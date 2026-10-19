@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="ja" data-ver="9.0.0" style="--lbl-open: &quot;開く&quot;; --lbl-close: &quot;閉じる&quot;;"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prism — ミニマルな画像ビューア</title>
+<meta name="description-x" content="i18n">
+<meta name="description" content="Prism は JPEG・PNG・WebP・TIFF・ニコン NEF に対応したミニマルな画像ビューア。カーブ、HSL、ローカルフィルタ、プラグインを内蔵。">
+<meta name="theme-color" content="#0b0c0e">
+<link rel="canonical" href="https://11ly322.github.io/Prism/ja/">
+<link rel="alternate" hreflang="zh-Hans" href="https://11ly322.github.io/Prism/">
+<link rel="alternate" hreflang="en" href="https://11ly322.github.io/Prism/en/">
+<link rel="alternate" hreflang="ja" href="https://11ly322.github.io/Prism/ja/">
+<meta name="color-scheme" content="dark">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://11ly322.github.io/Prism/ja/">
+<meta property="og:locale" content="ja_JP">
+<meta property="og:description" content="Prism は JPEG・PNG・WebP・TIFF・ニコン NEF に対応したミニマルな画像ビューア。カーブ、HSL、ローカルフィルタ、プラグインを内蔵。">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Prism — 简约图片查看器">
+<meta name="twitter:description" content="为看图而生的简约图片查看器，4000 万像素首帧不到一秒。">
+
+<link rel="icon" href="../Prism.ico" sizes="any">
+<link rel="shortcut icon" href="../Prism.ico">
+<link rel="apple-touch-icon" href="../Prism.png">
+<meta property="og:title" content="Prism — ミニマルな画像ビューア">
+<meta property="og:image" content="Prism.png">
+<style>
+  :root{--bg:#0b0c0e;--fg:#eceef2;--dim:#8b919c;--line:#1e2127;--accent:#3d7dff;--code:#7fe0a8}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--fg);font:16px/1.75 "Microsoft YaHei UI","Segoe UI",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1000px;margin:0 auto;padding:0 24px}
+  /* ---------- 顶栏 + 多层菜单 ---------- */
+  .top{position:sticky;top:0;z-index:50;background:rgba(11,12,14,.86);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  .topin{max-width:1000px;margin:0 auto;padding:0 24px;height:62px;display:flex;align-items:center;gap:26px}
+  .brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--fg)}
+  .brand img{width:26px;height:26px;border-radius:6px}
+  .brand b{font-size:15px;font-weight:600;letter-spacing:.3px}
+  .brand i{font-style:normal;font-size:12px;color:var(--dim);border:1px solid var(--line);border-radius:20px;padding:0 8px}
+  nav.menu{display:flex;gap:4px;margin-left:auto}
+  .mi{position:relative}
+  .mi>a{display:block;padding:8px 12px;color:var(--dim);text-decoration:none;font-size:14px;border-radius:6px}
+  .mi:hover>a{color:var(--fg);background:#15171b}
+  .sub{position:absolute;top:100%;left:0;min-width:186px;background:#0f1114;border:1px solid var(--line);border-radius:10px;padding:6px;opacity:0;visibility:hidden;transform:translateY(-4px);transition:.14s}
+  .mi:hover .sub{opacity:1;visibility:visible;transform:none}
+  .sub a{display:block;padding:7px 11px;color:var(--dim);text-decoration:none;font-size:13.5px;border-radius:6px;white-space:nowrap}
+  .sub a:hover{color:var(--fg);background:#171a1f}
+  .sub2{position:relative}
+  .sub2>a::after{content:"›";float:right;color:#5c626d}
+  .sub2 .lvl3{position:absolute;left:100%;top:-6px;min-width:170px;background:#0f1114;border:1px solid var(--line);border-radius:10px;padding:6px;opacity:0;visibility:hidden;transition:.14s}
+  .sub2:hover .lvl3{opacity:1;visibility:visible}
+  /* ---------- 首屏 ---------- */
+  .eyebrow{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);
+    border-radius:20px;padding:4px 13px;font-size:12.5px;color:var(--dim);margin-bottom:20px;
+    letter-spacing:.2px}
+  .eyebrow b{color:var(--accent);font-weight:600}
+  header{padding:70px 0 52px}
+  h1{font-size:42px;line-height:1.24;font-weight:600;letter-spacing:-.5px}
+  .lead{color:var(--dim);font-size:16.5px;margin-top:16px;max-width:44em}
+  .cta{margin-top:30px;display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+  .btn{display:inline-block;background:var(--accent);color:#fff;text-decoration:none;font-weight:600;font-size:15px;padding:12px 26px;border-radius:8px}
+  .btn:hover{background:#558cff}
+  .meta{color:var(--dim);font-size:13.5px;line-height:1.6}
+  section{padding:58px 0;border-top:1px solid var(--line)}
+  section>*{max-width:100%}
+  /* 章节标题：左侧强调条（用 border 而不是 flex，避免标题被居中） */
+  h2{border-left:3px solid var(--accent);padding-left:11px;line-height:1.15}
+  h2{font-size:13px;font-weight:600;letter-spacing:1.1px;color:var(--dim);text-transform:uppercase;margin-bottom:26px}
+  /* ---------- 动态演示：自动前后对比 ---------- */
+  .demo{position:relative;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#000;aspect-ratio:8/5}
+  .demo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .demo{--pos:52%;cursor:ew-resize;touch-action:none;user-select:none}
+  .demo .after{clip-path:inset(0 calc(100% - var(--pos)) 0 0)}
+  .demo .bar{left:var(--pos);animation:none;box-shadow:0 0 0 1px rgba(0,0,0,.45)}
+  .demo .bar::after{content:"";position:absolute;top:50%;left:50%;width:34px;height:34px;
+    transform:translate(-50%,-50%);border-radius:50%;background:rgba(255,255,255,.92);
+    box-shadow:0 2px 10px rgba(0,0,0,.45)}
+  .demo .bar::before{content:"⇄";position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+    z-index:2;color:#1a1d22;font-size:15px;font-weight:700;line-height:1}
+  .demo .lab{position:absolute;bottom:10px;font-size:12px;color:#dfe3e8;background:rgba(0,0,0,.55);padding:2px 9px;border-radius:20px}
+  .demo .l1{left:12px}
+  .demo .l2{right:12px}
+  .demo .bar{position:absolute;top:0;bottom:0;width:2px;background:rgba(255,255,255,.85)}
+  .cap{color:var(--dim);font-size:13px;margin-top:10px}
+  /* ---------- 图片展示 ---------- */
+  .gal{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px}
+  .card{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#0f1114}
+  .card img{display:block;width:100%;height:150px;object-fit:cover}
+  .card div{padding:10px 12px}
+  .card b{display:block;font-size:13.5px;font-weight:600}
+  .card span{color:var(--dim);font-size:12.5px}
+  /* ---------- 表格 ---------- */
+  table{width:100%;font-size:14px;border-collapse:collapse}
+  td{padding:11px 0;border-bottom:1px solid var(--line);color:var(--dim)}
+  tr:last-child td{border:0}
+  td:last-child{color:var(--fg);text-align:right}
+  code{font-family:Consolas,"SF Mono",monospace;font-size:12.5px;color:var(--code);word-break:break-all}
+  /* ---------- 界面实拍 ---------- */
+  .ui{display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:20px}
+  .ui figure{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#0f1114}
+  .ui img{display:block;width:100%;height:auto}
+  .ui figcaption{padding:11px 13px;font-size:12.5px;color:var(--dim);border-top:1px solid var(--line)}
+  .ui figcaption b{color:var(--fg);font-weight:600;margin-right:6px}
+  /* ---------- 回到顶部 / 复制 ---------- */
+  .totop{position:fixed;right:22px;bottom:22px;z-index:60;width:42px;height:42px;border-radius:50%;
+    background:var(--accent);color:#fff;border:0;cursor:pointer;font-size:16px;display:none;
+    box-shadow:0 6px 18px rgba(0,0,0,.35)}
+  .totop.show{display:block}
+  .totop:hover{background:#558cff}
+  .copybtn{background:#15171b;border:1px solid var(--line);color:var(--dim);font:inherit;
+    font-size:12px;padding:3px 9px;border-radius:6px;cursor:pointer;margin-left:8px}
+  .copybtn:hover{color:var(--fg);border-color:#3a3f48}
+  /* ---------- 无障碍 ---------- */
+  .skip{position:absolute;left:-9999px;top:0;background:var(--accent);color:#fff;
+    padding:10px 16px;border-radius:0 0 8px 0;z-index:99;text-decoration:none}
+  .skip:focus{left:0}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto}
+    *{transition:none!important;animation:none!important}
+  }
+  @media print{
+    .top,.langs,.support,.ui,#demo,.blk>summary::after{display:none}
+    body{background:#fff;color:#000}
+    .blk{border:0}
+    a{color:#000}
+  }
+  nav.menu> .mi> a{white-space:nowrap}
+  .topin{gap:16px}
+  /* ---------- 语言切换 ---------- */
+  .langs{display:flex;gap:2px;margin-left:12px;border:1px solid var(--line);border-radius:20px;padding:2px}
+  .langs button{background:transparent;border:0;color:var(--dim);font:inherit;font-size:12.5px;
+    padding:3px 8px;border-radius:16px;cursor:pointer;white-space:nowrap}
+  .langs button:hover{color:var(--fg)}
+  .langs button.on{background:var(--accent);color:#fff}
+  /* ---------- 大板块（原生 details 折叠） ---------- */
+  .blk{border-top:1px solid var(--line)}
+  .blk>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:12px;
+    padding:26px 0;font-size:19px;font-weight:600;letter-spacing:.2px;color:var(--fg)}
+  .blk>summary::-webkit-details-marker{display:none}
+  .blk>summary::before{content:"";width:3px;height:18px;border-radius:2px;background:var(--accent)}
+  .blk>summary::after{content:var(--lbl-open,"展开");margin-left:auto;font-size:12px;font-weight:400;
+    color:var(--dim);border:1px solid var(--line);border-radius:20px;padding:2px 10px}
+  .blk[open]>summary::after{content:var(--lbl-close,"收起")}
+  .blk[open]>summary{padding-bottom:8px}
+  .blk>summary:hover::after{color:var(--fg)}
+  .blk>section:first-of-type{border-top:0}
+  /* ---------- 支持作者 ---------- */
+  .support{padding:34px 0;border-top:1px solid var(--line)}
+  .sup-card{display:flex;align-items:center;gap:22px;flex-wrap:wrap;justify-content:space-between;
+    border:1px solid #332733;border-left:3px solid #ff6b9d;border-radius:12px;
+    background:linear-gradient(90deg,rgba(255,107,157,.12),rgba(255,107,157,0) 58%);
+    padding:20px 22px}
+  .sup-txt b{display:block;font-size:15.5px;font-weight:600;margin-bottom:5px}
+  .sup-txt span{color:var(--dim);font-size:13.5px}
+  .sup-btn{display:inline-block;background:#ff6b9d;color:#1a0d14;text-decoration:none;
+    font-weight:600;font-size:14px;padding:10px 20px;border-radius:8px;white-space:nowrap}
+  .sup-btn:hover{background:#ff86b0}
+  .toplink{color:var(--dim);text-decoration:none;font-size:14px;padding:8px 12px;border-radius:6px;
+    white-space:nowrap}
+  .toplink:hover{color:#ff9dc0;background:#191418}
+  html{scroll-behavior:smooth}
+  section,header{scroll-margin-top:76px}
+  footer{padding:34px 0 52px;border-top:1px solid var(--line);color:var(--dim);font-size:13px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+  footer a{color:var(--dim);text-decoration:none;border-bottom:1px solid var(--line)}
+  footer a:hover{color:var(--fg)}
+  @media (max-width:800px){nav.menu{display:none}h1{font-size:30px}header{padding:44px 0 34px}}
+
+  .spl{position:relative;display:inline-flex;align-items:stretch}
+  .spl .btn{border-radius:8px 0 0 8px}
+  .spl .caret{background:var(--accent);color:#fff;border:0;border-left:1px solid rgba(255,255,255,.28);
+    border-radius:0 8px 8px 0;padding:0 12px;font-size:12px;cursor:pointer;font-family:inherit}
+  .spl .caret:hover,.spl .btn:hover{background:#558cff}
+  .opts{position:absolute;top:calc(100% + 6px);left:0;width:268px;background:#0f1114;
+    border:1px solid var(--line);border-radius:10px;padding:6px;opacity:0;visibility:hidden;
+    transform:translateY(-4px);transition:.14s;z-index:60}
+  .spl:hover .opts,.spl:focus-within .opts{opacity:1;visibility:visible;transform:none}
+  .opts a{display:block;padding:9px 11px;border-radius:7px;text-decoration:none;color:var(--fg)}
+  .opts a:hover{background:#171a1f}
+  .opts b{display:block;font-size:13.5px;font-weight:600}
+  .opts span{color:var(--dim);font-size:12px}
+  .opts i{float:right;color:var(--dim);font-size:12px;font-style:normal}
+
+  .plats{margin-top:18px;font-size:13.5px;color:var(--dim);line-height:2}
+  .plats b{font-weight:400;color:#5a6270;margin-right:6px}
+  .plats a{color:var(--accent);text-decoration:none;margin-right:16px;
+    border-bottom:1px solid rgba(61,125,255,.3);padding-bottom:1px}
+  .plats a:hover{color:#7ba6ff;border-bottom-color:#7ba6ff}
+  .plats em{font-style:normal;color:#5a6270;font-size:12.5px}
+
+  .sub .gh{display:block;padding:9px 11px 3px;font-size:11px;letter-spacing:.6px;
+    color:#5a6270;text-transform:uppercase}
+  .sub .sp{display:block;height:1px;background:var(--line);margin:6px 8px}
+  .sub a i{float:right;font-style:normal;color:#5a6270;font-size:11.5px;margin-left:14px}
+
+  td.grp{padding-top:20px;font-size:11.5px;letter-spacing:.6px;color:#5a6270;
+    text-transform:uppercase;border-bottom:1px solid var(--line)}
+  td a{color:var(--accent);text-decoration:none}
+  td a:hover{color:#7ba6ff}
+
+  nav.menu{gap:2px}
+  .mi>a{padding:8px 14px;font-size:14px;color:var(--dim);border-radius:7px}
+  .mi:hover>a{color:var(--fg);background:#171a1f}
+  .mi>a[href^="#"]:hover{background:#171a1f}
+  @media (max-width:900px){nav.menu{display:none}}
+
+  h3{font-size:14.5px;font-weight:600;margin:26px 0 10px;color:var(--fg)}
+  section h3:first-of-type{margin-top:6px}
+  details{border-bottom:1px solid var(--line);padding:10px 0}
+  details summary{cursor:pointer;font-size:14px;color:var(--fg);list-style:none}
+  details summary::-webkit-details-marker{display:none}
+  details summary::before{content:"+";display:inline-block;width:16px;color:var(--dim)}
+  details[open] summary::before{content:"−"}
+  details p{color:var(--dim);font-size:13.5px;padding:8px 0 0 16px;line-height:1.7}
+  td code{color:#b9c4d6}
+
+  /* 折叠区块 */
+  section[id]{padding:0;border-top:1px solid var(--line)}
+  .fold-head{cursor:pointer;user-select:none;margin:0;padding:20px 0;
+    display:flex;align-items:center;justify-content:space-between;
+    transition:color .15s}
+  .fold-head:hover{color:var(--fg)}
+  .fold-head::after{content:"＋";font-size:15px;color:#5a6270;font-weight:400}
+  section.open .fold-head::after{content:"－"}
+  .fold-body{display:none;padding-bottom:26px}
+  .fold-head{cursor:pointer;user-select:none}
+  .fold-head:hover{color:var(--fg)}
+  section.open .fold-body{display:block}
+  section.open .fold-head{color:var(--dim)}
+  .fold-body>h3:first-child{margin-top:0}
+</style>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareApplication",
+ "name":"Prism","applicationCategory":"MultimediaApplication",
+ "operatingSystem":"Windows 10, Windows 11",
+ "softwareVersion":"9.0.0",
+ "offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"},
+ "url":"https://11ly322.github.io/Prism/",
+ "downloadUrl":"https://github.com/11ly322/Prism/releases",
+ "description":"Prism は NEF・カーブ・HSL・ローカルフィルタ・プラグインに対応したミニマルな画像ビューアです。"}
+</script>
+</head>
+<body>
+<a class="skip" href="#ui">跳到主要内容</a>
+<div class="top"><div class="topin">
+  <a class="brand" href=".././"><img src="../Prism.png" alt=""><b>Prism</b><i>9.0.0</i></a>
+  <nav class="menu" aria-label="主导航">
+    <div class="mi"><a href="#features">製品</a>
+      <div class="sub">
+        <span class="gh">概要</span>
+        <a href="#features">機能</a>
+        <a href="#demo">色調整デモ</a>
+        <a href="#gallery">作例</a>
+        <div class="sub2"><a href="#plugins">プラグイン</a>
+          <div class="lvl3">
+            <a href="#plugins">プラグインの使い方</a>
+            <a href="#plugins">プラグインを書く</a>
+            <a href="#plugins">サンプル</a>
+          </div>
+        </div>
+        <span class="sp"></span>
+        <a href="#docs">ドキュメント</a>
+      </div>
+    </div>
+    <div class="mi"><a href="#demo">デモ</a></div>
+    <div class="mi"><a href="#gallery">作例</a></div>
+    <div class="mi"><a href="#ui">画面</a></div>
+    <div class="mi"><a href="#beauty">ポートレート</a></div>
+    <div class="mi"><a href="#plugins">プラグイン</a>
+      <div class="sub">
+        <a href="#plugins">使い方</a>
+        <a href="#plugins">プラグインを書く</a>
+        <a href="#plugins">12 個同梱</a>
+      </div>
+    </div>
+    <a class="toplink" href="https://afdian.com/a/pis01" target="_blank" rel="noopener">❤ 支援する</a>
+    <div class="mi"><a href="#download">ダウンロード</a>
+      <div class="sub">
+        <span class="gh">Windows</span>
+        <a href="https://github.com/11ly322/Prism/releases/download/v9.0.0/Prism-Setup-9.0.0.exe" download=""><span style="display:inline-block;margin-left:6px;padding:1px 6px;border-radius:6px;font-size:11px;background:#2f7d32;color:#fff">フル</span>フル版 <i>39.9 MB</i></a>
+        <a href="https://github.com/11ly322/Prism/releases/download/v9.0.0/Prism-Viewer-Setup-9.0.0.exe" download="">ビューア（インストーラ） <i>39.9 MB</i></a>
+        <span class="gh">その他</span>
+        <a href="https://github.com/11ly322/Prism/releases/download/v9.0.0/Prism-macOS-9.0.0.zip" download=""><span style="display:inline-block;margin-left:6px;padding:1px 6px;border-radius:6px;font-size:11px;background:#8a6d1f;color:#fff">ソース版</span>macOS <i>ソースから実行</i></a>
+        <a href="https://github.com/11ly322/Prism/releases/download/v9.0.0/Prism-Linux-9.0.0.zip" download=""><span style="display:inline-block;margin-left:6px;padding:1px 6px;border-radius:6px;font-size:11px;background:#8a6d1f;color:#fff">ソース版</span>Linux <i>ソースから実行</i></a>
+        <span class="sp"></span>
+        <a href="#docs">ドキュメント</a>
+        <a href="#verify">証明書とチェックサム</a>
+      </div>
+    </div>
+  </nav>
+  <div class="langs" role="group" aria-label="语言">
+    <button data-lang-btn="zh" onclick="location.href='../index.html?lang=zh'">中文</button>
+    <button data-lang-btn="en" onclick="location.href='../en/index.html'">EN</button>
+    <button data-lang-btn="ja" onclick="location.href='../ja/index.html'" class="on">日本語</button>
+  </div>
+</div></div>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Windows 10/11 · 単一ファイル · ランタイム不要 · NEF 対応</div>
+    <h1>閲覧のために生まれた<br>ミニマルな画像ビューア</h1>
+    <p class="lead">開くのも切り替えも速く、色調整も正確。ニコン NEF と一般的な形式に対応し、カーブ・HSL・ローカルフィルタを内蔵。プラグインで拡張できます。</p>
+    <div class="cta">
+      <div class="spl">
+        <a class="btn" href="https://github.com/11ly322/Prism/releases/download/v9.0.0/Prism-Setup-9.0.0.exe" download="">フル版をダウンロード</a>
+        <button class="caret" aria-label="更多版本">▾</button>
+        <div class="opts">
+          <a href="https://github.com/11ly322/Prism/releases/download/v9.0.0/Prism-Setup-9.0.0.exe" download=""><i>40.0 MB</i><b>Windows フル版</b><span>インストーラ · 編集とプラグイン込み</span></a>
+          <a href="https://github.com/11ly322/Prism/releases/download/v9.0.0/Prism-Viewer-Setup-9.0.0.exe" download=""><i>39.9 MB</i><b>Windows ビューア</b><span>インストーラ · 閲覧のみ、同じ手順</span></a>
+          <a href="https://github.com/11ly322/Prism/releases/download/v9.0.0/Prism-macOS-9.0.0.zip" download=""><i>149 KB</i><b>macOS</b><span>ソースから実行 · Python 3</span></a>
+          <a href="https://github.com/11ly322/Prism/releases/download/v9.0.0/Prism-Linux-9.0.0.zip" download=""><i>149 KB</i><b>Linux</b><span>ソースから実行 · デスクトップ項目付き</span></a>
+        </div>
+      </div>
+      <div class="meta">バージョン 9.0.0<br>40 MB · Windows 10/11 64bit</div>
+    </div>
+    <p class="plats"><b>すべてのダウンロード</b>
+      <a href="https://github.com/11ly322/Prism/releases/download/v9.0.0/Prism-Setup-9.0.0.exe" download="">Windows フル版</a><em>39.8 MB</em>
+      <a href="https://github.com/11ly322/Prism/releases/download/v9.0.0/Prism-Viewer-Setup-9.0.0.exe" download="">Windows ビューア</a><em>39.9 MB</em>
+      <a href="https://github.com/11ly322/Prism/releases/download/v9.0.0/Prism-macOS-9.0.0.zip" download="">macOS</a><em>104 KB</em>
+      <a href="https://github.com/11ly322/Prism/releases/download/v9.0.0/Prism-Linux-9.0.0.zip" download="">Linux</a><em>105 KB</em>
+    </p>
+  </header>
+
+  <section id="support" class="support">
+    <div class="sup-card">
+      <div class="sup-txt">
+        <b>Prism は無料 — 広告なし・アプリ内課金なし</b>
+        <span>時間の節約になったら、Afdian で支援していただけると助かります（検証機とビルド費用に充てます）。</span>
+      </div>
+      <a class="sup-btn" href="https://afdian.com/a/pis01" target="_blank" rel="noopener">Afdian · 作者を支援</a>
+    </div>
+  </section>
+
+  <details class="blk" open="">
+    <summary>画面とデモ</summary>
+  <section id="ui">
+    <h2>実際の画面</h2>
+    <div class="ui">
+      <figure>
+        <img src="../shots/ui-main-ja.webp" alt="纯看图模式" decoding="async" width="1100" height="642" fetchpriority="high">
+        <figcaption><b>ビューアのみ</b>パネルを閉じればビューアに：写真は中央に、解像度と容量はステータスバーに表示。</figcaption>
+      </figure>
+      <figure>
+        <img src="../shots/ui-main-ja.webp" alt="主界面" loading="lazy" decoding="async" width="1100" height="642">
+        <figcaption><b>編集パネル</b>ヒストグラム、4 つのショートカット、セクション別スライダーが同じ縦線に揃います。</figcaption>
+      </figure>
+      <figure>
+        <img src="../shots/ui-plugins.webp" alt="插件窗口" loading="lazy" decoding="async" width="1100" height="642">
+        <figcaption><b>プラグイン</b>2 列カード。ホバーで説明と「ネットワーク / ファイル書き込み」の有無を表示。</figcaption>
+      </figure>
+      <figure>
+        <img src="../shots/ui-settings.webp" alt="设置窗口" loading="lazy" decoding="async" width="1100" height="642">
+        <figcaption><b>設定</b>テーマは即時切り替え。ウィンドウは OS 標準の角丸。</figcaption>
+      </figure>
+    </div>
+    <p class="cap">すべて実際の動作画面で、リリーススクリプト（tools/uishot.py）が自動生成したものです。</p>
+  </section>
+
+  <section id="demo">
+    <h2>色調整デモ</h2>
+    <div class="demo" tabindex="0">
+      <img src="../shots/shot-original.webp" alt="元画像" width="1000" height="625" decoding="async">
+      <img class="after" src="../shots/shot-graded.webp" alt="調整後" width="1000" height="625" decoding="async">
+      <div class="bar"></div>
+      <span class="lab l1">調整後</span>
+      <span class="lab l2">元画像</span>
+    </div>
+    <p class="cap"><b style="color:var(--fg)">中央の丸を左右にドラッグ</b> して、露出・コントラスト・自然な彩度・色温度・周辺減光を適用した結果を比較できます。どちらも Prism 自身の描画パイプラインの出力です。</p>
+    <p class="cap">サンプル写真： <a href="https://picsum.photos" target="_blank" rel="noopener" style="color:inherit">Lorem Picsum</a>（Unsplash の画像・無料利用可）。色調整のデモ用です。</p>
+  </section>
+
+  <section id="gallery">
+    <h2>作例</h2>
+    <div class="gal">
+      <div class="card"><img src="../shots/shot-original.webp" alt="" loading="lazy" decoding="async" width="1000" height="625"><div><b>元画像</b><span>調整なし</span></div></div>
+      <div class="card"><img src="../shots/shot-graded.webp" alt="" loading="lazy" decoding="async" width="1000" height="625"><div><b>調整後</b><span>露出 / コントラスト / 彩度 / 周辺減光</span></div></div>
+      <div class="card"><img src="../shots/shot-mono.webp" alt="" loading="lazy" decoding="async" width="1000" height="625"><div><b>モノクロプラグイン</b><span>サンプルプラグイン（.py 1 ファイル）</span></div></div>
+      <div class="card"><img src="../shots/shot-frame.webp" alt="" loading="lazy" decoding="async" width="1000" height="625"><div><b>白フレームプラグイン</b><span>四辺に白フチを付けるサンプル</span></div></div>
+    </div>
+  </section>
+
+  </details>
+
+  <details class="blk" open="">
+    <summary>機能とポートレート</summary>
+  <section id="features">
+    <h2>要点</h2>
+    <table>
+      <tbody><tr><td>すぐ開く</td><td>表示領域だけを描画。4000 万画素でも最初の表示は 1 秒未満</td></tr>
+      <tr><td>本格的な色調整</td><td>トーンカーブ、8 バンド HSL、カラーグレーディング。プレビューと書き出しがピクセル単位で一致</td></tr>
+      <tr><td>レンズ / フィルム / 人物</td><td>歪み補正 · フィルム風 · 人物補正（アルゴリズムのみ、モデル不要）</td></tr>
+      <tr><td>ローカル調整</td><td>円形・グラデーションフィルタ。被写体と高コントラストの自動選択も</td></tr>
+      <tr><td>プラグイン拡張</td><td>.py 1 ファイルがプラグイン。12 個同梱でパラメータ調整可能。plugins/ に置くだけ</td></tr>
+    </tbody></table>
+  </section>
+
+  <section id="beauty">
+    <h2>人物補正</h2>
+    <p class="cap" style="margin-top:0">アルゴリズムのみ。モデルファイル不要・通信なし・アップロードなし。</p>
+    <h3>9 つの効果</h3>
+    <table>
+      <tbody><tr><td>肌の滑らかさ</td><td>周波数分離：低周波のムラだけを抑え、毛穴はそのまま</td></tr>
+      <tr><td>肌の明るさ・均一化</td><td>肌領域を明るく、メディアンフィルタで小ジミを除去</td></tr>
+      <tr><td>シミ・ニキビ跡</td><td>背景差分で暗いシミを見つけて補正。サイズ調整可</td></tr>
+      <tr><td>目の下のくま</td><td>目の下の暗部だけを持ち上げ、青を抑えて紫を軽減</td></tr>
+      <tr><td>歯・唇の色</td><td>明るさと赤緑差で歯と唇を分離</td></tr>
+      <tr><td>小顔・目を大きく</td><td>逆写像リサンプリング。目の位置を自動検出</td></tr>
+    </tbody></table>
+    <h3>ワンクリックプリセット</h3>
+    <table>
+      <tbody><tr><td>素肌</td><td>すべてゼロ</td></tr>
+      <tr><td>ナチュラル</td><td>肌 35 · シミ 25 · 歯 20</td></tr>
+      <tr><td>ポートレート</td><td>肌 60 · シミ 50 · 目元 35 · 小顔 15</td></tr>
+      <tr><td>インフルエンサー</td><td>肌 85 · シミ 70 · 目元 60 · 小顔 45</td></tr>
+    </tbody></table>
+    <h3>操作</h3>
+    <table>
+      <tbody><tr><td>入口</td><td>ツール → 人物補正…</td></tr>
+      <tr><td>ビフォア・アフター</td><td>B を押している間はオフ</td></tr>
+      <tr><td>ステータス行</td><td>パネル上部に検出した顔数・現在の値・適用外かどうかを表示</td></tr>
+      <tr><td>ガード</td><td>極小・単色・モノクロ・極端な比率では自動的にスキップ</td></tr>
+    </tbody></table>
+    <p class="cap">パラメータ表と実装の詳細は <a href="../README.md">README</a>  の「人物補正」を参照。</p>
+  </section>
+
+  </details>
+
+  <details class="blk" open="">
+    <summary>プラグイン拡張</summary>
+  <section id="plugins">
+    <h2>プラグイン</h2>
+    <p class="cap" style="margin-top:0;margin-bottom:16px">プラグインは Python ファイル 1 つ。プログラム横の plugins/ に入れて「再スキャン」を押すだけ。登録も再起動も不要。</p>
+    <table>
+      <tbody><tr><td>プラグインを書く</td><td>.py を追加し run(img) を定義</td></tr>
+      <tr><td>入力</td><td>img は全調整済みの PIL.Image（RGB）</td></tr>
+      <tr><td>出力</td><td>新しい PIL.Image を返す。None でスキップ</td></tr>
+      <tr><td>メタ情報</td><td>PLUGIN_NAME / PLUGIN_DESC / PLUGIN_VERSION / PLUGIN_AUTHOR</td></tr>
+      <tr><td>はじめ方</td><td>「プラグイン → 新規プラグイン」でコメント付きテンプレートを生成</td></tr>
+    </tbody></table>
+  </section>
+
+  </details>
+
+  <details class="blk" open="">
+    <summary>ドキュメント</summary>
+  <section id="docs">
+    <h2>ドキュメント</h2>
+
+    <h3>インストール</h3>
+    <table>
+      <tbody><tr><td class="grp" colspan="2">Windows</td></tr>
+      <tr><td>1</td><td>ダウンロード <code>Prism-Setup-9.0.0.exe</code> をダブルクリック</td></tr>
+      <tr><td>2</td><td>インストール方法（ユーザー領域 / その場で展開）と場所を選択</td></tr>
+      <tr><td>3</td><td>スタートメニューとデスクトップのショートカットは任意。完了後すぐ起動します</td></tr>
+      <tr><td class="grp" colspan="2">macOS</td></tr>
+      <tr><td>1</td><td>Python 3 をインストール：<a href="https://www.python.org/downloads/">python.org</a></td></tr>
+      <tr><td>2</td><td>展開して「启动 Prism.command」をダブルクリック</td></tr>
+      <tr><td>3</td><td>開発元を確認できない場合：右クリック → 開く、または「プライバシーとセキュリティ」で許可</td></tr>
+      <tr><td class="grp" colspan="2">Linux</td></tr>
+      <tr><td>1</td><td>依存関係をインストール：<code>sudo apt install python3-tk python3-pil</code></td></tr>
+      <tr><td>2</td><td><code>chmod +x prism.sh &amp;&amp; ./prism.sh</code></td></tr>
+      <tr><td>3</td><td>アプリメニューに追加：フォルダを <code>/opt/Prism</code> に置き、 <code>Prism.desktop</code> を <code>/usr/share/applications/</code></td></tr>
+    </tbody></table>
+
+    <h3>主なショートカット</h3>
+    <table>
+      <tbody><tr><td>← / →</td><td>前 / 次</td></tr>
+      <tr><td>+ / − / 1</td><td>拡大 / 縮小 / 100%</td></tr>
+      <tr><td>F</td><td>ウィンドウに合わせる</td></tr>
+      <tr><td>R / Shift+R</td><td>時計回り / 反時計回りに回転</td></tr>
+      <tr><td>E</td><td>編集パネルの表示切り替え</td></tr>
+      <tr><td>C</td><td>トリミング</td></tr>
+      <tr><td>G</td><td>グリッド表示</td></tr>
+      <tr><td>Ctrl+Z / Ctrl+Y</td><td>元に戻す / やり直す</td></tr>
+      <tr><td>Esc</td><td>現在の状態を抜ける（終了はしません）</td></tr>
+    </tbody></table>
+
+    <h3>プラグイン</h3>
+    <table>
+      <tbody><tr><td>置き場所</td><td>プログラムフォルダ内の <code>plugins/</code>（初回起動時に作成）</td></tr>
+      <tr><td>書き方</td><td>1 つの <code>.py</code> ファイルに <code>run(img)</code> を定義。任意で <code>PARAMS</code>  を宣言するとスライダーを自動生成</td></tr>
+      <tr><td>使い方</td><td>ツールバーの「プラグイン」→ 実行。結果ウィンドウで調整して別名保存できます</td></tr>
+      <tr><td>同梱数</td><td>12 個：ピクセル化・ビンテージフィルム・丸アバター・白フチ・シャープ・モノクロ・自動レベル・文字入れ・16:9 トリミング・チルトシフト・光芒・グリッチ</td></tr>
+    </tbody></table>
+
+    <h3>よくある質問</h3>
+    <details>
+      <summary>Windows で「不明な発行元」／SmartScreen の警告が出る</summary>
+      <p>インストーラは未署名です。「詳細情報」→「実行」で起動できます。通信なし・管理者権限不要。</p>
+    </details>
+    <details>
+      <summary>macOS でダブルクリックしても反応しない</summary>
+      <p>まずターミナルで実行： <code>chmod +x "启动 Prism.command"</code>。開発元を確認できない場合は右クリック → 開く。</p>
+    </details>
+    <details>
+      <summary>Linux で tkinter が無いと言われる</summary>
+      <p>Tk が入っていません：<code>sudo apt install python3-tk</code>（Fedora では <code>python3-tkinter</code>）。</p>
+    </details>
+    <details>
+      <summary>フル版とビューアの違い</summary>
+      <p>ビューアには編集パネルがなく、閲覧・ズーム・回転・スライドショー・フィルムストリップ・グリッドのみ。サイズは小さく、対応形式と描画速度は同じです。</p>
+    </details>
+    <details>
+      <summary>为什么没有全屏</summary>
+      <p>F11 全屏在部分机器上显示不全，权衡后已在早前版本移除，而不是留一个半坏的功能。</p>
+    </details>
+
+    <p class="cap">Markdown の詳細： <a href="../README.md">README.md</a>。</p>
+  </section>
+
+  </details>
+
+  <details class="blk" open="">
+    <summary>ダウンロード・検証・FAQ</summary>
+  <section id="download">
+    <h2>ダウンロードとインストール</h2>
+    <table>
+      <tbody><tr><td class="grp" colspan="2">Windows</td></tr>
+      <tr><td><a href="https://github.com/11ly322/Prism/releases/download/v9.0.0/Prism-Setup-9.0.0.exe" download="">フル版インストーラ</a></td>
+          <td>39.8 MB · 編集パネルとプラグイン込み</td></tr>
+      <tr><td><a href="https://github.com/11ly322/Prism/releases/download/v9.0.0/Prism-Viewer-Setup-9.0.0.exe" download="">ビューアのみ（インストーラ）</a></td>
+          <td>39.9 MB · フル版と同じ手順。スタートメニューとデスクトップのショートカット付き</td></tr>
+      <tr><td><a href="https://github.com/11ly322/Prism/releases/download/v9.0.0/Prism-Viewer-9.0.0.zip" download="">ビューアのみ（ポータブル）</a></td>
+          <td>29.9 MB · 展開してすぐ使える。レジストリ不要</td></tr>
+      <tr><td class="grp" colspan="2">macOS / Linux</td></tr>
+      <tr><td><a href="https://github.com/11ly322/Prism/releases/download/v9.0.0/Prism-macOS-9.0.0.zip" download="">macOS パッケージ</a></td>
+          <td>104 KB · ソースから実行。Python 3 + Pillow が必要</td></tr>
+      <tr><td><a href="https://github.com/11ly322/Prism/releases/download/v9.0.0/Prism-Linux-9.0.0.zip" download="">Linux パッケージ</a></td>
+          <td>105 KB · .desktop 付き。python3-tk が必要</td></tr>
+      <tr><td class="grp" colspan="2">要件（Windows 版）</td></tr>
+      <tr><td>OS</td><td>Windows 10 / 11（64bit）</td></tr>
+      <tr><td>ランタイム</td><td>不要。すぐ使えます</td></tr>
+      <tr><td>ディスク使用量</td><td>約 75 MB</td></tr>
+      <tr><td>権限</td><td>一般ユーザー。管理者不要</td></tr>
+      <tr><td>インストール手順</td><td>ダブルクリック → 方法と場所を選択 → 起動</td></tr>
+    </tbody></table>
+  </section>
+
+    <div id="known" style="margin:14px 0 4px;padding:12px 14px;border-left:3px solid #d9a441;background:rgba(217,164,65,.08);border-radius:6px">
+      <p class="cap" style="margin:0 0 6px"><strong>ダウンロード前の注意</strong></p>
+      <p class="cap" style="margin:0">1. インストーラは未署名のため SmartScreen が出ることがあります（下記「安全な回避」参照）。</p>
+      <p class="cap" style="margin:0">2. 全画面は互換モード（枠なし最大化 + Esc で解除）で、システム全画面ではありません。</p>
+      <p class="cap" style="margin:0">3. macOS と Linux はソース版で、.app / AppImage はありません。</p>
+    </div>
+    <p class="cap" style="margin-top:10px"><strong>ポータブル版</strong>：<a href="https://github.com/11ly322/Prism/releases/download/v9.0.0/Prism-Portable-9.0.0.zip">Prism-Portable-9.0.0.zip</a>（フル版を展開してすぐ使える。レジストリ・スタートメニュー登録なし）</p>
+    <h3>SmartScreen を安全に回避する</h3>
+    <p class="cap" style="margin-top:0">インストーラは未署名のため「Windows によって PC が保護されました」と表示されます。まずファイルを検証してください：</p>
+    <ol class="cap" style="margin:0 0 10px 18px;padding:0">
+      <li>PowerShell で SHA-256 を確認：<br><code>Get-FileHash .\Prism-Setup-9.0.0.exe -Algorithm SHA256</code><br>上記の SHA-256 と 1 桁ずつ照合します。</li>
+      <li>一致 → インストーラを開き「詳細情報」をクリック。</li>
+      <li>発行元が「不明な発行元」でハッシュも一致していれば「実行」をクリック。</li>
+      <li>不一致 → すぐ削除して再ダウンロード。</li>
+    </ol>
+    <p class="cap" style="margin-top:0">未署名の実行ファイルを避けたい場合は、上のポータブル版かソースから実行してください：
+    <code>python src/Prism.pyw</code>。</p>
+  <section id="verify">
+    <h2>証明書とチェックサム</h2>
+    <table>
+      <tbody><tr><td class="grp" colspan="2">サイト証明書</td></tr>
+      <tr><td>プロトコル</td><td>HTTPS（強制リダイレクト・平文なし）</td></tr>
+      <tr><td>サブジェクト</td><td><code>*.github.io</code></td></tr>
+      <tr><td>発行元</td><td>Let's Encrypt（由 GitHub Pages 自动签发与续期）</td></tr>
+      <tr><td>有効期限</td><td>2026-12-30</td></tr>
+      <tr><td class="grp" colspan="2">インストーラのチェックサム</td></tr>
+      <tr><td>ファイル</td><td>Prism-Setup-9.0.0.exe</td></tr>
+      <tr><td>SHA-256</td><td><code>41334D5698AE0AF635164016617F2404282532F1534319293D1E70C35FB79397</code></td></tr>
+    </tbody></table>
+    <p class="cap">ダウンロード後に次で照合： <code>certutil -hashfile &lt;ファイル&gt; SHA256</code>（Windows）または <code>shasum -a 256 &lt;ファイル&gt;</code>（macOS/Linux）。</p>
+  </section>
+
+  </details>
+
+  <footer>
+    <div>Prism 9.0.0 · ミニマルな画像ビューア · <a href="https://github.com/11ly322/Prism/blob/main/CHANGELOG.md" style="color:inherit;text-decoration:underline">変更履歴</a> · <a href="https://afdian.com/a/pis01" target="_blank" rel="noopener">Afdian</a></div>
+    <div><a href="#docs">ドキュメント</a></div>
+  </footer>
+</div>
+
+<script>
+/* 记住每个大板块的展开/收起状态，下次访问保持 */
+(function(){
+  var KEY = 'prism.blocks', state = {};
+  try { state = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) {}
+  var blocks = document.querySelectorAll('details.blk');
+  for (var i = 0; i < blocks.length; i++) {
+    (function (b) {
+      var title = (b.querySelector('summary') || {}).textContent || ('b' + i);
+      title = title.trim();
+      if (state[title] === false) { b.removeAttribute('open'); }
+      b.addEventListener('toggle', function () {
+        state[title] = b.hasAttribute('open');
+        try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {}
+      });
+    })(blocks[i]);
+  }
+})();
+</script>
+<script>
+/* demo-drag：按住圆点左右拖动，比较调色前后 */
+(function(){
+  var box = document.querySelector('#demo .demo');
+  if (!box) return;
+  var dragging = false;
+  function setPos(clientX) {
+    var r = box.getBoundingClientRect();
+    var t = (clientX - r.left) / Math.max(1, r.width);
+    t = Math.max(0, Math.min(1, t));
+    box.style.setProperty('--pos', (t * 100).toFixed(2) + '%');
+  }
+  box.addEventListener('pointerdown', function (e) {
+    dragging = true;
+    if (box.setPointerCapture) { try { box.setPointerCapture(e.pointerId); } catch (err) {} }
+    setPos(e.clientX);
+    e.preventDefault();
+  });
+  box.addEventListener('pointermove', function (e) { if (dragging) { setPos(e.clientX); } });
+  box.addEventListener('pointerup', function () { dragging = false; });
+  box.addEventListener('pointercancel', function () { dragging = false; });
+  box.addEventListener('pointerleave', function () { dragging = false; });
+  box.addEventListener('keydown', function (e) {
+    var cur = parseFloat(box.style.getPropertyValue('--pos')) || 52;
+    if (e.key === 'ArrowLeft') { cur = Math.max(0, cur - 4); }
+    else if (e.key === 'ArrowRight') { cur = Math.min(100, cur + 4); }
+    else { return; }
+    box.style.setProperty('--pos', cur.toFixed(2) + '%');
+    e.preventDefault();
+  });
+  box.tabIndex = 0;
+})();
+</script>
+<script src="../i18n.js"></script>
+<script>
+(function(){
+  var D = window.PRISM_I18N || {};
+  var VER = document.documentElement.getAttribute('data-ver') || '';
+  var KEY = 'prism.lang';
+  function norm(t){ return t.replace(/\d+\.\d+\.\d+/g, '{v}'); }
+  function tr(text, lang){
+    var d = D[lang] || {}, m = d[text];
+    if (m === undefined) { m = d[norm(text)]; }
+    if (m === undefined) { return null; }
+    return m.replace(/\{v\}/g, VER);
+  }
+  var origText = new WeakMap(), origAttr = new WeakMap();
+  function walk(lang){
+    var tw = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null), n;
+    while ((n = tw.nextNode())) {
+      var p = n.parentNode;
+      if (!p || /^(SCRIPT|STYLE|NOSCRIPT|TEXTAREA)$/.test(p.nodeName)) { continue; }
+      if (!origText.has(n)) { origText.set(n, n.nodeValue); }
+      var base = origText.get(n), t = base.trim();
+      if (!t) { continue; }
+      var out = base;
+      if (lang !== 'zh') { var r = tr(t, lang); if (r !== null) { out = base.replace(t, r); } }
+      if (n.nodeValue !== out) { n.nodeValue = out; }
+    }
+    var els = document.querySelectorAll('[placeholder],[title],[alt],[aria-label]');
+    for (var i = 0; i < els.length; i++) {
+      var attrs = ['placeholder', 'title', 'alt', 'aria-label'];
+      var store = origAttr.get(els[i]);
+      if (!store) { store = {}; origAttr.set(els[i], store); }
+      for (var a = 0; a < attrs.length; a++) {
+        var v = els[i].getAttribute(attrs[a]);
+        if (v === null) { continue; }
+        if (store[attrs[a]] === undefined) { store[attrs[a]] = v; }
+        var base2 = store[attrs[a]], out2 = base2;
+        if (lang !== 'zh') { var r2 = tr(base2.trim(), lang); if (r2 !== null) { out2 = r2; } }
+        if (v !== out2) { els[i].setAttribute(attrs[a], out2); }
+      }
+    }
+  }
+  var TEXT = {
+    zh: { open: '展开', close: '收起',
+          title: 'Prism — 简约图片查看器',
+          desc: 'Prism 是一款极简的图片查看器，支持 JPEG、PNG、WebP、TIFF 与尼康 NEF，内置曲线、HSL、局部滤镜与插件系统。' },
+    en: { open: 'Expand', close: 'Collapse',
+          title: 'Prism — a minimalist image viewer',
+          desc: 'Prism is a minimalist image viewer with JPEG, PNG, WebP, TIFF and Nikon NEF support, built-in curves, HSL, local filters and a plugin system.' },
+    ja: { open: '開く', close: '閉じる',
+          title: 'Prism — ミニマルな画像ビューア',
+          desc: 'Prism は JPEG・PNG・WebP・TIFF・ニコン NEF に対応したミニマルな画像ビューア。カーブ、HSL、ローカルフィルタ、プラグインを内蔵。' }
+  };
+  window.__prismSetLang = function(lang){
+    document.documentElement.lang = lang === 'zh' ? 'zh-CN' : lang;
+    walk(lang);
+    var t = TEXT[lang] || TEXT.zh;
+    document.documentElement.style.setProperty('--lbl-open', '"' + t.open + '"');
+    document.documentElement.style.setProperty('--lbl-close', '"' + t.close + '"');
+    document.title = t.title;
+    var md = document.querySelector('meta[name="description"]');
+    if (md) { md.setAttribute('content', t.desc); }
+    var btns = document.querySelectorAll('[data-lang-btn]');
+    for (var i = 0; i < btns.length; i++) {
+      var on = btns[i].getAttribute('data-lang-btn') === lang;
+      btns[i].classList.toggle('on', on);
+    }
+    try { localStorage.setItem(KEY, lang); } catch (e) {}
+  };
+  var q = (location.search.match(/[?&]lang=(zh|en|ja)/) || [])[1];
+  var saved = null;
+  try { saved = localStorage.getItem(KEY); } catch (e) {}
+  var auto = 'zh';
+  try {
+    var nav = (navigator.language || 'zh').toLowerCase();
+    if (nav.indexOf('ja') === 0) { auto = 'ja'; }
+    else if (nav.indexOf('zh') !== 0) { auto = 'en'; }
+  } catch (e) {}
+  window.__prismSetLang(q || saved || auto);
+})();
+</script>
+<button class="totop" id="totop" aria-label="回到顶部" title="回到顶部">↑</button>
+<script>
+/* 回到顶部 + 导航高亮 + 首次访问按浏览器语言选择 */
+(function(){
+  var btn = document.getElementById('totop');
+  if (btn) {
+    window.addEventListener('scroll', function(){
+      btn.classList.toggle('show', window.scrollY > 700);
+    }, {passive: true});
+    btn.addEventListener('click', function(){ window.scrollTo({top:0, behavior:'smooth'}); });
+  }
+  var links = document.querySelectorAll('nav.menu a[href^="#"]');
+  if (!links.length || !('IntersectionObserver' in window)) { return; }
+  var map = {};
+  for (var i = 0; i < links.length; i++) {
+    var id = links[i].getAttribute('href').slice(1);
+    var sec = document.getElementById(id);
+    if (sec) { map[id] = links[i]; }
+  }
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      var a = map[e.target.id];
+      if (!a) { return; }
+      if (e.isIntersecting) {
+        for (var k in map) { map[k].style.color = ''; }
+        a.style.color = 'var(--fg)';
+      }
+    });
+  }, {rootMargin: '-45% 0px -50% 0px'});
+  for (var id in map) { io.observe(document.getElementById(id)); }
+})();
+</script>
+
+
+</body></html>

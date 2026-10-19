@@ -44,7 +44,7 @@ IS_WIN = sys.platform.startswith("win")
 K = "Command" if IS_MAC else "Control"
 
 APP_NAME = "Prism"
-APP_VERSION = "9.0.0"
+APP_VERSION = "9.1.0"
 APP_BUILD = "2025-12.9"
 # ---------------------------------------------------------------- 运行模式
 # 同一份源码编出两个版本：
@@ -225,6 +225,116 @@ HEAD_BG = "#242424"
 KNOB_BG = "#d0d0d0"
 RULE_BG = "#2e2e2e"
 ON_BG = "#101010"
+
+
+# ---------------------------------------------------------------- 界面三语
+# 中文是源语言，键即界面上的原文；没有译文的控件保持中文。
+APP_LANG = "zh"
+LANG_TABLE = {
+    "en": {
+        # 菜单
+        "文件": "File", "编辑": "Edit", "视图": "View", "工具": "Tools",
+        "帮助": "Help", "关于 / 帮助": "About / Help", "快捷键说明": "Shortcuts",
+        "打开官网": "Website", "关闭": "Close",
+        # 工具栏
+        "面板": "UI", "插件": "Plug", "设置": "Prefs",
+        "适应窗口": "Fit", "原始大小": "Actual size",
+        # 面板分区
+        "修图": "Edit", "基本": "Basic", "镜头": "Lens", "人像": "Portrait",
+        "人像 · 高级": "Portrait · Advanced", "曲线": "Curves", "HSL": "HSL",
+        "细节": "Detail", "效果": "Effects", "分屏对比": "Split view",
+        "局部": "Local", "预设": "Presets", "快照": "Snapshots",
+        # 基本滑块
+        "色温": "Temp", "色调": "Tint", "曝光": "Exposure",
+        "对比度": "Contrast", "高光": "Highlights", "阴影": "Shadows",
+        "白色色阶": "Whites", "黑色色阶": "Blacks", "自然饱和度": "Vibrance",
+        "饱和度": "Saturation", "清晰度": "Clarity", "去雾": "Dehaze",
+        "白平衡吸管": "White balance picker",
+        "人像美化": "Retouch", "胶片": "Film", "畸变": "Lens", "对比(B)": "Compare",
+        "裁剪": "Crop", "撤销": "Undo", "重做": "Redo", "对比原图": "Compare",
+        "批量": "Batch", "改名": "Rename", "胶片条": "Filmstrip",
+        "网格": "Grid", "所在文件夹": "Show in folder", "自动色调": "Auto tone",
+        "过曝警告": "Clipping warning", "锁定取色": "Lock picker",
+        "粘贴设置": "Paste settings", "保存 / 另存为": "Save / Save as",
+        "重置全部调整": "Reset all", "复制设置": "Copy settings",
+        "运行": "Run", "重新扫描": "Rescan", "新建插件": "New plugin",
+        "打开插件目录": "Open plugin folder", "重载插件": "Reload",
+        "插件说明": "Plugin help",
+        # 设置窗口
+        "改动立即生效，下次启动保留": "Changes apply immediately and persist",
+        "主题": "Theme", "点一下立即生效": "Click to apply",
+        "深色": "Dark", "高对比": "High contrast", "高对比·描边": "High contrast · outline",
+        "炭橙": "Charcoal", "浅色": "Light", "提示": "Warnings",
+        "拖动滑块时省略暗角与水印（更跟手）": "Skip vignette and watermark while dragging",
+        "过曝 / 欠曝警告": "Clipping warnings", "配置位置": "Config location",
+        "打开配置目录": "Open config folder", "恢复默认设置": "Restore defaults",
+        "语言": "Language",
+        # 状态栏
+        "快速预览（按 1:1 自动换全分辨率）": "Fast preview (1:1 loads full resolution)",
+        "未打开图片": "No image", "就绪": "Ready",
+        "暗": "Sh", "亮": "Hi", "均": "Avg",
+        "人像美化：打开图片后自动识别": "Retouch: auto-detect after opening",
+        "人像美化：等待图像": "Retouch: waiting for image",
+        "人像美化：本图不适用（%s）": "Retouch: not applicable (%s)",
+        "人像美化：本图不适用（黑白照片）": "Retouch: not applicable (monochrome)",
+        "检出 %d 张脸": "%d face(s) found",
+        "未检出人脸": "no face found",
+        "人像美化：%s · 当前未启用": "Retouch: %s · not applied",
+    },
+    "ja": {
+        "文件": "ファイル", "编辑": "編集", "视图": "表示", "工具": "ツール",
+        "帮助": "ヘルプ", "关于 / 帮助": "このアプリについて", "快捷键说明": "ショートカット",
+        "打开官网": "ウェブサイト", "关闭": "閉じる",
+        "面板": "UI", "插件": "Plug", "设置": "設定",
+        "适应窗口": "フィット", "原始大小": "100%",
+        "修图": "編集", "基本": "基本", "镜头": "レンズ", "人像": "人物",
+        "人像 · 高级": "人物 · 詳細", "曲线": "カーブ", "HSL": "HSL",
+        "细节": "ディテール", "效果": "効果", "分屏对比": "分割比較",
+        "局部": "ローカル", "预设": "プリセット", "快照": "スナップショット",
+        "色温": "色温度", "色调": "色合い", "曝光": "露出",
+        "对比度": "コントラスト", "高光": "ハイライト", "阴影": "シャドウ",
+        "白色色阶": "ホワイト", "黑色色阶": "ブラック", "自然饱和度": "自然な彩度",
+        "饱和度": "彩度", "清晰度": "クラリティ", "去雾": "かすみ除去",
+        "白平衡吸管": "ホワイトバランス",
+        "人像美化": "人物補正", "胶片": "フィルム", "畸变": "歪み", "对比(B)": "比較",
+        "裁剪": "トリミング", "撤销": "元に戻す", "重做": "やり直す",
+        "对比原图": "元画像と比較", "批量": "バッチ", "改名": "名前変更",
+        "胶片条": "フィルムストリップ", "网格": "グリッド",
+        "所在文件夹": "フォルダを開く", "自动色调": "自動トーン",
+        "过曝警告": "白飛び警告", "锁定取色": "スポイト固定",
+        "粘贴设置": "設定を貼り付け", "保存 / 另存为": "保存 / 別名保存",
+        "重置全部调整": "全調整をリセット", "复制设置": "設定をコピー",
+        "运行": "実行", "重新扫描": "再スキャン", "新建插件": "新規プラグイン",
+        "打开插件目录": "プラグインフォルダ", "重载插件": "再読み込み",
+        "插件说明": "プラグインの説明",
+        "改动立即生效，下次启动保留": "変更は即時反映・次回も保持",
+        "主题": "テーマ", "点一下立即生效": "クリックで適用",
+        "深色": "ダーク", "高对比": "高コントラスト", "高对比·描边": "高コントラスト・輪郭",
+        "炭橙": "チャコール", "浅色": "ライト", "提示": "警告",
+        "拖动滑块时省略暗角与水印（更跟手）": "ドラッグ中は周辺減光と透かしを省略",
+        "过曝 / 欠曝警告": "白飛び・黒つぶれ警告", "配置位置": "設定の場所",
+        "打开配置目录": "設定フォルダ", "恢复默认设置": "初期設定に戻す",
+        "语言": "言語",
+        "快速预览（按 1:1 自动换全分辨率）": "高速プレビュー（1:1 で全解像度）",
+        "未打开图片": "画像なし", "就緒": "準備完了", "就绪": "準備完了",
+        "暗": "暗", "亮": "明", "均": "平均",
+        "人像美化：打开图片后自动识别": "人物補正：画像を開くと自動認識",
+        "人像美化：等待图像": "人物補正：画像を待機中",
+        "人像美化：本图不适用（%s）": "人物補正：この画像には不適用（%s）",
+        "人像美化：本图不适用（黑白照片）": "人物補正：この画像には不適用（モノクロ）",
+        "检出 %d 张脸": "%d 件の顔を検出",
+        "未检出人脸": "顔は未検出",
+        "人像美化：%s · 当前未启用": "人物補正：%s · 未適用",
+    },
+}
+
+
+def _tr(text):
+    """把界面原文翻成当前语言；没有译文就原样返回。"""
+    if not text or APP_LANG == "zh":
+        return text
+    return LANG_TABLE.get(APP_LANG, {}).get(text, text)
+
 
 # ---------------------------------------------------------------- 设计令牌
 # 间距统一走 4 的倍数：以前 px(9)/px(11)/px(17) 这类奇数散落各处，收进这里。
@@ -1406,7 +1516,9 @@ class _QpeRoundButton(tk.Canvas):
         redraw = False
         for k, v in kw.items():
             if k == "text":
-                self._text = v; redraw = True
+                self._text = v
+                self._measure()          # 英文/日文比中文宽，必须重新量
+                redraw = True
             elif k == "state":
                 self._state = v; redraw = True
             elif k == "bg":
@@ -2422,6 +2534,11 @@ class QPEApp(_BASE):
         self.b_stop = False
         self.theme = self._peek_theme()
         _apply_palette(self.theme)
+        global APP_LANG
+        self.lang = self._peek_setting("lang", "zh")
+        if self.lang not in ("zh", "en", "ja"):
+            self.lang = "zh"
+        APP_LANG = self.lang
         self.theme_btn = None
         self.title(APP_TITLE)
         self._apply_icon()
@@ -3095,6 +3212,7 @@ class QPEApp(_BASE):
 
         self._build_cropbar()
         self._build_panel()
+        self._apply_lang()
         self._build_strip()
 
         if _DND_OK:
@@ -6079,7 +6197,9 @@ class QPEApp(_BASE):
         except Exception:
             mean = 0.0
         # 面板只有约 221 逻辑像素宽，长句必然折行错位；改成三段短读数
-        lbl.configure(text="暗%5.2f%%   亮%5.2f%%   均%4.0f" % (
+        _d, _b, _m = _tr("暗"), _tr("亮"), _tr("均")
+        lbl.configure(text=(_d + "%5.2f%%   " + _b + "%5.2f%%   "
+                             + _m + "%4.0f") % (
             min(100.0, dark * 100.0 / total),
             min(100.0, bright * 100.0 / total), mean),
             fg=("#ff8a6b" if (dark > total * 0.02 or bright > total * 0.02)
@@ -6874,18 +6994,18 @@ class QPEApp(_BASE):
         self._ai_status_sig = sig
         try:
             if self.doc is None:
-                lbl.configure(text="人像美化：打开图片后自动识别")
+                lbl.configure(text=_tr("人像美化：打开图片后自动识别"))
                 return
             src = self._view_image()
             if src is None:
-                lbl.configure(text="人像美化：等待图像")
+                lbl.configure(text=_tr("人像美化：等待图像"))
                 return
             ok, why = _beauty_guard(src)
             if not ok:
-                lbl.configure(text="人像美化：本图不适用（%s）" % why)
+                lbl.configure(text=_tr("人像美化：本图不适用（%s）") % why)
                 return
             if _is_grayish(src):
-                lbl.configure(text="人像美化：本图不适用（黑白照片）")
+                lbl.configure(text=_tr("人像美化：本图不适用（黑白照片）"))
                 return
             skin = _skin_mask(src, 4)
             ok, why = _beauty_guard(src, skin)
@@ -6899,12 +7019,12 @@ class QPEApp(_BASE):
                                  ("瘦脸", "skin_slim"), ("大眼", "skin_eyes"))
                   if a.get(k)]
             if not on:
-                head = "检出 %d 张脸" % len(faces) if faces else "未检出人脸"
-                lbl.configure(text="人像美化：%s · 当前未启用" % head)
+                head = (_tr("检出 %d 张脸") % len(faces)) if faces else _tr("未检出人脸")
+                lbl.configure(text=_tr("人像美化：%s · 当前未启用") % head)
                 return
             parts = []
             if faces:
-                parts.append("检出 %d 张脸" % len(faces))
+                parts.append(_tr("检出 %d 张脸") % len(faces))
             else:
                 parts.append("未检出人脸（按肤色处理）")
             detail = " ".join("%s%.0f" % (n, a.get(k, 0)) for n, k in
@@ -7308,6 +7428,89 @@ class QPEApp(_BASE):
         n = max(1, int(round(abs(units) * 3)))
         self.pcan.yview_scroll(-n if units > 0 else n, "units")
         return "break"
+
+    def _apply_lang(self):
+        """把界面文字切换成当前语言（保留原文，可来回切换）。"""
+        if True:
+            def do_widget(w):
+                for ch in w.winfo_children():
+                    cls = ""
+                    try:
+                        cls = ch.winfo_class()
+                    except Exception:
+                        continue
+                    if cls == "Menu":
+                        try:
+                            last = ch.index("end")
+                        except Exception:
+                            last = None
+                        if last is not None:
+                            for i in range(int(last) + 1):
+                                try:
+                                    label = ch.entrycget(i, "label")
+                                except Exception:
+                                    continue
+                                if not label:
+                                    continue
+                                store = getattr(ch, "_orig_labels", None)
+                                if store is None:
+                                    store = {}
+                                    ch._orig_labels = store
+                                if i not in store:
+                                    store[i] = label
+                                try:
+                                    ch.entryconfigure(i, label=_tr(store[i]))
+                                except Exception:
+                                    pass
+                    elif isinstance(ch, _QpeRoundButton):
+                        # 自绘圆角按钮：文字存在 _text 里，不是 Tk 的 text 选项
+                        orig = getattr(ch, "_orig_text", None)
+                        if orig is None:
+                            orig = ch._text
+                            try:
+                                ch._orig_text = orig
+                            except Exception:
+                                pass
+                        try:
+                            ch.configure(text=_tr(orig))
+                        except Exception:
+                            pass
+                    elif cls in ("Label", "Button", "Checkbutton",
+                                 "Radiobutton", "Menubutton"):
+                        try:
+                            cur = ch.cget("text")
+                        except Exception:
+                            cur = None
+                        if cur:
+                            orig = getattr(ch, "_orig_text", None)
+                            if orig is None:
+                                orig = cur
+                                try:
+                                    ch._orig_text = cur
+                                except Exception:
+                                    pass
+                            try:
+                                ch.configure(text=_tr(orig))
+                            except Exception:
+                                pass
+                    do_widget(ch)
+            do_widget(self)
+            # 文字变了按钮宽度也变了：先重新量一遍，再让父容器重新分配空间。
+            # 只调 _layout_bar 不够 —— pack 会把组压到旧宽度（实测英文被裁成 40px）。
+            try:
+                for g, _p in getattr(self, "bar_groups", []):
+                    g.pack_forget()
+                self.update_idletasks()
+                for g, _p in getattr(self, "bar_groups", []):
+                    g.pack(side="left")
+                self.update_idletasks()
+                self._layout_bar(force=True)
+            except Exception:
+                pass
+            try:
+                self.update_idletasks()
+            except Exception:
+                pass
 
     def _sync_panel_btn(self):
         """面板开关要有选中态，否则看不出当前是开还是关。"""
@@ -7989,6 +8192,15 @@ class QPEApp(_BASE):
         return new
 
     # ---------------------------------------------------------------- 主题
+
+    def _peek_setting(self, key, default=None):
+        """在 load_settings 之前读一个设置项（只读，不建容器）。"""
+        try:
+            with open(self._settings_path(), "r", encoding="utf-8") as fh:
+                data = json.load(fh)
+            return data.get(key, default)
+        except Exception:
+            return default
 
     def _peek_theme(self):
         """建界面前就要知道用哪套配色，所以直接读一次设置文件。"""

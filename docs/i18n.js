@@ -190,7 +190,7 @@ window.PRISM_I18N = {
 "）。": ").",
 "完整版和看图版有什么区别": "Full version vs viewer",
 "看图版没有修图面板，只保留浏览、缩放、旋转、幻灯片、胶片条与网格，体积更小；其余格式支持与渲染性能完全一致。": "The viewer has no editing panel — only browsing, zoom, rotation, slideshow, filmstrip and grid, in a smaller package. Format support and rendering speed are identical.",
-"为什么没有系统级全屏": "Why not system-level fullscreen",
+"为什么没有系统级全屏": "Why not system fullscreen",
 "F11 全屏在部分机器上显示不全，所以做成了兼容模式：无边框最大化 + Esc 退出。": "F11 fullscreen renders incorrectly on some machines, so Prism uses a compatible mode: borderless maximise with Esc to leave.",
 "完整的 Markdown 说明见": "Full Markdown docs:",
 "README.md": "README.md",
@@ -252,7 +252,10 @@ window.PRISM_I18N = {
 "Prism {v} · 简约图片查看器 ·": "Prism {v} · minimalist image viewer ·",
 "Get-FileHash .\\Prism-Setup-{v}.exe -Algorithm SHA256": "Get-FileHash .\\Prism-Setup-{v}.exe -Algorithm SHA256",
 "展开": "Expand",
-"收起": "Collapse"
+"收起": "Collapse",
+"跳到主要内容": "Skip to content",
+"中文": "中文",
+"日本語": "日本語"
 },
 "ja": {
 "Prism — 简约图片查看器": "Prism — ミニマルな画像ビューア",
@@ -506,7 +509,10 @@ window.PRISM_I18N = {
 "Prism {v} · 简约图片查看器 ·": "Prism {v} · ミニマルな画像ビューア ·",
 "Get-FileHash .\\Prism-Setup-{v}.exe -Algorithm SHA256": "Get-FileHash .\\Prism-Setup-{v}.exe -Algorithm SHA256",
 "展开": "開く",
-"收起": "閉じる"
+"收起": "閉じる",
+"跳到主要内容": "本文へスキップ",
+"中文": "中文",
+"日本語": "日本語"
 }
 };
 window.PRISM_LANGS = [["zh", "中文"], ["en", "EN"], ["ja", "日本語"]];

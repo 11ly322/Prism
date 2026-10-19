@@ -25,6 +25,14 @@ if ($LASTEXITCODE -ne 0) {
     exit 1
 }
 
+# ---- 三语文档门禁：语言切换链接、相对链接、代码块、生成标记 ----
+Write-Host '-- 0/4 三语文档自检'
+& $py (Join-Path $root 'tools\docscheck.py')
+if ($LASTEXITCODE -ne 0) {
+    Write-Host '三语文档自检失败：看上面哪份文档的链接/标记不对' -ForegroundColor Red
+    exit 1
+}
+
 # ---- 只做链接自检，不打包：提交前先跑这个 ----
 if ($CheckOnly) {
     $pg = Join-Path $root 'docs\index.html'

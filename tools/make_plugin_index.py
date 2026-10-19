@@ -1,16 +1,17 @@
 # -*- coding: utf-8 -*-
-"""从 plugins/index.json + 各插件源码生成 README 索引，并同步到 docs/。
+"""从 plugins/index.json + 各插件源码生成三语 README 索引，并同步到 docs/。
 
 单一数据源：
   plugins/index.json          官方可安装清单（应用内「插件市场」读它）
   plugins/*.py                自带插件（README 的「自带」表由源码元信息生成）
-  plugins/README.md           两块表格由本脚本生成，别手改表格内容
+  plugins/README{,.en,.ja}.md 三份文档的两块表格由本脚本生成，别手改表格内容
   docs/plugins/index.json     发布到网页的副本，应用从 Pages 拉取
 
 跑法：
     python tools/make_plugin_index.py           生成 / 更新
     python tools/make_plugin_index.py --check   只检查是否最新（发布门禁用）
 """
+import importlib.machinery
 import importlib.util
 import io
 import json
@@ -19,20 +20,40 @@ import shutil
 import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+APP = os.path.join(ROOT, "src", "Prism.pyw")
 PLUGIN_DIR = os.path.join(ROOT, "plugins")
 DOCS_PLUGINS = os.path.join(ROOT, "docs", "plugins")
-README = os.path.join(PLUGIN_DIR, "README.md")
 INDEX = os.path.join(PLUGIN_DIR, "index.json")
 DOC_INDEX = os.path.join(DOCS_PLUGINS, "index.json")
+LANGS = ("zh", "en", "ja")
+README_FILES = {"zh": "README.md", "en": "README.en.md",
+                "ja": "README.ja.md"}
 BEGIN = "<!-- BEGIN GENERATED %s -->"
 END = "<!-- END GENERATED %s -->"
+HEADERS = {
+    "zh": (
+        "| id | 名称 / 版本 | 参数（控件 · 范围 · 默认） | 说明 | 联网 | 写文件 | 源码 |\n"
+        "| --- | --- | --- | --- | --- | --- | --- |\n",
+        "| id | 名称 / 版本 | 参数摘要 | 说明 | SHA-256（前 12 位） | 安装文件 |\n"
+        "| --- | --- | --- | --- | --- | --- |\n"),
+    "en": (
+        "| id | Name / version | Parameters (control · range · default) | Description | Network | Writes files | Source |\n"
+        "| --- | --- | --- | --- | --- | --- | --- |\n",
+        "| id | Name / version | Parameters | Description | SHA-256 (first 12) | Install file |\n"
+        "| --- | --- | --- | --- | --- | --- |\n"),
+    "ja": (
+        "| id | 名前 / バージョン | パラメータ（コントロール · 範囲 · 既定値） | 説明 | ネットワーク | ファイル書き込み | ソース |\n"
+        "| --- | --- | --- | --- | --- | --- | --- |\n",
+        "| id | 名前 / バージョン | パラメータ | 説明 | SHA-256（先頭 12 桁） | インストールファイル |\n"
+        "| --- | --- | --- | --- | --- | --- |\n"),
+}
+YESNO = {"zh": ("是", "否"), "en": ("Yes", "No"), "ja": ("はい", "いいえ")}
 
-BUILTIN_HEAD = (
-    "| id | 名称 / 版本 | 参数（控件 · 范围 · 默认） | 说明 | 联网 | 写文件 | 源码 |\n"
-    "| --- | --- | --- | --- | --- | --- | --- |\n")
-CATALOG_HEAD = (
-    "| id | 名称 / 版本 | 参数摘要 | 说明 | SHA-256（前 12 位） | 安装文件 |\n"
-    "| --- | --- | --- | --- | --- | --- |\n")
+
+def app_lang_table():
+    """读 Prism 的 LANG_TABLE，用来把自带插件名翻成 en / ja。"""
+    mod = importlib.machinery.SourceFileLoader("idx_app", APP).load_module()
+    return mod.LANG_TABLE
 
 
 def load_plugin(path):
@@ -69,29 +90,31 @@ def fmt_params(params):
     return " · ".join(parts) or "—"
 
 
-def yes_no(flag):
-    return "是" if flag else "否"
+def yes_no(flag, lang):
+    return YESNO[lang][0] if flag else YESNO[lang][1]
 
 
-def scan_builtin():
+def scan_builtin(lang, names):
     rows, seen = [], set()
     for fn in sorted(os.listdir(PLUGIN_DIR)):
         if not fn.endswith(".py") or fn.startswith("_"):
             continue
-        path = os.path.join(PLUGIN_DIR, fn)
-        mod = load_plugin(path)
+        mod = load_plugin(os.path.join(PLUGIN_DIR, fn))
         meta = getattr(mod, "PLUGIN", None) or {}
         pid = str(meta.get("id") or os.path.splitext(fn)[0])
         if pid in seen:
             raise SystemExit("自带插件 id 重复：%s" % pid)
         seen.add(pid)
         name = str(meta.get("name") or pid)
+        if lang != "zh":
+            name = names.get(lang, {}).get(name, name)
         ver = str(meta.get("version") or "")
         desc = str(meta.get("description")
                    or getattr(mod, "PLUGIN_DESC", "") or "—")
         rows.append("| %s | %s %s | %s | %s | %s | %s | `%s` |" % (
             pid, name, ver, fmt_params(getattr(mod, "PARAMS", [])), desc,
-            yes_no(meta.get("network")), yes_no(meta.get("writes_files")), fn))
+            yes_no(meta.get("network"), lang),
+            yes_no(meta.get("writes_files"), lang), fn))
     return rows
 
 
@@ -127,9 +150,9 @@ def validate_catalog(data):
             loc = e.get(field)
             if not isinstance(loc, dict):
                 raise SystemExit("%s 的 %s 必须是 {zh,en,ja}" % (pid, field))
-            for lang in ("zh", "en", "ja"):
-                if not str(loc.get(lang) or "").strip():
-                    raise SystemExit("%s 的 %s 缺 %s" % (pid, field, lang))
+            for lg in LANGS:
+                if not str(loc.get(lg) or "").strip():
+                    raise SystemExit("%s 的 %s 缺 %s" % (pid, field, lg))
         src = e.get("source")
         if not src:
             raise SystemExit("%s 缺 source（仓库内源码路径）" % pid)
@@ -146,16 +169,16 @@ def validate_catalog(data):
     return entries
 
 
-def scan_catalog(entries):
+def scan_catalog(entries, lang):
     rows = []
     for e in entries:
         mod = load_plugin(os.path.join(ROOT, e["source"]))
-        name = str(e["name"].get("zh") or e["id"])
+        name = str(e["name"].get(lang) or e["name"].get("zh") or e["id"])
         ver = str(e.get("version") or "")
         rows.append("| %s | %s %s | %s | %s | `%s…` | `%s` |" % (
             e["id"], name, ver, fmt_params(getattr(mod, "PARAMS", [])),
-            str(e["description"].get("zh") or "—"), e["sha256"][:12],
-            os.path.basename(e["url"])))
+            str(e["description"].get(lang) or e["description"].get("zh") or "—"),
+            e["sha256"][:12], os.path.basename(e["url"])))
     return rows
 
 
@@ -173,16 +196,22 @@ def main():
     check = "--check" in sys.argv
     data = json.load(io.open(INDEX, encoding="utf-8"))
     entries = validate_catalog(data)
-    builtin_rows = scan_builtin()
-    catalog_rows = scan_catalog(entries)
+    names = app_lang_table()
 
-    src = io.open(README, encoding="utf-8").read()
-    out = replace_block(src, "builtin", builtin_rows, BUILTIN_HEAD)
-    out = replace_block(out, "catalog", catalog_rows, CATALOG_HEAD)
+    changed, out = [], {}
+    for lang in LANGS:
+        path = os.path.join(PLUGIN_DIR, README_FILES[lang])
+        if not os.path.isfile(path):
+            raise SystemExit("缺少文档：%s" % path)
+        src = io.open(path, encoding="utf-8").read()
+        body = replace_block(src, "builtin", scan_builtin(lang, names),
+                             HEADERS[lang][0])
+        body = replace_block(body, "catalog", scan_catalog(entries, lang),
+                             HEADERS[lang][1])
+        out[path] = body
+        if body != src:
+            changed.append(README_FILES[lang])
 
-    changed = []
-    if out != src:
-        changed.append("plugins/README.md")
     doc_bytes = io.open(INDEX, "rb").read()
     os.makedirs(DOCS_PLUGINS, exist_ok=True)
     old_doc = open(DOC_INDEX, "rb").read() if os.path.exists(DOC_INDEX) else b""
@@ -193,16 +222,17 @@ def main():
         if changed:
             print("索引不是最新：%s" % ", ".join(changed))
             return 1
-        print("索引最新：自带 %d 个 / 官方清单 %d 个" % (
-            len(builtin_rows), len(catalog_rows)))
+        print("索引最新：自带 %d 个 / 官方清单 %d 个 / 文档 %d 份" % (
+            len(scan_builtin("zh", names)), len(entries), len(LANGS)))
         return 0
 
-    if "plugins/README.md" in changed:
-        io.open(README, "w", encoding="utf-8", newline="\n").write(out)
+    for path, body in out.items():
+        if body != io.open(path, encoding="utf-8").read():
+            io.open(path, "w", encoding="utf-8", newline="\n").write(body)
     if "docs/plugins/index.json" in changed:
         shutil.copyfile(INDEX, DOC_INDEX)
     print("已生成：自带 %d 个 / 官方清单 %d 个%s" % (
-        len(builtin_rows), len(catalog_rows),
+        len(scan_builtin("zh", names)), len(entries),
         ("（更新 " + ", ".join(changed) + "）") if changed else "（无变化）"))
     return 0
 

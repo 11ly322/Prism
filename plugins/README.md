@@ -1,3 +1,5 @@
+**中文** · [English](README.en.md) · [日本語](README.ja.md)
+
 # Prism 插件索引
 
 12 个自带插件 + 一份官方可安装清单。清单 `index.json` 同时是应用内「插件市场」的数据源；
@@ -56,6 +58,63 @@
 
 安装只解决「下载到的东西没被改过」（SHA-256），**不解决作者可信不可信**。
 插件声明的 `network` / `writes_files` 会在确认框里显示，但那只是作者自己填的声明。
+
+## 发布插件到市场
+
+官方市场读 `plugins/index.json`。从写插件到用户能在市场里看到，一共六步：
+
+1. **写插件**：单文件放 `docs/plugins/<文件名>.py`，文件名用 ASCII。
+   `PLUGIN` 里 `id` 唯一、`api: 2`，`network` / `writes_files` 如实填写；
+   `PARAMS` 用 `slider` / `select` / `checkbox` / `text`。
+2. **本机自测**：把 `.py` 放进插件目录（插件窗口顶部有完整路径），运行、调参、另存；
+   用 `--plugin-dev` 启动可以看 `logs/plugins.log` 里的加载/执行耗时。
+3. **算 SHA-256**（必须与文件逐字节一致）：
+   ~~~powershell
+   Get-FileHash docs\plugins\myplugin.py -Algorithm SHA256
+   ~~~
+4. **在 `plugins/index.json` 里加一项**（`plugins` 数组，schema 1）：
+
+   ~~~json
+   {
+     "id": "myplugin",
+     "name": {"zh": "我的插件", "en": "My plugin", "ja": "マイプラグイン"},
+     "version": "1.0",
+     "api": 2,
+     "author": "你的名字",
+     "description": {"zh": "一句话说明", "en": "One line", "ja": "ひとこと"},
+     "network": false,
+     "writes_files": false,
+     "url": "https://11ly322.github.io/Prism/plugins/myplugin.py",
+     "sha256": "<上一步的 64 位小写十六进制>",
+     "source": "docs/plugins/myplugin.py"
+   }
+   ~~~
+
+   `url` 的文件名必须和 `source` 一致；官方清单固定用 Pages 地址。
+5. **生成索引并自检**：
+
+   ~~~bash
+   python tools/make_plugin_index.py          # 更新 README 三语表格 + docs 副本
+   python tools/make_plugin_index.py --check  # 必须通过
+   ~~~
+
+   它会校验 SHA-256、三语字段、id 唯一、api 与 URL，并确认 `docs/plugins/index.json`
+   与仓库版本一致。发布门禁也会跑这一步。
+6. **提 PR**：源码、`plugins/index.json`、`plugins/README.md`（三语三份）、
+   `docs/plugins/index.json` 一起提交。合并后 Pages 部署约 1 分钟生效；
+   应用里点「刷新」就能看到新插件，已装旧版的用户会看到「可更新」。
+
+更新一个已发布的插件：改 `docs/plugins/` 源码 → 版本号 +1（`PLUGIN.version` 与
+`index.json` 的 `version` 同步）→ 重算 SHA-256 → 跑生成脚本。市场按版本号判断可更新。
+
+**自己维护一份市场（不进官方仓库）**：
+
+- 把同样格式的 `index.json` 放到任意 http(s) 静态托管（每个条目仍必须带 SHA-256）；
+- 用户在**启动 Prism 之前**设置环境变量 `PRISM_PLUGIN_CATALOG` 指向它；
+- 不需要改代码，也不需要重新打包。
+
+安全底线：清单本身不执行任何代码；安装时只解析 AST、强制比对 SHA-256，
+确认后才写盘。
 
 ## 参数会被记住（9.4.0）
 

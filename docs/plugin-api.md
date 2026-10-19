@@ -1,3 +1,5 @@
+**中文** · [English](plugin-api.en.md) · [日本語](plugin-api.ja.md)
+
 # 插件 API（api = 2）
 
 ## 最小插件

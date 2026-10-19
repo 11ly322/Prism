@@ -65,7 +65,7 @@ IS_WIN = sys.platform.startswith("win")
 K = "Command" if IS_MAC else "Control"
 
 APP_NAME = "Prism"
-APP_VERSION = "9.5.0"
+APP_VERSION = "9.5.1"
 APP_BUILD = "2025-12.9"
 # ---------------------------------------------------------------- 运行模式
 # 同一份源码编出两个版本：
@@ -10579,21 +10579,28 @@ def run(img, **params):
         self._watch_job = self.after(1500, self._watch_plugins)
 
     def _set_plugin_enabled(self, item, enabled=True):
-        """启用/禁用插件：就是把文件在 .py 与 .py.disabled 之间改名。"""
+        """启用/禁用插件：就是把文件在 .py 与 .py.disabled 之间改名。
+
+        item["file"] 可能是 "gray.py"（已禁用列表给的名字）也可能是
+        "gray.py.disabled"（直接传禁用文件），两种都要能接住。之前启用时
+        无条件砍掉末尾 9 个字符，把 "gray.py" 砍成 "gr"，于是静默失败。
+        """
         folder = _plugin_dir()
         fn = item.get("file") or ""
+        base = fn[:-len(".disabled")] if fn.endswith(".disabled") else fn
+        if not base.endswith(".py"):
+            base += ".py"
         try:
             if enabled:
-                src = os.path.join(folder, fn)
-                dst = os.path.join(folder, fn[:-len(".disabled")])
+                src = os.path.join(folder, base + ".disabled")
+                dst = os.path.join(folder, base)
             else:
-                base = fn
                 src = os.path.join(folder, base)
-                dst = src + ".disabled"
+                dst = os.path.join(folder, base + ".disabled")
             if os.path.exists(src):
                 os.replace(src, dst)
-                _plugin_log("plugin=%s %s" % (fn, "enabled" if enabled else "disabled"),
-                            plugin_id=os.path.splitext(fn)[0], stage="toggle")
+                _plugin_log("plugin=%s %s" % (base, "enabled" if enabled else "disabled"),
+                            plugin_id=os.path.splitext(base)[0], stage="toggle")
         except Exception as exc:
             self._flash("插件切换失败：%s" % exc, 3200)
             return
@@ -10605,7 +10612,7 @@ def run(img, **params):
                 self.show_plugins()
         except Exception:
             pass
-        self._flash((_tr("已启用 ") if enabled else _tr("已禁用 ")) + fn, 2200)
+        self._flash((_tr("已启用 ") if enabled else _tr("已禁用 ")) + base, 2200)
 
     def _reload_plugins(self, auto=False):
         """重新加载插件目录并刷新界面（热重载与手动重载共用）。"""

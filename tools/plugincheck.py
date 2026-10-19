@@ -107,6 +107,28 @@ def main():
     ok("恢复默认会清空记忆", app._plugin_params(item, spec).get("amount") == 50
        and "gray" not in app.plug_params)
 
+    # 禁用 -> 重新启用（回归：启用时把 gray.py 砍成 gr，静默失败）
+    app._scan_plugins()
+    gray = next(p for p in app.plugins if p["id"] == "gray")
+    app._set_plugin_enabled(gray, False)
+    app.update()
+    ok("禁用后改名为 .disabled",
+       os.path.exists(os.path.join(tmp, "gray.py.disabled"))
+       and not os.path.exists(os.path.join(tmp, "gray.py")))
+    ok("禁用后插件列表为空", not any(p["id"] == "gray" for p in app.plugins))
+    # 走插件窗口的实际路径：已禁用列表里传的是 "gray.py"
+    app._set_plugin_enabled({"file": "gray.py"}, True)
+    app.update()
+    ok("重新启用恢复 .py",
+       os.path.exists(os.path.join(tmp, "gray.py"))
+       and not os.path.exists(os.path.join(tmp, "gray.py.disabled")))
+    ok("重新启用后能扫描到", any(p["id"] == "gray" for p in app.plugins))
+    # 直接传 .disabled 全名也要能接住
+    app._set_plugin_enabled({"file": "gray.py"}, False)
+    app._set_plugin_enabled({"file": "gray.py.disabled"}, True)
+    ok("传 .disabled 全名也能启用",
+       os.path.exists(os.path.join(tmp, "gray.py")))
+
     # 安装窗口能打开（只建界面，不发网络请求）
     tops_before = [w for w in app.winfo_children() if isinstance(w, tk.Toplevel)]
     app.show_plugin_install()

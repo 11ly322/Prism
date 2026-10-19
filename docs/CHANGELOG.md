@@ -4,6 +4,34 @@
 > 已一并改为 Prism，功能与时间线不变。代码里的 QPEApp / _QpeSlider 等内部
 > 标识符与旧配置迁移路径保持原名，改动会破坏兼容。
 
+## v9.5.1  （修复插件重新启用 + 三语文档 + 发布到市场指南）
+
+### 修复：插件禁用后无法重新启用
+
+- 根因：启用路径对 `item["file"]` 无条件砍掉末尾 9 个字符（`.disabled`），
+  但已禁用列表传进来的是 `gray.py`，于是变成 `gr`，找不到文件就静默失败。
+- 修法：先判断是否带 `.disabled` 后缀，兼容 `gray.py` 与 `gray.py.disabled` 两种入参；
+  日志与提示统一用规范化后的文件名。
+- 回归：`tools/plugincheck.py` 新增 5 项（禁用改名、列表清空、启用恢复、
+  启用后能扫描到、传 `.disabled` 全名也能启用），全过。
+
+### 三语文档
+
+- `plugins/README.md` 增加 English / 日本語 版本：`README.en.md`、`README.ja.md`，
+  三份文档顶部都有语言切换；`tools/make_plugin_index.py` 现在同时生成三份
+  README 的表格（列头、能力、自带插件名按语言本地化；插件参数标签保持作者原文）。
+- `docs/plugin-api.md` 增加 `plugin-api.en.md`、`plugin-api.ja.md`，schema、
+  AST 校验、SHA-256、参数记忆等说明全部三语。
+- 新增 `tools/docscheck.py`：检查语言切换链接、相对文档链接、代码块配对、
+  生成标记与三份文档章节数是否一致；已接进 `make_release.ps1` 发布门禁。
+
+### 发布到市场指南（三语）
+
+- `plugins/README` 新增「发布插件到市场 / Publishing to the marketplace」：
+  写源码 → 本机自测 → 算 SHA-256 → 写 `plugins/index.json` 条目 → 跑生成脚本
+  → 提 PR；另附更新插件的版本流程与「自建市场（PRISM_PLUGIN_CATALOG）」做法。
+- 指南在中文、英文、日文三份文档里同步存在。
+
 ## v9.5.0  （插件市场：官方 index.json 清单 + 应用内浏览安装）
 
 ### 插件市场

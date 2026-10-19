@@ -111,7 +111,7 @@ if ($setup) {
         $html = [regex]::Replace($html, '<code>[0-9A-Fa-f]{64}</code>', "<code>$sha</code>")
         $html = [regex]::Replace($html, '>\d+\.\d MB · Windows 10/11', ">$sizeMb MB · Windows 10/11")
         $html = [regex]::Replace($html, 'releases/download/v\d+\.\d+\.\d+/', "releases/download/v$ver/")
-        $html = [regex]::Replace($html, '(Prism-(?:Viewer-Setup|Viewer|Portable|macOS|Linux|Setup)-)\d+\.\d+\.\d+(\.(?:exe|zip))', '$1' + $ver + '$2')
+        $html = [regex]::Replace($html, '(Prism-(?:Viewer-Setup|Viewer|Portable|macOS|Linux|Setup)-)\d+\.\d+\.\d+(\.(?:exe|zip))', '${1}' + $ver + '${2}')
         Set-Content -LiteralPath $page -Value $html -Encoding UTF8 -NoNewline
         Write-Host ("   页面已更新 SHA " + $sha.Substring(0, 12) + " / " + $sizeMb + " MB")
     }

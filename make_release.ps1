@@ -100,40 +100,93 @@ if ((Test-Path (Join-Path $root 'Prism.exe')) -and (Test-Path (Join-Path $root '
     Write-Host '   !! 未找到 onedir 构建，跳过便携版'
 }
 
-# ---- 发布到 GitHub Release（仓库不再保存二进制）----
-$setup = Get-ChildItem (Join-Path $root 'docs') -Filter ("Prism-Setup-{0}.exe" -f $ver) -ErrorAction SilentlyContinue | Select-Object -First 1
-if ($setup) {
-    $sha = (Get-FileHash $setup.FullName -Algorithm SHA256).Hash
-    $sizeMb = "{0:N1}" -f ($setup.Length / 1MB)
-    $page = Join-Path $root 'docs\index.html'
-    if (Test-Path $page) {
-        $html = Get-Content $page -Raw -Encoding UTF8
-        $html = [regex]::Replace($html, '<code>[0-9A-Fa-f]{64}</code>', "<code>$sha</code>")
-        $html = [regex]::Replace($html, '>\d+\.\d MB · Windows 10/11', ">$sizeMb MB · Windows 10/11")
-        $html = [regex]::Replace($html, 'releases/download/v\d+\.\d+\.\d+/', "releases/download/v$ver/")
-        $html = [regex]::Replace($html, '(Prism-(?:Viewer-Setup|Viewer|Portable|macOS|Linux|Setup)-)\d+\.\d+\.\d+(\.(?:exe|zip))', '${1}' + $ver + '${2}')
-        Set-Content -LiteralPath $page -Value $html -Encoding UTF8 -NoNewline
-        Write-Host ("   页面已更新 SHA " + $sha.Substring(0, 12) + " / " + $sizeMb + " MB")
-    }
-    $tag = "v$ver"
-    & git -C $root tag -f $tag | Out-Null
-    & git -C $root push origin $tag --force | Out-Null
-    $assets = Get-ChildItem (Join-Path $root 'docs') -File |
-              Where-Object { $_.Extension -in '.exe', '.zip' } |
-              ForEach-Object { $_.FullName }
-    $notes = "Prism $ver — 详见 CHANGELOG.md"
-    if ($assets.Count -gt 0) {
-        $existing = (& gh release view $tag --json tagName 2>$null)
-        if ($LASTEXITCODE -eq 0 -and $existing) {
-            & gh release upload $tag @assets --clobber
-        } else {
-            & gh release create $tag --title "Prism $ver" --notes $notes @assets
+# ---- 发布到 GitHub Release（仓库不保存二进制）----
+$page = Join-Path $root 'docs\index.html'
+$pageBak = "$page.bak"
+$pushed = $false
+try {
+    $setup = Get-ChildItem (Join-Path $root 'docs') -File |
+             Where-Object { $_.Name -eq ("Prism-Setup-{0}.exe" -f $ver) } |
+             Select-Object -First 1
+    if ($setup) {
+        $sha = (Get-FileHash $setup.FullName -Algorithm SHA256).Hash
+        $sizeMb = "{0:N1}" -f ($setup.Length / 1MB)
+        if (Test-Path $page) {
+            Copy-Item $page $pageBak -Force          # 自检失败时回滚用
+            $html = Get-Content $page -Raw -Encoding UTF8
+            $html = [regex]::Replace($html, '<code>[0-9A-Fa-f]{64}</code>', "<code>$sha</code>")
+            $html = [regex]::Replace($html, '>\d+\.\d+ MB · Windows 10/11', ">$sizeMb MB · Windows 10/11")
+            # 链接与文件名里的版本号（用 ${1} 明确分组，避免 $1 与版本号粘连）
+            $html = [regex]::Replace($html, 'releases/download/v\d+\.\d+\.\d+/', "releases/download/v$ver/")
+            $html = [regex]::Replace($html,
+                '(Prism-(?:Viewer-Setup|Viewer|Portable|macOS|Linux|Setup)-)\d+\.\d+\.\d+(\.(?:exe|zip))',
+                '${1}' + $ver + '${2}')
+            # 页面上显示的版本号（品牌、meta、页脚）
+            $html = [regex]::Replace($html, '<i>\d+\.\d+\.\d+</i>', "<i>$ver</i>")
+            $html = [regex]::Replace($html, '版本 \d+\.\d+\.\d+', "版本 $ver")
+            $html = [regex]::Replace($html, 'Prism \d+\.\d+\.\d+ ·', "Prism $ver ·")
+            Set-Content -LiteralPath $page -Value $html -Encoding UTF8 -NoNewline
+            Write-Host ("   页面已更新 SHA " + $sha.Substring(0, 12) + " / " + $sizeMb + " MB / 版本 $ver")
         }
-        Write-Host ("   已上传 " + $assets.Count + " 个产物到 Release " + $tag)
+        $tag = "v$ver"
+        & git -C $root tag -f $tag 2>&1 | Out-Null
+        & git -C $root push origin $tag --force 2>&1 | Out-Null
+        $assets = Get-ChildItem (Join-Path $root 'docs') -File |
+                  Where-Object { $_.Extension -in '.exe', '.zip' } |
+                  ForEach-Object { $_.FullName }
+        $notes = "Prism $ver — 详见 CHANGELOG.md"
+        if ($assets.Count -gt 0) {
+            $existing = (& gh release view $tag --json tagName 2>$null)
+            if ($LASTEXITCODE -eq 0 -and $existing) {
+                & gh release upload $tag @assets --clobber
+            } else {
+                & gh release create $tag --title "Prism $ver" --notes $notes @assets
+            }
+            if ($LASTEXITCODE -ne 0) {
+                throw ("gh release 失败（退出码 " + $LASTEXITCODE + "）")
+            }
+            Write-Host ("   已上传 " + $assets.Count + " 个产物到 Release " + $tag)
+            $pushed = $true
+        }
+
+        # ---- 自检：页面里每条下载链接都必须 200 ----
+        Start-Sleep -Seconds 3
+        $html = Get-Content $page -Raw -Encoding UTF8
+        $hrefs = [regex]::Matches($html, 'href="(https://github\.com/11ly322/Prism/releases/download/[^"]+)"') |
+                 ForEach-Object { $_.Groups[1].Value } | Sort-Object -Unique
+        $bad = @()
+        foreach ($u in $hrefs) {
+            $code = 0
+            # 资产刚上传后可能短暂 404，重试 5 次、每次间隔 6 秒
+            foreach ($attempt in 1..5) {
+                try {
+                    $r = Invoke-WebRequest -Uri $u -Method Head -UseBasicParsing -MaximumRedirection 5 -TimeoutSec 30
+                    $code = [int]$r.StatusCode
+                } catch {
+                    try { $code = [int]$_.Exception.Response.StatusCode.value__ } catch { $code = 0 }
+                }
+                if ($code -eq 200) { break }
+                Start-Sleep -Seconds 6
+            }
+            if ($code -ne 200) { $bad += ("{0} -> {1}" -f ($u -replace '.*/download/', ''), $code) }
+        }
+        if ($bad.Count -gt 0) {
+            Write-Host '   !! 下载链接自检失败，回滚页面：' -ForegroundColor Red
+            $bad | ForEach-Object { Write-Host ("      " + $_) -ForegroundColor Red }
+            if (Test-Path $pageBak) { Copy-Item $pageBak $page -Force; Write-Host '   页面已回滚到发布前状态' }
+            throw "download links failed self-check"
+        }
+        Write-Host ("   自检通过：" + $hrefs.Count + " 条下载链接全部 200")
     }
-    # 二进制不进仓库
-    Get-ChildItem (Join-Path $root 'docs') -File |
-        Where-Object { $_.Extension -in '.exe', '.zip' } |
-        ForEach-Object { Remove-Item -LiteralPath $_.FullName -Force }
-    Write-Host '   已清理 docs 下的二进制（定位见 GitHub Releases）'
+} catch {
+    Write-Host ("   发布流程出错：" + $_.Exception.Message) -ForegroundColor Red
+    throw
+} finally {
+    if (Test-Path $pageBak) { Remove-Item $pageBak -Force -ErrorAction SilentlyContinue }
+    if ($pushed) {
+        Get-ChildItem (Join-Path $root 'docs') -File |
+            Where-Object { $_.Extension -in '.exe', '.zip' } |
+            ForEach-Object { Remove-Item -LiteralPath $_.FullName -Force }
+        Write-Host '   已清理 docs 下的二进制（定位见 GitHub Releases）'
+    }
 }

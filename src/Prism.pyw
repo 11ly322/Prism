@@ -44,7 +44,7 @@ IS_WIN = sys.platform.startswith("win")
 K = "Command" if IS_MAC else "Control"
 
 APP_NAME = "Prism"
-APP_VERSION = "8.5.3"
+APP_VERSION = "8.5.4"
 APP_BUILD = "2025-12.9"
 # ---------------------------------------------------------------- 运行模式
 # 同一份源码编出两个版本：
@@ -2659,16 +2659,12 @@ class QPEApp(_BASE):
     # ------------------------------------------------------------ 界面
 
     def _mkbtn(self, parent, text, cmd, width=None):
-        b = tk.Button(parent, text=text, command=cmd, font=self.ui_font,
-                      bg=BAR_BG, fg=FG, activebackground=BAR_HOVER,
-                      activeforeground=FG_HI, relief="flat", bd=0,
-                      highlightthickness=0, padx=px(8), pady=px(3),
-                      cursor="hand2", takefocus=0)
-        if width:
-            b.configure(width=width)
-        b.bind("<Enter>", lambda e, w=b: w.configure(bg=BAR_HOVER, fg=FG_HI))
-        b.bind("<Leave>", lambda e, w=b: w.configure(bg=BAR_BG, fg=FG))
-        b.pack(side="left", padx=1, pady=3)
+        # 与面板按钮统一：Canvas 自绘圆角，hover 变色
+        b = _QpeRoundButton(parent, text=text, command=cmd,
+                            font=self.ui_font, bg=BAR_BG, fg=FG,
+                            hover_bg=BAR_HOVER, hover_fg=FG_HI,
+                            padx=8, pady=3, radius=RADIUS_SM)
+        b.pack(side="left", padx=px(1), pady=px(3))
         return b
 
     def _build_cropbar(self):
@@ -2768,6 +2764,14 @@ class QPEApp(_BASE):
         cv = tk.Canvas(parent, width=s, height=s, bg=BAR_BG,
                        highlightthickness=0, bd=0, cursor="hand2")
         cv.pack(side="left", padx=px(1), pady=px(3))
+        # 圆角 hover 底：先铺一层和背景同色的圆角矩形，图标画在它上面
+        r = px(RADIUS_SM)
+        _bg = cv.create_polygon(
+            [r, 0, s - r, 0, s, 0, s, r, s, s - r, s, s, s - r, s,
+             r, s, 0, s, 0, s - r, 0, r, 0, 0],
+            smooth=True, fill=BAR_BG, outline="", tags="rbg")
+        cv.bind("<Enter>", lambda e, c=cv, b=_bg: c.itemconfigure(b, fill=BAR_HOVER))
+        cv.bind("<Leave>", lambda e, c=cv, b=_bg: c.itemconfigure(b, fill=BAR_BG))
         k = s / 26.0
         col = FG
 

@@ -44,7 +44,7 @@ IS_WIN = sys.platform.startswith("win")
 K = "Command" if IS_MAC else "Control"
 
 APP_NAME = "Prism"
-APP_VERSION = "8.5.7"
+APP_VERSION = "8.5.8"
 APP_BUILD = "2025-12.9"
 # ---------------------------------------------------------------- 运行模式
 # 同一份源码编出两个版本：
@@ -8065,9 +8065,9 @@ class QPEApp(_BASE):
                  bg=CARD_BG, fg=FG_DIM, anchor="w").pack(
                      fill="x", padx=px(SPACE_XL), pady=(0, px(SPACE_XL)))
 
-        tk.Label(wrap, text="主题", font=self.ui_font_b, bg=BAR_BG, fg=FG,
-                 anchor="w").pack(fill="x", padx=px(SPACE_XL),
-                                  pady=(px(SPACE_XL), 0))
+        # 与下面的选项行对齐：那几行没有额外左右内边距，这里也不加
+        tk.Label(wrap, text="主题", font=self.ui_font_b, bg=PANEL_BG, fg=FG,
+                 anchor="w").pack(fill="x", pady=(px(SPACE_XL), 0))
         tk.Label(wrap, text="点一下立即生效", font=self.ui_font_s, bg=BAR_BG,
                  fg=FG_DIM, anchor="w").pack(fill="x", pady=(0, px(6)))
 

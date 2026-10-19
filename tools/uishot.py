@@ -1,8 +1,12 @@
 ﻿# -*- coding: utf-8 -*-
-"""外观回归截图：每次发版自动截一张主界面，存到 design/after/。
+"""外观回归截图与像素比对。
 
-跑法： python tools/uishot.py
-用途：让排版问题在 diff 里能被看见，而不是等用户发现。
+跑法：
+    python tools/uishot.py                 只比对（首次自动建基线）
+    python tools/uishot.py --update-baseline   有意改版后更新基线
+
+为什么需要：截图存着没人看等于没做。这里把主界面/插件/设置三个窗口分别与
+基线比较，逐像素判断「任一通道差异 > 8」，给出变化比例，超过 2% 提醒。
 """
 import importlib.machinery
 import os
@@ -15,10 +19,12 @@ from PIL import Image, ImageDraw, ImageGrab
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 APP = os.path.join(ROOT, "src", "Prism.pyw")
 OUT = os.path.join(ROOT, "design", "after")
+BASE = os.path.join(ROOT, "design", "baseline")
+THRESHOLD = 0.02          # 2% 像素变化即提醒
+UPDATE = "--update-baseline" in sys.argv
 
 
 def sample_image():
-    """优先用 bench 的真实大图；没有就现造一张渐变图。"""
     big = os.path.join(tempfile.gettempdir(), "_benchimg", "real40mp.jpg")
     if os.path.exists(big):
         return big
@@ -32,9 +38,54 @@ def sample_image():
     return tmp
 
 
+def grab(win, app):
+    try:
+        win.lift()
+        win.attributes("-topmost", True)
+        win.focus_force()
+    except Exception:
+        pass
+    for _ in range(18):
+        app.update(); time.sleep(0.02)
+    x, y = win.winfo_rootx(), win.winfo_rooty()
+    w, h = win.winfo_width(), win.winfo_height()
+    shot = ImageGrab.grab(bbox=(x, y, x + w, y + h))
+    try:
+        win.attributes("-topmost", False)
+    except Exception:
+        pass
+    return shot
+
+
+def compare(name, shot):
+    bp = os.path.join(BASE, name + ".png")
+    os.makedirs(BASE, exist_ok=True)
+    if UPDATE or not os.path.exists(bp):
+        shot.save(bp)
+        print("   %-9s 已%s基线" % (name, "更新" if UPDATE else "建立"))
+        return None
+    try:
+        base = Image.open(bp).convert("RGB")
+        cur = shot.convert("RGB")
+        if base.size != cur.size:
+            print("   %-9s !! 尺寸 %s -> %s" % (name, base.size, cur.size))
+            return 1.0
+        import numpy as np
+        a = np.asarray(base, dtype=np.int16)
+        b = np.asarray(cur, dtype=np.int16)
+        ratio = float((np.abs(a - b).max(axis=2) > 8).mean())
+        flag = "   << 超过 2%%，请确认是否符合预期" if ratio > THRESHOLD else ""
+        print("   %-9s 与基线差异 %.2f%%%s" % (name, ratio * 100.0, flag))
+        return ratio
+    except Exception as exc:
+        print("   %-9s 比对失败：%s" % (name, exc))
+        return None
+
+
 def main():
     os.makedirs(OUT, exist_ok=True)
     mod = importlib.machinery.SourceFileLoader("uishot", APP).load_module()
+    mod._plugin_dir = lambda: os.path.join(ROOT, "plugins")
     settings = os.path.join(os.path.dirname(APP), "Prism_settings.json")
     if os.path.exists(settings):
         os.remove(settings)
@@ -52,54 +103,32 @@ def main():
     app.toggle_panel(True)
     for _ in range(60):
         app.update(); time.sleep(0.005)
-    # 必须先置顶：ImageGrab 抓的是屏幕像素，窗口被浏览器挡住就会截错东西
-    try:
-        app.lift()
-        app.attributes("-topmost", True)
-        app.focus_force()
-    except Exception:
-        pass
-    for _ in range(20):
-        app.update(); time.sleep(0.02)
-    x, y = app.winfo_rootx(), app.winfo_rooty()
-    w, h = app.winfo_width(), app.winfo_height()
-    shot = ImageGrab.grab(bbox=(x, y, x + w, y + h))
-    try:
-        app.attributes("-topmost", False)
-    except Exception:
-        pass
-    # ---- 像素比对：与基线比较，超过阈值就提示（防止排版被悄悄改坏）----
-    base_path = os.path.join(ROOT, "design", "baseline", "main.png")
-    os.makedirs(os.path.dirname(base_path), exist_ok=True)
-    diff_ratio = None
-    if os.path.exists(base_path):
-        try:
-            base = Image.open(base_path).convert("RGB")
-            cur = shot.convert("RGB")
-            if base.size == cur.size:
-                import numpy as np
-                a = np.asarray(base, dtype=np.int16)
-                b = np.asarray(cur, dtype=np.int16)
-                # 任一通道差异 > 8 才算变了：抗锯齿与字体渲染抖动不算
-                changed = (np.abs(a - b).max(axis=2) > 8)
-                diff_ratio = float(changed.mean())
-            else:
-                print("   !! 基线尺寸 %s 与当前 %s 不同" % (base.size, cur.size))
-                diff_ratio = 1.0
-        except Exception as exc:
-            print("   基线比对失败：%s" % exc)
-    else:
-        shot.save(base_path)
-        print("   已建立外观基线 -> %s" % base_path)
 
-    path = os.path.join(OUT, "main.png")
-    shot.save(path)
-    print("   外观截图 -> %s (%dx%d)" % (path, w, h))
-    if diff_ratio is not None:
-        print("   与基线差异 %.2f%%%s" % (
-            diff_ratio * 100.0,
-            "   << 超过 2%%，请确认排版改动是否符合预期"
-            if diff_ratio > 0.02 else ""))
+    shots = {}
+    shots["main"] = grab(app, app)
+
+    try:
+        app.show_plugins()
+        for _ in range(40):
+            app.update(); time.sleep(0.005)
+        shots["plugins"] = grab(app.plug_win, app)
+    except Exception as exc:
+        print("   插件窗口截图失败：%s" % exc)
+    try:
+        app.show_settings()
+        for _ in range(40):
+            app.update(); time.sleep(0.005)
+        shots["settings"] = grab(app.set_win, app)
+    except Exception as exc:
+        print("   设置窗口截图失败：%s" % exc)
+
+    worst = 0.0
+    for name, shot in shots.items():
+        shot.save(os.path.join(OUT, name + ".png"))
+        r = compare(name, shot)
+        if r:
+            worst = max(worst, r)
+    print("   截图输出 -> %s" % OUT)
     app.on_close()
     if os.path.exists(settings):
         os.remove(settings)

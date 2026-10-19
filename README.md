@@ -20,6 +20,10 @@
 </div>
 
 > **MIT 协议开源**，见 [LICENSE](LICENSE)。插件请只安装你信任的：它们以完整权限运行（[说明](docs/plugin-api.md)）。
+>
+> **插件文档（三语）**：
+> 指南 [中文](plugins/README.md) · [English](plugins/README.en.md) · [日本語](plugins/README.ja.md)；
+> API [中文](docs/plugin-api.md) · [English](docs/plugin-api.en.md) · [日本語](docs/plugin-api.ja.md)。
 
 ---
 

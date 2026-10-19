@@ -44,7 +44,7 @@ IS_WIN = sys.platform.startswith("win")
 K = "Command" if IS_MAC else "Control"
 
 APP_NAME = "Prism"
-APP_VERSION = "8.5.2"
+APP_VERSION = "8.5.3"
 APP_BUILD = "2025-12.9"
 # ---------------------------------------------------------------- 运行模式
 # 同一份源码编出两个版本：
@@ -1292,6 +1292,130 @@ class ThumbWorker(threading.Thread):
             except Exception:
                 im = None
             self.out.put((path, im))
+
+
+class _QpeRoundButton(tk.Canvas):
+    """Canvas 自绘的圆角按钮。
+
+    Tk 的 tk.Button 只能画直角，想做圆角只能自己画。这里用平滑多边形
+    画一个圆角矩形，配上 hover 与 disabled 三种状态，接口尽量贴近 tk.Button
+    （text / command / state / configure），这样调用方几乎不用改。
+    """
+
+    def __init__(self, parent, text="", command=None, bg=BTN_BG, fg=FG,
+                 hover_bg=BAR_HOVER, hover_fg=FG_HI, radius=None,
+                 padx=10, pady=4, font=None, state="normal", **kw):
+        try:
+            host_bg = parent.cget("bg")
+        except Exception:
+            host_bg = BAR_BG
+        tk.Canvas.__init__(self, parent, bg=host_bg, highlightthickness=0,
+                           bd=0, **kw)
+        self._text = text
+        self._command = command
+        self._bg = bg
+        self._fg = fg
+        self._hover_bg = hover_bg
+        self._hover_fg = hover_fg
+        self._radius = px(RADIUS_SM if radius is None else radius)
+        self._padx = px(padx)
+        self._pady = px(pady)
+        self._font = font
+        self._state = state
+        self._hover = False
+        self._measure()
+        self.bind("<Enter>", self._on_enter)
+        self.bind("<Leave>", self._on_leave)
+        self.bind("<Button-1>", self._on_click)
+        self.bind("<Configure>", lambda e: self._draw())
+
+    # --- 尺寸与绘制 ---
+    def _measure(self):
+        try:
+            f = tkfont.Font(font=self._font) if self._font else tkfont.Font()
+        except Exception:
+            f = tkfont.Font()
+        tw = f.measure(self._text or " ")
+        th = f.metrics("linespace")
+        self.configure(width=tw + self._padx * 2, height=th + self._pady * 2)
+
+    def _round_pts(self, x1, y1, x2, y2, r):
+        r = max(0, min(r, (x2 - x1) / 2, (y2 - y1) / 2))
+        return [
+            x1 + r, y1, x2 - r, y1, x2, y1, x2, y1 + r,
+            x2, y2 - r, x2, y2, x2 - r, y2, x1 + r, y2,
+            x1, y2, x1, y2 - r, x1, y1 + r, x1, y1,
+        ]
+
+    def _draw(self):
+        self.delete("all")
+        w = max(2, self.winfo_width() or int(self.cget("width")))
+        h = max(2, self.winfo_height() or int(self.cget("height")))
+        if self._state == "disabled":
+            fill, ink = self._bg, FG_DIM
+        elif self._hover:
+            fill, ink = self._hover_bg, self._hover_fg
+        else:
+            fill, ink = self._bg, self._fg
+        self.create_polygon(self._round_pts(0, 0, w, h, self._radius),
+                            smooth=True, fill=fill, outline="")
+        self.create_text(w / 2, h / 2, text=self._text, fill=ink,
+                         font=self._font)
+
+    # --- 事件 ---
+    def _on_enter(self, _e=None):
+        if self._state != "disabled":
+            self._hover = True
+            self._draw()
+            self.configure(cursor="hand2")
+
+    def _on_leave(self, _e=None):
+        self._hover = False
+        self._draw()
+
+    def _on_click(self, _e=None):
+        if self._state == "disabled":
+            return
+        if callable(self._command):
+            self._command()
+
+    # --- 兼容 tk.Button 的少量接口 ---
+    def configure(self, **kw):
+        redraw = False
+        for k, v in kw.items():
+            if k == "text":
+                self._text = v; redraw = True
+            elif k == "state":
+                self._state = v; redraw = True
+            elif k == "bg":
+                self._bg = v; redraw = True
+            elif k == "fg":
+                self._fg = v; redraw = True
+            elif k == "font":
+                self._font = v; self._measure(); redraw = True
+            else:
+                try:
+                    tk.Canvas.configure(self, **{k: v})
+                except Exception:
+                    pass
+        if redraw:
+            self._draw()
+        return self
+
+    config = configure
+
+    def cget(self, key):
+        if key == "text":
+            return self._text
+        if key == "state":
+            return self._state
+        try:
+            return tk.Canvas.cget(self, key)
+        except Exception:
+            return ""
+
+    def invoke(self):
+        self._on_click()
 
 
 class _QpeSlider(tk.Canvas):
@@ -2895,7 +3019,8 @@ class QPEApp(_BASE):
         g = self._bar_group(3)
         self._sep(g)
         if not VIEWER_ONLY:
-            self._mkbtn(g, "编辑", self.toggle_panel)
+            # 菜单里已经有「编辑」，这个按钮是开关侧栏，改名避免重名
+            self._mkbtn(g, "面板", self.toggle_panel)
 
         g = self._bar_group(2)
         self._sep(g)
@@ -5486,20 +5611,17 @@ class QPEApp(_BASE):
     # ------------------------------------------------------------ 修图面板
 
     def _panel_btn(self, parent, text, cmd, side="left", wide=False):
-        b = tk.Button(parent, text=text, command=cmd, font=self.ui_font,
-                      bg=BTN_BG, fg=FG, activebackground=BAR_HOVER,
-                      activeforeground=FG_HI, relief="flat", bd=0,
-                      highlightthickness=0, padx=px(10), pady=px(4),
-                      cursor="hand2", takefocus=0)
+        # 圆角按钮：Tk 的 Button 只能画直角，这里换成 Canvas 自绘控件
+        b = _QpeRoundButton(parent, text=text, command=cmd,
+                            font=self.ui_font_s, bg=BTN_BG, fg=FG,
+                            hover_bg=BAR_HOVER, hover_fg=FG_HI)
         if side == "grid":
             return b
         if side == "left":
-            b.pack(side="left", padx=(0, px(SPACE_MD)))
+            b.pack(side="left", padx=(0, px(SPACE_MD)), pady=px(1))
         else:
             b.pack(side=side, fill="x" if wide else None,
-                   expand=1 if wide else 0)
-        b.bind("<Enter>", lambda e, w=b: w.configure(bg=BAR_HOVER, fg=FG_HI))
-        b.bind("<Leave>", lambda e, w=b: w.configure(bg=BTN_BG, fg=FG))
+                   expand=1 if wide else 0, pady=px(1))
         return b
 
     # -------------------------------------------------------- 滑块 / 区块
@@ -5801,11 +5923,19 @@ class QPEApp(_BASE):
         if c is None or not c.winfo_exists():
             return
         c.delete("all")
-        im = self._preview_thumb()
-        if im is None:
-            return
+        # 尺寸先算出来：空态提示也要用到 w/h（之前写成在下面才算，导致
+        # NameError 被 except 吞掉，提示永远不显示）
         w = max(40, c.winfo_width())
         h = max(30, c.winfo_height())
+        im = self._preview_thumb()
+        if im is None:
+            try:
+                k = max(1, px(10))
+                c.create_text(w // 2, h // 2, text="打开图片后显示直方图",
+                              fill=FG_DIM, font=self.ui_font_s)
+            except Exception:
+                pass
+            return
         hist = im.histogram()
         peak = 1
         for band in range(3):

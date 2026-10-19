@@ -25,6 +25,10 @@ UPDATE = "--update-baseline" in sys.argv
 
 
 def sample_image():
+    # 优先用仓库里的真实示例照片（网页截图好看且稳定），其次才用 bench 噪声图
+    real = os.path.join(ROOT, "design", "sample.jpg")
+    if os.path.exists(real):
+        return real
     big = os.path.join(tempfile.gettempdir(), "_benchimg", "real40mp.jpg")
     if os.path.exists(big):
         return big

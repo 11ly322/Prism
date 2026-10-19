@@ -44,7 +44,7 @@ IS_WIN = sys.platform.startswith("win")
 K = "Command" if IS_MAC else "Control"
 
 APP_NAME = "Prism"
-APP_VERSION = "8.5.6"
+APP_VERSION = "8.5.7"
 APP_BUILD = "2025-12.9"
 # ---------------------------------------------------------------- 运行模式
 # 同一份源码编出两个版本：
@@ -5641,8 +5641,11 @@ class QPEApp(_BASE):
 
     # ------------------------------------------------------------ 修图面板
 
-    def _hover_tip(self, widget, text, delay=420):
-        """鼠标停留片刻后弹一行说明（用于插件卡片这种信息压缩场景）。"""
+    def _hover_tip(self, widget, text, delay=420, caps=None):
+        """鼠标停留片刻后弹一行说明（用于插件卡片这种信息压缩场景）。
+
+        caps 给出能力声明时，用彩色圆点 + 文字替代干巴巴的「联网 是/否」。
+        """
         state = {"job": None, "win": None}
 
         def show():
@@ -5653,7 +5656,18 @@ class QPEApp(_BASE):
                 _round_window(w)
                 tk.Label(w, text=text, font=self.ui_font_s, bg=BAR_BG, fg=FG,
                          justify="left", padx=px(8), pady=px(5),
-                         wraplength=px(320)).pack()
+                         wraplength=px(320)).pack(fill="x")
+                if caps:
+                    inc = tk.Frame(w, bg=BAR_BG)
+                    inc.pack(fill="x", padx=px(8), pady=(0, px(5)))
+                    for label, on in (("联网", bool(caps.get("network"))),
+                                      ("写文件", bool(caps.get("writes_files")))):
+                        col = "#ff8a6b" if on else "#5c5c5c"
+                        tk.Label(inc, text="●", font=self.ui_font_s,
+                                 bg=BAR_BG, fg=col).pack(side="left")
+                        tk.Label(inc, text=label, font=self.ui_font_s,
+                                 bg=BAR_BG, fg=FG_DIM).pack(side="left",
+                                                            padx=(px(2), px(8)))
                 x = widget.winfo_rootx() + px(12)
                 y = widget.winfo_rooty() + widget.winfo_height() + px(6)
                 w.wm_geometry("+%d+%d" % (x, y))
@@ -8028,19 +8042,32 @@ class QPEApp(_BASE):
         win = tk.Toplevel(self)
         self.set_win = win
         win.title("设置")
-        win.configure(bg=BAR_BG)
-        win.geometry("%dx%d" % (px(430), px(440)))
+        win.configure(bg=PANEL_BG)
+        win.geometry("%dx%d" % (px(430), px(470)))
+        win.after(60, lambda: _round_window(win))
         win.transient(self)
         try:
             win.iconbitmap(os.path.join(_res_dir(), "Prism.ico"))
         except Exception:
             pass
 
-        wrap = tk.Frame(win, bg=BAR_BG)
-        wrap.pack(fill="both", expand=True, padx=px(16), pady=px(14))
+        wrap = tk.Frame(win, bg=PANEL_BG)
+        wrap.pack(fill="both", expand=True, padx=px(SPACE_2XL),
+                  pady=px(SPACE_2XL))
+
+        # 标题做成一张卡片，和主面板的层次一致（面板底更暗、卡片略亮）
+        head = tk.Frame(wrap, bg=CARD_BG)
+        head.pack(fill="x", pady=(0, px(SPACE_2XL)))
+        tk.Label(head, text="设置", font=self.ui_font_l, bg=CARD_BG, fg=FG_HI,
+                 anchor="w").pack(fill="x", padx=px(SPACE_XL),
+                                  pady=(px(SPACE_XL), 0))
+        tk.Label(head, text="改动立即生效，下次启动保留", font=self.ui_font_s,
+                 bg=CARD_BG, fg=FG_DIM, anchor="w").pack(
+                     fill="x", padx=px(SPACE_XL), pady=(0, px(SPACE_XL)))
 
         tk.Label(wrap, text="主题", font=self.ui_font_b, bg=BAR_BG, fg=FG,
-                 anchor="w").pack(fill="x")
+                 anchor="w").pack(fill="x", padx=px(SPACE_XL),
+                                  pady=(px(SPACE_XL), 0))
         tk.Label(wrap, text="点一下立即生效", font=self.ui_font_s, bg=BAR_BG,
                  fg=FG_DIM, anchor="w").pack(fill="x", pady=(0, px(6)))
 
@@ -8312,9 +8339,9 @@ class QPEApp(_BASE):
                 tip.append("联网 %s · 写文件 %s" % (
                     "是" if caps.get("network") else "否",
                     "是" if caps.get("writes_files") else "否"))
-            text_tip = "\n".join(tip)
+            text_tip = "\n".join(tip[:2]) if len(tip) > 2 else "\n".join(tip)
             for _w in (row, txt, name_lbl):
-                self._hover_tip(_w, text_tip)
+                self._hover_tip(_w, text_tip, caps=caps)
             self._panel_btn(row, "运行", lambda it=item: self.run_plugin(it))
         for fn in getattr(self, "plugins_disabled", []):
             tk.Label(inner, text="已禁用 %s（改回 .py 即可启用）" % fn,

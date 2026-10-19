@@ -68,9 +68,38 @@ def main():
         app.attributes("-topmost", False)
     except Exception:
         pass
+    # ---- 像素比对：与基线比较，超过阈值就提示（防止排版被悄悄改坏）----
+    base_path = os.path.join(ROOT, "design", "baseline", "main.png")
+    os.makedirs(os.path.dirname(base_path), exist_ok=True)
+    diff_ratio = None
+    if os.path.exists(base_path):
+        try:
+            base = Image.open(base_path).convert("RGB")
+            cur = shot.convert("RGB")
+            if base.size == cur.size:
+                import numpy as np
+                a = np.asarray(base, dtype=np.int16)
+                b = np.asarray(cur, dtype=np.int16)
+                # 任一通道差异 > 8 才算变了：抗锯齿与字体渲染抖动不算
+                changed = (np.abs(a - b).max(axis=2) > 8)
+                diff_ratio = float(changed.mean())
+            else:
+                print("   !! 基线尺寸 %s 与当前 %s 不同" % (base.size, cur.size))
+                diff_ratio = 1.0
+        except Exception as exc:
+            print("   基线比对失败：%s" % exc)
+    else:
+        shot.save(base_path)
+        print("   已建立外观基线 -> %s" % base_path)
+
     path = os.path.join(OUT, "main.png")
     shot.save(path)
     print("   外观截图 -> %s (%dx%d)" % (path, w, h))
+    if diff_ratio is not None:
+        print("   与基线差异 %.2f%%%s" % (
+            diff_ratio * 100.0,
+            "   << 超过 2%%，请确认排版改动是否符合预期"
+            if diff_ratio > 0.02 else ""))
     app.on_close()
     if os.path.exists(settings):
         os.remove(settings)

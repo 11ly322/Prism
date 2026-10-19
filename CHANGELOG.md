@@ -4,6 +4,21 @@
 > 已一并改为 Prism，功能与时间线不变。代码里的 QPEApp / _QpeSlider 等内部
 > 标识符与旧配置迁移路径保持原名，改动会破坏兼容。
 
+## v8.5.9  （网页层次 + 界面实拍 + 差异留档）
+
+- **网页排版层次**：章节标题加左侧蓝色强调条并统一左对齐（之前纯灰小字、
+  扫读困难）；章节间距 46px -> 58px；首屏加一枚信息胶囊
+  「Windows 10/11 · 单文件 · 无需运行环境 · 支持 NEF」。
+- **新增「界面实拍」区块**：把 `design/after/` 里由发版脚本自动生成的三张
+  真实运行截图（主界面 / 插件 / 设置）搬进网页，替换掉只有合成示意图的局面；
+  caption 明确写「由 tools/uishot.py 自动生成，不是设计稿」。
+- **外观差异留档**：`tools/uishot.py` 每次运行把三个窗口与基线的差异百分比
+  追加到 `design/uishot-log.md`，按版本与日期成表，便于回溯「哪一版动了外观」。
+  本次记录：main 0.02% / plugins 0.00% / settings 0.16%。
+- **爱发电支持数**：查询了 `afdian.com/api/open/query-sponsor`，返回
+  `{"ec":400001,"em":"params incomplete","data":{"explain":"user_id is not set"}}`
+  —— 需要 user_id 与 token，无法匿名取数。按约定**不加假数据**，保持文字说明。
+
 ## v8.5.8  （网页改版 + 爱发电 + 多窗口基线比对）
 
 - **网页放上爱发电**：https://afdian.com/a/pis01

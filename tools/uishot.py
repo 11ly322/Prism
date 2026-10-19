@@ -123,12 +123,42 @@ def main():
         print("   设置窗口截图失败：%s" % exc)
 
     worst = 0.0
+    ratios = {}
     for name, shot in shots.items():
         shot.save(os.path.join(OUT, name + ".png"))
         r = compare(name, shot)
+        ratios[name] = r
         if r:
             worst = max(worst, r)
     print("   截图输出 -> %s" % OUT)
+
+    # ---- 把本次差异写进留档（只在本机比对，历史需要可追溯）----
+    try:
+        import datetime
+        import re
+        ver = "?"
+        with open(APP, encoding="utf-8") as fh:
+            m = re.search(r'APP_VERSION = "([^"]+)"', fh.read())
+            if m:
+                ver = m.group(1)
+        log = os.path.join(ROOT, "design", "uishot-log.md")
+        new_file = not os.path.exists(log)
+        NL = chr(10)
+        with open(log, "a", encoding="utf-8") as fh:
+            if new_file:
+                fh.write("# 外观基线差异留档" + NL + NL)
+                fh.write("每次发版自动追加。阈值 2%，超过会打印提醒。" + NL + NL)
+                fh.write("| 日期 | 版本 | main | plugins | settings |" + NL)
+                fh.write("| :--- | :--- | ---: | ---: | ---: |" + NL)
+            cells = []
+            for k in ("main", "plugins", "settings"):
+                v = ratios.get(k)
+                cells.append("—" if v is None else "%.2f%%" % (v * 100.0))
+            fh.write("| %s | %s | %s |" % (datetime.date.today().isoformat(),
+                                              ver, " | ".join(cells)) + NL)
+        print("   差异已记入 design/uishot-log.md（版本 %s）" % ver)
+    except Exception as exc:
+        print("   留档失败：%s" % exc)
     app.on_close()
     if os.path.exists(settings):
         os.remove(settings)

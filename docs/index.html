@@ -36,15 +36,22 @@
   .sub2 .lvl3{position:absolute;left:100%;top:-6px;min-width:170px;background:#0f1114;border:1px solid var(--line);border-radius:10px;padding:6px;opacity:0;visibility:hidden;transition:.14s}
   .sub2:hover .lvl3{opacity:1;visibility:visible}
   /* ---------- 首屏 ---------- */
-  header{padding:66px 0 46px}
+  .eyebrow{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);
+    border-radius:20px;padding:4px 13px;font-size:12.5px;color:var(--dim);margin-bottom:20px;
+    letter-spacing:.2px}
+  .eyebrow b{color:var(--accent);font-weight:600}
+  header{padding:70px 0 52px}
   h1{font-size:42px;line-height:1.24;font-weight:600;letter-spacing:-.5px}
   .lead{color:var(--dim);font-size:16.5px;margin-top:16px;max-width:44em}
   .cta{margin-top:30px;display:flex;align-items:center;gap:18px;flex-wrap:wrap}
   .btn{display:inline-block;background:var(--accent);color:#fff;text-decoration:none;font-weight:600;font-size:15px;padding:12px 26px;border-radius:8px}
   .btn:hover{background:#558cff}
   .meta{color:var(--dim);font-size:13.5px;line-height:1.6}
-  section{padding:46px 0;border-top:1px solid var(--line)}
-  h2{font-size:14px;font-weight:600;letter-spacing:.9px;color:var(--dim);text-transform:uppercase;margin-bottom:24px}
+  section{padding:58px 0;border-top:1px solid var(--line)}
+  section>*{max-width:100%}
+  /* 章节标题：左侧强调条（用 border 而不是 flex，避免标题被居中） */
+  h2{border-left:3px solid var(--accent);padding-left:11px;line-height:1.15}
+  h2{font-size:13px;font-weight:600;letter-spacing:1.1px;color:var(--dim);text-transform:uppercase;margin-bottom:26px}
   /* ---------- 动态演示：自动前后对比 ---------- */
   .demo{position:relative;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#000;aspect-ratio:8/5}
   .demo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
@@ -69,6 +76,12 @@
   tr:last-child td{border:0}
   td:last-child{color:var(--fg);text-align:right}
   code{font-family:Consolas,"SF Mono",monospace;font-size:12.5px;color:var(--code);word-break:break-all}
+  /* ---------- 界面实拍 ---------- */
+  .ui{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px}
+  .ui figure{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#0f1114}
+  .ui img{display:block;width:100%;height:auto}
+  .ui figcaption{padding:11px 13px;font-size:12.5px;color:var(--dim);border-top:1px solid var(--line)}
+  .ui figcaption b{color:var(--fg);font-weight:600;margin-right:6px}
   /* ---------- 支持作者 ---------- */
   .support{padding:34px 0;border-top:1px solid var(--line)}
   .sup-card{display:flex;align-items:center;gap:22px;flex-wrap:wrap;justify-content:space-between;
@@ -156,7 +169,7 @@
 </head>
 <body>
 <div class="top"><div class="topin">
-  <a class="brand" href="./"><img src="Prism.png" alt=""><b>Prism</b><i>8.5.8</i></a>
+  <a class="brand" href="./"><img src="Prism.png" alt=""><b>Prism</b><i>8.5.9</i></a>
   <nav class="menu">
     <div class="mi"><a href="#features">产品</a>
       <div class="sub">
@@ -177,6 +190,7 @@
     </div>
     <div class="mi"><a href="#demo">演示</a></div>
     <div class="mi"><a href="#gallery">展示</a></div>
+    <div class="mi"><a href="#ui">界面</a></div>
     <div class="mi"><a href="#beauty">美颜</a></div>
     <div class="mi"><a href="#plugins">插件</a>
       <div class="sub">
@@ -189,11 +203,11 @@
     <div class="mi"><a href="#download">下载</a>
       <div class="sub">
         <span class="gh">Windows</span>
-        <a href="https://github.com/11ly322/Prism/releases/download/v8.5.8/Prism-Setup-8.5.8.exe" download><span style="display:inline-block;margin-left:6px;padding:1px 6px;border-radius:6px;font-size:11px;background:#2f7d32;color:#fff">完整支持</span>完整版 <i>39.9 MB</i></a>
-        <a href="https://github.com/11ly322/Prism/releases/download/v8.5.8/Prism-Viewer-Setup-8.5.8.exe" download>看图版（安装包） <i>39.9 MB</i></a>
+        <a href="https://github.com/11ly322/Prism/releases/download/v8.5.9/Prism-Setup-8.5.9.exe" download><span style="display:inline-block;margin-left:6px;padding:1px 6px;border-radius:6px;font-size:11px;background:#2f7d32;color:#fff">完整支持</span>完整版 <i>39.9 MB</i></a>
+        <a href="https://github.com/11ly322/Prism/releases/download/v8.5.9/Prism-Viewer-Setup-8.5.9.exe" download>看图版（安装包） <i>39.9 MB</i></a>
         <span class="gh">其它平台</span>
-        <a href="https://github.com/11ly322/Prism/releases/download/v8.5.8/Prism-macOS-8.5.8.zip" download><span style="display:inline-block;margin-left:6px;padding:1px 6px;border-radius:6px;font-size:11px;background:#8a6d1f;color:#fff">源码预览</span>macOS <i>源码运行</i></a>
-        <a href="https://github.com/11ly322/Prism/releases/download/v8.5.8/Prism-Linux-8.5.8.zip" download><span style="display:inline-block;margin-left:6px;padding:1px 6px;border-radius:6px;font-size:11px;background:#8a6d1f;color:#fff">源码预览</span>Linux <i>源码运行</i></a>
+        <a href="https://github.com/11ly322/Prism/releases/download/v8.5.9/Prism-macOS-8.5.9.zip" download><span style="display:inline-block;margin-left:6px;padding:1px 6px;border-radius:6px;font-size:11px;background:#8a6d1f;color:#fff">源码预览</span>macOS <i>源码运行</i></a>
+        <a href="https://github.com/11ly322/Prism/releases/download/v8.5.9/Prism-Linux-8.5.9.zip" download><span style="display:inline-block;margin-left:6px;padding:1px 6px;border-radius:6px;font-size:11px;background:#8a6d1f;color:#fff">源码预览</span>Linux <i>源码运行</i></a>
         <span class="sp"></span>
         <a href="#docs">说明文档</a>
         <a href="#verify">证书与校验</a>
@@ -204,26 +218,27 @@
 
 <div class="wrap">
   <header>
+    <div class="eyebrow">Windows 10/11 · 单文件 · 无需运行环境 · 支持 NEF</div>
     <h1>为看图而生的<br>简约图片查看器</h1>
     <p class="lead">打开快、切图快、调色准。支持尼康 NEF 与常见格式，内置曲线、HSL 与局部滤镜，还可以用插件扩展。</p>
     <div class="cta">
       <div class="spl">
-        <a class="btn" href="https://github.com/11ly322/Prism/releases/download/v8.5.8/Prism-Setup-8.5.8.exe" download>下载完整版</a>
+        <a class="btn" href="https://github.com/11ly322/Prism/releases/download/v8.5.9/Prism-Setup-8.5.9.exe" download>下载完整版</a>
         <button class="caret" aria-label="更多版本">▾</button>
         <div class="opts">
-          <a href="https://github.com/11ly322/Prism/releases/download/v8.5.8/Prism-Setup-8.5.8.exe" download><i>40.0 MB</i><b>Windows 完整版</b><span>安装包 · 含修图与插件</span></a>
-          <a href="https://github.com/11ly322/Prism/releases/download/v8.5.8/Prism-Viewer-Setup-8.5.8.exe" download><i>39.9 MB</i><b>Windows 看图版</b><span>安装包 · 纯浏览，与完整版同样装法</span></a>
-          <a href="https://github.com/11ly322/Prism/releases/download/v8.5.8/Prism-macOS-8.5.8.zip" download><i>149 KB</i><b>macOS</b><span>源码运行 · 需 Python 3</span></a>
-          <a href="https://github.com/11ly322/Prism/releases/download/v8.5.8/Prism-Linux-8.5.8.zip" download><i>149 KB</i><b>Linux</b><span>源码运行 · 带桌面项</span></a>
+          <a href="https://github.com/11ly322/Prism/releases/download/v8.5.9/Prism-Setup-8.5.9.exe" download><i>40.0 MB</i><b>Windows 完整版</b><span>安装包 · 含修图与插件</span></a>
+          <a href="https://github.com/11ly322/Prism/releases/download/v8.5.9/Prism-Viewer-Setup-8.5.9.exe" download><i>39.9 MB</i><b>Windows 看图版</b><span>安装包 · 纯浏览，与完整版同样装法</span></a>
+          <a href="https://github.com/11ly322/Prism/releases/download/v8.5.9/Prism-macOS-8.5.9.zip" download><i>149 KB</i><b>macOS</b><span>源码运行 · 需 Python 3</span></a>
+          <a href="https://github.com/11ly322/Prism/releases/download/v8.5.9/Prism-Linux-8.5.9.zip" download><i>149 KB</i><b>Linux</b><span>源码运行 · 带桌面项</span></a>
         </div>
       </div>
-      <div class="meta">版本 8.5.8<br>40 MB · Windows 10/11 64 位</div>
+      <div class="meta">版本 8.5.9<br>40 MB · Windows 10/11 64 位</div>
     </div>
     <p class="plats"><b>全部下载</b>
-      <a href="https://github.com/11ly322/Prism/releases/download/v8.5.8/Prism-Setup-8.5.8.exe" download>Windows 完整版</a><em>39.8 MB</em>
-      <a href="https://github.com/11ly322/Prism/releases/download/v8.5.8/Prism-Viewer-Setup-8.5.8.exe" download>Windows 看图版</a><em>39.9 MB</em>
-      <a href="https://github.com/11ly322/Prism/releases/download/v8.5.8/Prism-macOS-8.5.8.zip" download>macOS</a><em>104 KB</em>
-      <a href="https://github.com/11ly322/Prism/releases/download/v8.5.8/Prism-Linux-8.5.8.zip" download>Linux</a><em>105 KB</em>
+      <a href="https://github.com/11ly322/Prism/releases/download/v8.5.9/Prism-Setup-8.5.9.exe" download>Windows 完整版</a><em>39.8 MB</em>
+      <a href="https://github.com/11ly322/Prism/releases/download/v8.5.9/Prism-Viewer-Setup-8.5.9.exe" download>Windows 看图版</a><em>39.9 MB</em>
+      <a href="https://github.com/11ly322/Prism/releases/download/v8.5.9/Prism-macOS-8.5.9.zip" download>macOS</a><em>104 KB</em>
+      <a href="https://github.com/11ly322/Prism/releases/download/v8.5.9/Prism-Linux-8.5.9.zip" download>Linux</a><em>105 KB</em>
     </p>
   </header>
 
@@ -257,6 +272,25 @@
       <div class="card"><img src="shots/shot-mono.jpg" alt=""><div><b>黑白插件</b><span>示例插件，一个 .py 文件</span></div></div>
       <div class="card"><img src="shots/shot-frame.jpg" alt=""><div><b>白边框插件</b><span>示例插件，四周加白边</span></div></div>
     </div>
+  </section>
+
+  <section id="ui">
+    <h2>界面实拍</h2>
+    <div class="ui">
+      <figure>
+        <img src="shots/ui-main.png" alt="主界面" loading="lazy">
+        <figcaption><b>主界面</b>直方图、四组快捷入口、分区滑块，全部同一条竖线对齐。</figcaption>
+      </figure>
+      <figure>
+        <img src="shots/ui-plugins.png" alt="插件窗口" loading="lazy">
+        <figcaption><b>插件</b>两列卡片，鼠标停留显示说明与「联网 / 写文件」能力。</figcaption>
+      </figure>
+      <figure>
+        <img src="shots/ui-settings.png" alt="设置窗口" loading="lazy">
+        <figcaption><b>设置</b>主题即时切换，窗口使用系统原生圆角。</figcaption>
+      </figure>
+    </div>
+    <p class="cap">以上三张是程序实际运行截图，由发版脚本自动生成（tools/uishot.py），不是设计稿。</p>
   </section>
 
   <section id="features">
@@ -317,7 +351,7 @@
     <h3>安装</h3>
     <table>
       <tr><td class="grp" colspan="2">Windows</td></tr>
-      <tr><td>1</td><td>下载 <code>Prism-Setup-8.5.8.exe</code> 并双击</td></tr>
+      <tr><td>1</td><td>下载 <code>Prism-Setup-8.5.9.exe</code> 并双击</td></tr>
       <tr><td>2</td><td>选择安装方式（本机安装 / 就地解压）与位置</td></tr>
       <tr><td>3</td><td>可选建开始菜单与桌面快捷方式，完成后直接启动</td></tr>
       <tr><td class="grp" colspan="2">macOS</td></tr>
@@ -380,16 +414,16 @@
     <h2>下载与安装</h2>
     <table>
       <tr><td class="grp" colspan="2">Windows</td></tr>
-      <tr><td><a href="https://github.com/11ly322/Prism/releases/download/v8.5.8/Prism-Setup-8.5.8.exe" download>完整版安装包</a></td>
+      <tr><td><a href="https://github.com/11ly322/Prism/releases/download/v8.5.9/Prism-Setup-8.5.9.exe" download>完整版安装包</a></td>
           <td>39.8 MB · 含修图面板与插件</td></tr>
-      <tr><td><a href="https://github.com/11ly322/Prism/releases/download/v8.5.8/Prism-Viewer-Setup-8.5.8.exe" download>纯看图版（安装包）</a></td>
+      <tr><td><a href="https://github.com/11ly322/Prism/releases/download/v8.5.9/Prism-Viewer-Setup-8.5.9.exe" download>纯看图版（安装包）</a></td>
           <td>39.9 MB · 与完整版同样装法，含开始菜单与桌面快捷方式</td></tr>
-      <tr><td><a href="https://github.com/11ly322/Prism/releases/download/v8.5.8/Prism-Viewer-8.5.8.zip" download>纯看图版（便携）</a></td>
+      <tr><td><a href="https://github.com/11ly322/Prism/releases/download/v8.5.9/Prism-Viewer-8.5.9.zip" download>纯看图版（便携）</a></td>
           <td>29.9 MB · 解压即用，不写注册表</td></tr>
       <tr><td class="grp" colspan="2">macOS / Linux</td></tr>
-      <tr><td><a href="https://github.com/11ly322/Prism/releases/download/v8.5.8/Prism-macOS-8.5.8.zip" download>macOS 运行包</a></td>
+      <tr><td><a href="https://github.com/11ly322/Prism/releases/download/v8.5.9/Prism-macOS-8.5.9.zip" download>macOS 运行包</a></td>
           <td>104 KB · 源码运行，需 Python 3 + Pillow</td></tr>
-      <tr><td><a href="https://github.com/11ly322/Prism/releases/download/v8.5.8/Prism-Linux-8.5.8.zip" download>Linux 运行包</a></td>
+      <tr><td><a href="https://github.com/11ly322/Prism/releases/download/v8.5.9/Prism-Linux-8.5.9.zip" download>Linux 运行包</a></td>
           <td>105 KB · 带 .desktop，需 python3-tk</td></tr>
       <tr><td class="grp" colspan="2">系统要求（Windows 版）</td></tr>
       <tr><td>操作系统</td><td>Windows 10 / 11（64 位）</td></tr>
@@ -406,11 +440,11 @@
       <p class="cap" style="margin:0">2. 全屏为兼容模式（无边框最大化 + Esc 退出），不是系统级全屏。</p>
       <p class="cap" style="margin:0">3. macOS 与 Linux 是源码预览包，没有编译好的 .app / AppImage。</p>
     </div>
-    <p class="cap" style="margin-top:10px"><strong>便携版</strong>：<a href="https://github.com/11ly322/Prism/releases/download/v8.5.8/Prism-Portable-8.5.8.zip">Prism-Portable-8.5.8.zip</a>（完整版解压即用，不写注册表、不装开始菜单）</p>
+    <p class="cap" style="margin-top:10px"><strong>便携版</strong>：<a href="https://github.com/11ly322/Prism/releases/download/v8.5.9/Prism-Portable-8.5.9.zip">Prism-Portable-8.5.9.zip</a>（完整版解压即用，不写注册表、不装开始菜单）</p>
     <h3>如何安全绕过 SmartScreen</h3>
     <p class="cap" style="margin-top:0">安装包未做代码签名，所以 Windows 会提示「已保护你的电脑」。先校验文件，再决定是否运行：</p>
     <ol class="cap" style="margin:0 0 10px 18px;padding:0">
-      <li>在 PowerShell 里校验 SHA-256：<br><code>Get-FileHash .\Prism-Setup-8.5.8.exe -Algorithm SHA256</code><br>与页面上的 SHA-256 逐位比对。</li>
+      <li>在 PowerShell 里校验 SHA-256：<br><code>Get-FileHash .\Prism-Setup-8.5.9.exe -Algorithm SHA256</code><br>与页面上的 SHA-256 逐位比对。</li>
       <li>一致 → 双击安装包，点弹窗里的「更多信息」。</li>
       <li>确认发布者是「未知发布者」且哈希已核对无误后，点「仍要运行」。</li>
       <li>校验不一致 → 立刻删除，重新下载。</li>
@@ -426,14 +460,14 @@
       <tr><td>签发机构</td><td>Let&#39;s Encrypt（由 GitHub Pages 自动签发与续期）</td></tr>
       <tr><td>有效期至</td><td>2026-12-30</td></tr>
       <tr><td class="grp" colspan="2">安装包校验</td></tr>
-      <tr><td>文件</td><td>Prism-Setup-8.5.8.exe</td></tr>
-      <tr><td>SHA-256</td><td><code>6FD0AABBDE9AC422F98AA5E86D3CD889E9E36D9B92930D4AA769199D3F755A8E</code></td></tr>
+      <tr><td>文件</td><td>Prism-Setup-8.5.9.exe</td></tr>
+      <tr><td>SHA-256</td><td><code>6B6D3EF3B809602811222C22757B37239887B93AC86381FB69C7BA336D1433F6</code></td></tr>
     </table>
     <p class="cap">下载后可用 <code>certutil -hashfile 文件名 SHA256</code>（Windows）或 <code>shasum -a 256 文件名</code>（macOS/Linux）比对。</p>
   </section>
 
   <footer>
-    <div>Prism 8.5.8 · 简约图片查看器 · <a href="https://github.com/11ly322/Prism/blob/main/CHANGELOG.md" style="color:inherit;text-decoration:underline">完整更新日志</a> · <a href="https://afdian.com/a/pis01" target="_blank" rel="noopener">爱发电</a></div>
+    <div>Prism 8.5.9 · 简约图片查看器 · <a href="https://github.com/11ly322/Prism/blob/main/CHANGELOG.md" style="color:inherit;text-decoration:underline">完整更新日志</a> · <a href="https://afdian.com/a/pis01" target="_blank" rel="noopener">爱发电</a></div>
     <div><a href="#docs">说明文档</a></div>
   </footer>
 </div>

@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """静态语言页构建：从中文主页生成 en/index.html 与 ja/index.html。
 
 为什么不用浏览器预渲染：主页已经改成「固定中文 + 自动跳转」，运行时不再翻译，
@@ -61,8 +61,13 @@ def build(lang, raw, dicts, ver):
     out = re.sub(r'(src|href)="(?!https?:|//|#|mailto:|\.\./)([^"]+)"',
                  lambda m: '%s="../%s"' % (m.group(1), m.group(2)), out)
     for kind in ("main", "viewer", "plugins", "settings"):
-        out = out.replace('src="../shots/ui-%s.webp"' % kind,
-                          'src="../shots/ui-%s-%s.webp"' % (kind, lang))
+        # 本地化截图不存在就保留中文原图：宁可少一张本地化，也不要 404 破图
+        loc = "ui-%s-%s.webp" % (kind, lang)
+        if os.path.exists(os.path.join(DOCS, "shots", loc)):
+            out = out.replace('src="../shots/ui-%s.webp"' % kind,
+                              'src="../shots/%s"' % loc)
+        else:
+            print("   !! 缺少 %s，%s 页沿用中文 ui-%s.webp" % (loc, lang, kind))
     out = out.replace("onclick=\"location.href='index.html'\"",
                       "onclick=\"location.href='../index.html'\"")
     out = re.sub(r'<button data-lang-btn="(\w+)"[^>]*>',

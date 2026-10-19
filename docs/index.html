@@ -55,13 +55,18 @@
   /* ---------- 动态演示：自动前后对比 ---------- */
   .demo{position:relative;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#000;aspect-ratio:8/5}
   .demo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-  .demo .after{clip-path:inset(0 50% 0 0);animation:wipe 7s ease-in-out infinite}
-  @keyframes wipe{0%,12%{clip-path:inset(0 100% 0 0)}45%,62%{clip-path:inset(0 0 0 0)}95%,100%{clip-path:inset(0 100% 0 0)}}
+  .demo{--pos:52%;cursor:ew-resize;touch-action:none;user-select:none}
+  .demo .after{clip-path:inset(0 calc(100% - var(--pos)) 0 0)}
+  .demo .bar{left:var(--pos);animation:none;box-shadow:0 0 0 1px rgba(0,0,0,.45)}
+  .demo .bar::after{content:"";position:absolute;top:50%;left:50%;width:34px;height:34px;
+    transform:translate(-50%,-50%);border-radius:50%;background:rgba(255,255,255,.92);
+    box-shadow:0 2px 10px rgba(0,0,0,.45)}
+  .demo .bar::before{content:"⇄";position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+    z-index:2;color:#1a1d22;font-size:15px;font-weight:700;line-height:1}
   .demo .lab{position:absolute;bottom:10px;font-size:12px;color:#dfe3e8;background:rgba(0,0,0,.55);padding:2px 9px;border-radius:20px}
   .demo .l1{left:12px}
   .demo .l2{right:12px}
-  .demo .bar{position:absolute;top:0;bottom:0;width:2px;background:rgba(255,255,255,.75);left:50%;animation:bar 7s ease-in-out infinite}
-  @keyframes bar{0%,12%{left:0}45%,62%{left:100%}95%,100%{left:0}}
+  .demo .bar{position:absolute;top:0;bottom:0;width:2px;background:rgba(255,255,255,.85)}
   .cap{color:var(--dim);font-size:13px;margin-top:10px}
   /* ---------- 图片展示 ---------- */
   .gal{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px}
@@ -181,7 +186,7 @@
 </head>
 <body>
 <div class="top"><div class="topin">
-  <a class="brand" href="./"><img src="Prism.png" alt=""><b>Prism</b><i>8.6.1</i></a>
+  <a class="brand" href="./"><img src="Prism.png" alt=""><b>Prism</b><i>8.6.2</i></a>
   <nav class="menu">
     <div class="mi"><a href="#features">产品</a>
       <div class="sub">
@@ -215,11 +220,11 @@
     <div class="mi"><a href="#download">下载</a>
       <div class="sub">
         <span class="gh">Windows</span>
-        <a href="https://github.com/11ly322/Prism/releases/download/v8.6.1/Prism-Setup-8.6.1.exe" download><span style="display:inline-block;margin-left:6px;padding:1px 6px;border-radius:6px;font-size:11px;background:#2f7d32;color:#fff">完整支持</span>完整版 <i>39.9 MB</i></a>
-        <a href="https://github.com/11ly322/Prism/releases/download/v8.6.1/Prism-Viewer-Setup-8.6.1.exe" download>看图版（安装包） <i>39.9 MB</i></a>
+        <a href="https://github.com/11ly322/Prism/releases/download/v8.6.2/Prism-Setup-8.6.2.exe" download><span style="display:inline-block;margin-left:6px;padding:1px 6px;border-radius:6px;font-size:11px;background:#2f7d32;color:#fff">完整支持</span>完整版 <i>39.9 MB</i></a>
+        <a href="https://github.com/11ly322/Prism/releases/download/v8.6.2/Prism-Viewer-Setup-8.6.2.exe" download>看图版（安装包） <i>39.9 MB</i></a>
         <span class="gh">其它平台</span>
-        <a href="https://github.com/11ly322/Prism/releases/download/v8.6.1/Prism-macOS-8.6.1.zip" download><span style="display:inline-block;margin-left:6px;padding:1px 6px;border-radius:6px;font-size:11px;background:#8a6d1f;color:#fff">源码预览</span>macOS <i>源码运行</i></a>
-        <a href="https://github.com/11ly322/Prism/releases/download/v8.6.1/Prism-Linux-8.6.1.zip" download><span style="display:inline-block;margin-left:6px;padding:1px 6px;border-radius:6px;font-size:11px;background:#8a6d1f;color:#fff">源码预览</span>Linux <i>源码运行</i></a>
+        <a href="https://github.com/11ly322/Prism/releases/download/v8.6.2/Prism-macOS-8.6.2.zip" download><span style="display:inline-block;margin-left:6px;padding:1px 6px;border-radius:6px;font-size:11px;background:#8a6d1f;color:#fff">源码预览</span>macOS <i>源码运行</i></a>
+        <a href="https://github.com/11ly322/Prism/releases/download/v8.6.2/Prism-Linux-8.6.2.zip" download><span style="display:inline-block;margin-left:6px;padding:1px 6px;border-radius:6px;font-size:11px;background:#8a6d1f;color:#fff">源码预览</span>Linux <i>源码运行</i></a>
         <span class="sp"></span>
         <a href="#docs">说明文档</a>
         <a href="#verify">证书与校验</a>
@@ -235,22 +240,22 @@
     <p class="lead">打开快、切图快、调色准。支持尼康 NEF 与常见格式，内置曲线、HSL 与局部滤镜，还可以用插件扩展。</p>
     <div class="cta">
       <div class="spl">
-        <a class="btn" href="https://github.com/11ly322/Prism/releases/download/v8.6.1/Prism-Setup-8.6.1.exe" download>下载完整版</a>
+        <a class="btn" href="https://github.com/11ly322/Prism/releases/download/v8.6.2/Prism-Setup-8.6.2.exe" download>下载完整版</a>
         <button class="caret" aria-label="更多版本">▾</button>
         <div class="opts">
-          <a href="https://github.com/11ly322/Prism/releases/download/v8.6.1/Prism-Setup-8.6.1.exe" download><i>40.0 MB</i><b>Windows 完整版</b><span>安装包 · 含修图与插件</span></a>
-          <a href="https://github.com/11ly322/Prism/releases/download/v8.6.1/Prism-Viewer-Setup-8.6.1.exe" download><i>39.9 MB</i><b>Windows 看图版</b><span>安装包 · 纯浏览，与完整版同样装法</span></a>
-          <a href="https://github.com/11ly322/Prism/releases/download/v8.6.1/Prism-macOS-8.6.1.zip" download><i>149 KB</i><b>macOS</b><span>源码运行 · 需 Python 3</span></a>
-          <a href="https://github.com/11ly322/Prism/releases/download/v8.6.1/Prism-Linux-8.6.1.zip" download><i>149 KB</i><b>Linux</b><span>源码运行 · 带桌面项</span></a>
+          <a href="https://github.com/11ly322/Prism/releases/download/v8.6.2/Prism-Setup-8.6.2.exe" download><i>40.0 MB</i><b>Windows 完整版</b><span>安装包 · 含修图与插件</span></a>
+          <a href="https://github.com/11ly322/Prism/releases/download/v8.6.2/Prism-Viewer-Setup-8.6.2.exe" download><i>39.9 MB</i><b>Windows 看图版</b><span>安装包 · 纯浏览，与完整版同样装法</span></a>
+          <a href="https://github.com/11ly322/Prism/releases/download/v8.6.2/Prism-macOS-8.6.2.zip" download><i>149 KB</i><b>macOS</b><span>源码运行 · 需 Python 3</span></a>
+          <a href="https://github.com/11ly322/Prism/releases/download/v8.6.2/Prism-Linux-8.6.2.zip" download><i>149 KB</i><b>Linux</b><span>源码运行 · 带桌面项</span></a>
         </div>
       </div>
-      <div class="meta">版本 8.6.1<br>40 MB · Windows 10/11 64 位</div>
+      <div class="meta">版本 8.6.2<br>40 MB · Windows 10/11 64 位</div>
     </div>
     <p class="plats"><b>全部下载</b>
-      <a href="https://github.com/11ly322/Prism/releases/download/v8.6.1/Prism-Setup-8.6.1.exe" download>Windows 完整版</a><em>39.8 MB</em>
-      <a href="https://github.com/11ly322/Prism/releases/download/v8.6.1/Prism-Viewer-Setup-8.6.1.exe" download>Windows 看图版</a><em>39.9 MB</em>
-      <a href="https://github.com/11ly322/Prism/releases/download/v8.6.1/Prism-macOS-8.6.1.zip" download>macOS</a><em>104 KB</em>
-      <a href="https://github.com/11ly322/Prism/releases/download/v8.6.1/Prism-Linux-8.6.1.zip" download>Linux</a><em>105 KB</em>
+      <a href="https://github.com/11ly322/Prism/releases/download/v8.6.2/Prism-Setup-8.6.2.exe" download>Windows 完整版</a><em>39.8 MB</em>
+      <a href="https://github.com/11ly322/Prism/releases/download/v8.6.2/Prism-Viewer-Setup-8.6.2.exe" download>Windows 看图版</a><em>39.9 MB</em>
+      <a href="https://github.com/11ly322/Prism/releases/download/v8.6.2/Prism-macOS-8.6.2.zip" download>macOS</a><em>104 KB</em>
+      <a href="https://github.com/11ly322/Prism/releases/download/v8.6.2/Prism-Linux-8.6.2.zip" download>Linux</a><em>105 KB</em>
     </p>
   </header>
 
@@ -292,13 +297,14 @@
   <section id="demo">
     <h2>调色演示</h2>
     <div class="demo">
-      <img src="shots/shot-original.webp" alt="原始">
-      <img class="after" src="shots/shot-graded.webp" alt="调色后">
+      <img src="shots/shot-original.webp" alt="原始" width="1000" height="625" decoding="async">
+      <img class="after" src="shots/shot-graded.webp" alt="调色后" width="1000" height="625" decoding="async">
       <div class="bar"></div>
       <span class="lab l1">调色后</span>
       <span class="lab l2">原始</span>
     </div>
-    <p class="cap">同一张原图，套用曝光、对比度、自然饱和度、色温与暗角之后的效果。两张图都由 Prism 自己的渲染管线输出，不是后期拼的。</p>
+    <p class="cap"><b style="color:var(--fg)">按住中间的圆点左右拖动</b>，查看同一张原图套用曝光、对比度、自然饱和度、色温与暗角之后的效果。两张图都由 Prism 自己的渲染管线输出，不是后期拼的。</p>
+    <p class="cap">示例照片来自 <a href="https://picsum.photos" target="_blank" rel="noopener" style="color:inherit">Lorem Picsum</a>（图源 Unsplash，免费使用），仅用于演示调色效果。</p>
   </section>
 
   <section id="gallery">
@@ -381,7 +387,7 @@
     <h3>安装</h3>
     <table>
       <tr><td class="grp" colspan="2">Windows</td></tr>
-      <tr><td>1</td><td>下载 <code>Prism-Setup-8.6.1.exe</code> 并双击</td></tr>
+      <tr><td>1</td><td>下载 <code>Prism-Setup-8.6.2.exe</code> 并双击</td></tr>
       <tr><td>2</td><td>选择安装方式（本机安装 / 就地解压）与位置</td></tr>
       <tr><td>3</td><td>可选建开始菜单与桌面快捷方式，完成后直接启动</td></tr>
       <tr><td class="grp" colspan="2">macOS</td></tr>
@@ -448,16 +454,16 @@
     <h2>下载与安装</h2>
     <table>
       <tr><td class="grp" colspan="2">Windows</td></tr>
-      <tr><td><a href="https://github.com/11ly322/Prism/releases/download/v8.6.1/Prism-Setup-8.6.1.exe" download>完整版安装包</a></td>
+      <tr><td><a href="https://github.com/11ly322/Prism/releases/download/v8.6.2/Prism-Setup-8.6.2.exe" download>完整版安装包</a></td>
           <td>39.8 MB · 含修图面板与插件</td></tr>
-      <tr><td><a href="https://github.com/11ly322/Prism/releases/download/v8.6.1/Prism-Viewer-Setup-8.6.1.exe" download>纯看图版（安装包）</a></td>
+      <tr><td><a href="https://github.com/11ly322/Prism/releases/download/v8.6.2/Prism-Viewer-Setup-8.6.2.exe" download>纯看图版（安装包）</a></td>
           <td>39.9 MB · 与完整版同样装法，含开始菜单与桌面快捷方式</td></tr>
-      <tr><td><a href="https://github.com/11ly322/Prism/releases/download/v8.6.1/Prism-Viewer-8.6.1.zip" download>纯看图版（便携）</a></td>
+      <tr><td><a href="https://github.com/11ly322/Prism/releases/download/v8.6.2/Prism-Viewer-8.6.2.zip" download>纯看图版（便携）</a></td>
           <td>29.9 MB · 解压即用，不写注册表</td></tr>
       <tr><td class="grp" colspan="2">macOS / Linux</td></tr>
-      <tr><td><a href="https://github.com/11ly322/Prism/releases/download/v8.6.1/Prism-macOS-8.6.1.zip" download>macOS 运行包</a></td>
+      <tr><td><a href="https://github.com/11ly322/Prism/releases/download/v8.6.2/Prism-macOS-8.6.2.zip" download>macOS 运行包</a></td>
           <td>104 KB · 源码运行，需 Python 3 + Pillow</td></tr>
-      <tr><td><a href="https://github.com/11ly322/Prism/releases/download/v8.6.1/Prism-Linux-8.6.1.zip" download>Linux 运行包</a></td>
+      <tr><td><a href="https://github.com/11ly322/Prism/releases/download/v8.6.2/Prism-Linux-8.6.2.zip" download>Linux 运行包</a></td>
           <td>105 KB · 带 .desktop，需 python3-tk</td></tr>
       <tr><td class="grp" colspan="2">系统要求（Windows 版）</td></tr>
       <tr><td>操作系统</td><td>Windows 10 / 11（64 位）</td></tr>
@@ -474,11 +480,11 @@
       <p class="cap" style="margin:0">2. 全屏为兼容模式（无边框最大化 + Esc 退出），不是系统级全屏。</p>
       <p class="cap" style="margin:0">3. macOS 与 Linux 是源码预览包，没有编译好的 .app / AppImage。</p>
     </div>
-    <p class="cap" style="margin-top:10px"><strong>便携版</strong>：<a href="https://github.com/11ly322/Prism/releases/download/v8.6.1/Prism-Portable-8.6.1.zip">Prism-Portable-8.6.1.zip</a>（完整版解压即用，不写注册表、不装开始菜单）</p>
+    <p class="cap" style="margin-top:10px"><strong>便携版</strong>：<a href="https://github.com/11ly322/Prism/releases/download/v8.6.2/Prism-Portable-8.6.2.zip">Prism-Portable-8.6.2.zip</a>（完整版解压即用，不写注册表、不装开始菜单）</p>
     <h3>如何安全绕过 SmartScreen</h3>
     <p class="cap" style="margin-top:0">安装包未做代码签名，所以 Windows 会提示「已保护你的电脑」。先校验文件，再决定是否运行：</p>
     <ol class="cap" style="margin:0 0 10px 18px;padding:0">
-      <li>在 PowerShell 里校验 SHA-256：<br><code>Get-FileHash .\Prism-Setup-8.6.1.exe -Algorithm SHA256</code><br>与页面上的 SHA-256 逐位比对。</li>
+      <li>在 PowerShell 里校验 SHA-256：<br><code>Get-FileHash .\Prism-Setup-8.6.2.exe -Algorithm SHA256</code><br>与页面上的 SHA-256 逐位比对。</li>
       <li>一致 → 双击安装包，点弹窗里的「更多信息」。</li>
       <li>确认发布者是「未知发布者」且哈希已核对无误后，点「仍要运行」。</li>
       <li>校验不一致 → 立刻删除，重新下载。</li>
@@ -494,8 +500,8 @@
       <tr><td>签发机构</td><td>Let&#39;s Encrypt（由 GitHub Pages 自动签发与续期）</td></tr>
       <tr><td>有效期至</td><td>2026-12-30</td></tr>
       <tr><td class="grp" colspan="2">安装包校验</td></tr>
-      <tr><td>文件</td><td>Prism-Setup-8.6.1.exe</td></tr>
-      <tr><td>SHA-256</td><td><code>B37D84CE6A718B9635FD45A7ED9AF53BEC21FA39B9A7857666F3AB0E45FA3C55</code></td></tr>
+      <tr><td>文件</td><td>Prism-Setup-8.6.2.exe</td></tr>
+      <tr><td>SHA-256</td><td><code>6DAE74ACA6B0E11933234EEF80832BF0651F91C2776D6B5651BB97A1BD14AA07</code></td></tr>
     </table>
     <p class="cap">下载后可用 <code>certutil -hashfile 文件名 SHA256</code>（Windows）或 <code>shasum -a 256 文件名</code>（macOS/Linux）比对。</p>
   </section>
@@ -503,7 +509,7 @@
   </details>
 
   <footer>
-    <div>Prism 8.6.1 · 简约图片查看器 · <a href="https://github.com/11ly322/Prism/blob/main/CHANGELOG.md" style="color:inherit;text-decoration:underline">完整更新日志</a> · <a href="https://afdian.com/a/pis01" target="_blank" rel="noopener">爱发电</a></div>
+    <div>Prism 8.6.2 · 简约图片查看器 · <a href="https://github.com/11ly322/Prism/blob/main/CHANGELOG.md" style="color:inherit;text-decoration:underline">完整更新日志</a> · <a href="https://afdian.com/a/pis01" target="_blank" rel="noopener">爱发电</a></div>
     <div><a href="#docs">说明文档</a></div>
   </footer>
 </div>
@@ -525,6 +531,39 @@
       });
     })(blocks[i]);
   }
+})();
+</script>
+<script>
+/* demo-drag：按住圆点左右拖动，比较调色前后 */
+(function(){
+  var box = document.querySelector('#demo .demo');
+  if (!box) return;
+  var dragging = false;
+  function setPos(clientX) {
+    var r = box.getBoundingClientRect();
+    var t = (clientX - r.left) / Math.max(1, r.width);
+    t = Math.max(0, Math.min(1, t));
+    box.style.setProperty('--pos', (t * 100).toFixed(2) + '%');
+  }
+  box.addEventListener('pointerdown', function (e) {
+    dragging = true;
+    if (box.setPointerCapture) { try { box.setPointerCapture(e.pointerId); } catch (err) {} }
+    setPos(e.clientX);
+    e.preventDefault();
+  });
+  box.addEventListener('pointermove', function (e) { if (dragging) { setPos(e.clientX); } });
+  box.addEventListener('pointerup', function () { dragging = false; });
+  box.addEventListener('pointercancel', function () { dragging = false; });
+  box.addEventListener('pointerleave', function () { dragging = false; });
+  box.addEventListener('keydown', function (e) {
+    var cur = parseFloat(box.style.getPropertyValue('--pos')) || 52;
+    if (e.key === 'ArrowLeft') { cur = Math.max(0, cur - 4); }
+    else if (e.key === 'ArrowRight') { cur = Math.min(100, cur + 4); }
+    else { return; }
+    box.style.setProperty('--pos', cur.toFixed(2) + '%');
+    e.preventDefault();
+  });
+  box.tabIndex = 0;
 })();
 </script>
 </body>

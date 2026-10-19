@@ -131,6 +131,12 @@ if ((Test-Path (Join-Path $root 'Prism.exe')) -and (Test-Path (Join-Path $root '
     Write-Host '   !! 未找到 onedir 构建，跳过便携版'
 }
 
+Write-Host '== 重新生成网页效果图 =='
+$sample = Join-Path $root 'design\sample.jpg'
+if (Test-Path $sample) {
+    & $py (Join-Path $root 'tools\make_shots.py') $sample
+}
+
 Write-Host '== 外观回归截图 =='
 & $py (Join-Path $root 'tools\uishot.py')
 

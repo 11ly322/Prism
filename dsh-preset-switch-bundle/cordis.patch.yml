@@ -1,6 +1,0 @@
-# dsh-preset-switch: mid-session agent-preset switching.
-# The Host half registers `/preset <id>`; the Client half adds the ⇄ mode
-# button beside the access-mode control in the composer tool row.
-- insert:
-    - id: preset-switch
-      name: 'dsh-preset-switch'

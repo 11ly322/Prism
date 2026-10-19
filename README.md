@@ -12,7 +12,7 @@
 
 <div align="center">
 
-![version](https://img.shields.io/badge/version-8.5.4-3d7dff?style=flat-square)
+![version](https://img.shields.io/badge/version-8.5.5-3d7dff?style=flat-square)
 ![platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-2b2f36?style=flat-square)
 ![python](https://img.shields.io/badge/python-3.9%2B-3776ab?style=flat-square&logo=python&logoColor=white)
 ![license](https://img.shields.io/badge/license-MIT-3ddc84?style=flat-square)
@@ -57,10 +57,10 @@ Prism 服务两种场景 ——
 
 | 平台 | 文件 | 说明 |
 | :--- | :--- | :--- |
-| Windows | `Prism-Setup-8.5.4.exe` | 安装包 · 含修图面板与插件 · 39.8 MB |
-| Windows | `Prism-Viewer-8.5.4.zip` | 纯看图版 · 便携免安装 · 29.9 MB |
-| macOS | `Prism-macOS-8.5.4.zip` | 源码运行 · 需 Python 3 + Pillow |
-| Linux | `Prism-Linux-8.5.4.zip` | 源码运行 · 带 `.desktop` |
+| Windows | `Prism-Setup-8.5.5.exe` | 安装包 · 含修图面板与插件 · 39.8 MB |
+| Windows | `Prism-Viewer-8.5.5.zip` | 纯看图版 · 便携免安装 · 29.9 MB |
+| macOS | `Prism-macOS-8.5.5.zip` | 源码运行 · 需 Python 3 + Pillow |
+| Linux | `Prism-Linux-8.5.5.zip` | 源码运行 · 带 `.desktop` |
 
 <div align="center">
 
@@ -234,7 +234,7 @@ api 必须是 2（旧的 1 仍能加载）。版本更高的插件会被跳过�
 ### 内存估算口径
 
 单张图的内存估算（`ImageDoc.mem_bytes()`）= 解码后像素字节 +
-**文件本身的字节数**。8.5.4 起非 RAW 不再把整个文件读进内存，
+**文件本身的字节数**。8.3.6 起非 RAW 不再把整个文件读进内存，
 文件大小改由 `file_bytes`（os.path.getsize）记录，所以估算值不变，
 但**常驻内存少了一整份文件**（40MP JPEG 可省 18~30MB）。
 
@@ -243,12 +243,30 @@ api 必须是 2（旧的 1 仍能加载）。版本更高的插件会被跳过�
 `tools/bench.py` 默认生成一张「低频块 + 高频噪声」的真实感 4000 万像素图（约 18MB）。
 早期用纯色图（0.6MB、解码 30ms），解码与内存类优化在基准里体现不出来，已废弃。
 
+## 外观与排版
+
+界面在 8.5 系列做了一轮系统性整理，目标是「看起来不糙」，而不是换皮：
+
+- **设计令牌**：间距统一为 4 的倍数（`SPACE_XXS`…`SPACE_3XL`），
+  字号为 11 / 12 / 13 / 15 / 18 五档（`FONT_XS`…`FONT_XL`），
+  圆角半径 `RADIUS_SM/MD/LG`。散落的魔法数字收敛到文件头部。
+- **层级靠明度**：面板底 `#141414`、分区卡片 `#1c1c1c`，
+  用明度差和 6px 外距分层，不用边框也不用色块。
+- **圆角按钮**：`_QpeRoundButton` 是 Canvas 自绘控件（平滑多边形画圆角矩形），
+  带 normal / hover / disabled 三态。面板 70 余处按钮与工具栏按钮统一使用。
+- **对齐**：分区标题与滑杆内容对齐到同一列（实测差 1px），
+  数值固定 6 字符宽，右边缘成一列。
+- **开关有状态**：工具栏「面板」按钮在侧栏打开时高亮，不再看不出开/关。
+- **插件列表两列**：12 个插件按两列卡片排布，信息密度与可读性平衡。
+
+改造前后的截图存放在 `design/before/` 与 `design/after/`。
+
 ## 性能基准
 
 测试机：**AMD Ryzen 7 H 255（Radeon 780M）· 19.8 GB RAM · Windows 11 26200 · Python 3.12.14**。
 数字用 python tools/bench.py 可复现，同一台机器连跑三次取中位数。
 
-| 项目 | 8.3.0 | 8.3.1 | 8.3.2 / 8.5.4 |
+| 项目 | 8.3.0 | 8.3.1 | 8.3.2 / 8.5.5 |
 | :--- | ---: | ---: | ---: |
 | 启动到可交互 | 1677 ms | 1583 ms | **1530 ms** |
 | **4000 万像素首帧** | 759 ms | 777 ms | **223~425 ms（< 1 秒）**，真实 18MB 图、3 轮标准差 2~30 ms |
@@ -350,4 +368,4 @@ make_platforms.py      构建看图版 + macOS + Linux 包
 - macOS 与 Linux 版本为**源码运行包**，只在 Windows 上验证过，界面细节可能有差异。
 - 安装包未做代码签名，Windows SmartScreen 可能提示「未知发布者」。
 - 「打开所在文件夹」依赖 Windows 的 `os.startfile`，在 macOS / Linux 上无动作。
-- **全屏功能已于 8.5.4 移除**（F11 全屏存在显示不全的问题，权衡后直接去掉）。
+- **全屏功能已于 8.5.5 移除**（F11 全屏存在显示不全的问题，权衡后直接去掉）。

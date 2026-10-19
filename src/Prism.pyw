@@ -44,7 +44,7 @@ IS_WIN = sys.platform.startswith("win")
 K = "Command" if IS_MAC else "Control"
 
 APP_NAME = "Prism"
-APP_VERSION = "8.5.4"
+APP_VERSION = "8.5.5"
 APP_BUILD = "2025-12.9"
 # ---------------------------------------------------------------- 运行模式
 # 同一份源码编出两个版本：
@@ -1409,6 +1409,10 @@ class _QpeRoundButton(tk.Canvas):
             return self._text
         if key == "state":
             return self._state
+        if key == "bg":
+            return self._bg
+        if key == "fg":
+            return self._fg
         try:
             return tk.Canvas.cget(self, key)
         except Exception:
@@ -3024,7 +3028,7 @@ class QPEApp(_BASE):
         self._sep(g)
         if not VIEWER_ONLY:
             # 菜单里已经有「编辑」，这个按钮是开关侧栏，改名避免重名
-            self._mkbtn(g, "面板", self.toggle_panel)
+            self.panel_btn = self._mkbtn(g, "面板", self.toggle_panel)
 
         g = self._bar_group(2)
         self._sep(g)
@@ -7224,6 +7228,19 @@ class QPEApp(_BASE):
         self.pcan.yview_scroll(-n if units > 0 else n, "units")
         return "break"
 
+    def _sync_panel_btn(self):
+        """面板开关要有选中态，否则看不出当前是开还是关。"""
+        b = getattr(self, "panel_btn", None)
+        if b is None:
+            return
+        try:
+            if self.panel_shown:
+                b.configure(bg=TROUGH_BG, fg=FG_HI)
+            else:
+                b.configure(bg=BAR_BG, fg=FG)
+        except Exception:
+            pass
+
     def toggle_panel(self, show=None):
         if VIEWER_ONLY:            # 看图版没有修图面板
             return
@@ -7235,6 +7252,7 @@ class QPEApp(_BASE):
             self.panel.pack(side="right", fill="y", before=self.canvas)
         else:
             self.panel.pack_forget()
+        self._sync_panel_btn()
         self.after(40, self._render)
         if want:
             self.after(60, self._update_histogram)
@@ -8201,9 +8219,15 @@ class QPEApp(_BASE):
                                  "点「重新扫描」即可。", font=self.ui_font,
                      bg=BAR_BG, fg=FG_DIM, justify="left", anchor="w").pack(
                          fill="x", pady=px(10))
-        for item in self.plugins:
-            row = tk.Frame(inner, bg=BTN_BG)
-            row.pack(fill="x", pady=px(3))
+        # 12 个插件排成一列太挤，改成两列卡片网格
+        grid = tk.Frame(inner, bg=BAR_BG)
+        grid.pack(fill="x")
+        grid.columnconfigure(0, weight=1, uniform="plug")
+        grid.columnconfigure(1, weight=1, uniform="plug")
+        for _idx, item in enumerate(self.plugins):
+            row = tk.Frame(grid, bg=BTN_BG)
+            row.grid(row=_idx // 2, column=_idx % 2, sticky="nsew",
+                     padx=(0 if _idx % 2 == 0 else px(4), 0), pady=px(3))
             txt = tk.Frame(row, bg=BTN_BG)
             txt.pack(side="left", fill="x", expand=True, padx=px(10),
                      pady=px(6))
@@ -8214,7 +8238,7 @@ class QPEApp(_BASE):
             if item["author"]:
                 sub += "　·　" + item["author"]
             tk.Label(txt, text=sub, font=self.ui_font_s, bg=BTN_BG, fg=FG_DIM,
-                     anchor="w", justify="left", wraplength=px(340)).pack(
+                     anchor="w", justify="left", wraplength=px(180)).pack(
                          fill="x")
             caps = item.get("caps") or {}
             if caps:

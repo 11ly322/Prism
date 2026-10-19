@@ -1,6 +1,6 @@
 ﻿# Prism 发布脚本：打包主程序 -> 生成自解压安装包 -> 删除旧版本发布物
 # 用法：powershell -ExecutionPolicy Bypass -File make_release.ps1
-param([switch]$SkipApp)
+param([switch]$SkipApp, [switch]$CheckOnly)
 
 $ErrorActionPreference = 'Continue'
 $root = $PSScriptRoot
@@ -8,6 +8,37 @@ $py = 'C:\Users\75643\.dsh\dsh-runtimes\dsh-primary-runtime\dependencies\python\
 $env:PYTHONIOENCODING = 'utf-8'
 
 $ver = (Select-String -Path (Join-Path $root 'src\Prism.pyw') -Pattern 'APP_VERSION = "(.*)"').Matches[0].Groups[1].Value
+
+# ---- 只做链接自检，不打包：提交前先跑这个 ----
+if ($CheckOnly) {
+    $pg = Join-Path $root 'docs\index.html'
+    if (-not (Test-Path $pg)) { Write-Host '找不到 docs/index.html'; exit 1 }
+    $html = Get-Content $pg -Raw -Encoding UTF8
+    $hrefs = [regex]::Matches($html, 'href="(https://github\.com/11ly322/Prism/releases/download/[^"]+)"') |
+             ForEach-Object { $_.Groups[1].Value } | Sort-Object -Unique
+    if ($hrefs.Count -eq 0) { Write-Host '页面里没有任何 release 下载链接'; exit 1 }
+    $bad = @()
+    foreach ($u in $hrefs) {
+        $code = 0
+        foreach ($attempt in 1..3) {
+            try {
+                $r = Invoke-WebRequest -Uri $u -Method Head -UseBasicParsing -MaximumRedirection 5 -TimeoutSec 25
+                $code = [int]$r.StatusCode
+            } catch { try { $code = [int]$_.Exception.Response.StatusCode.value__ } catch { $code = 0 } }
+            if ($code -eq 200) { break }
+            Start-Sleep -Seconds 4
+        }
+        $name = ($u -replace '.*/download/', '')
+        Write-Host ("   {0}  {1}" -f $name.PadRight(34), $code)
+        if ($code -ne 200) { $bad += $name }
+    }
+    if ($bad.Count -gt 0) {
+        Write-Host ("链接自检失败：{0} 条不可用" -f $bad.Count) -ForegroundColor Red
+        exit 1
+    }
+    Write-Host ("链接自检通过：{0} 条全部 200（页面版本 {1}）" -f $hrefs.Count, $ver)
+    exit 0
+}
 Write-Host "== 打包 Prism $ver =="
 
 Get-Process -Name Prism -ErrorAction SilentlyContinue | ForEach-Object { $_.Kill() }

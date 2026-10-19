@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  static:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: 安装依赖
+        run: pip install pillow
+      - name: 语法检查
+        run: |
+          python -m py_compile src/Prism.pyw src/installer.pyw
+          python -m py_compile tools/bench.py tools/plugincheck.py
+      - name: 版本一致性
+        run: python check_versions.py
+
+  gui:
+    runs-on: windows-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: 安装依赖
+        run: pip install pillow tkinterdnd2
+      - name: 核心回归
+        run: python tools/selfcheck.py
+      - name: 新功能回归
+        run: python tools/newcheck.py
+      - name: 美颜回归
+        run: python tools/beautycheck.py
+      - name: 插件异步回归
+        run: python tools/plugincheck.py
+      - name: 上传日志
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: logs
+          path: |
+            src/logs/
+            src/Prism_settings.json
+          if-no-files-found: ignore

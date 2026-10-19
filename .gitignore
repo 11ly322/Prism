@@ -1,0 +1,26 @@
+# 构建产物（由 make_release.ps1 重新生成，不入库）
+_build/
+__pycache__/
+*.pyc
+*.spec
+_internal/
+Prism.exe
+Lumen.exe
+QPE.exe
+
+# 根目录的安装包副本：正式发布物在 docs/ 里
+Prism * 自解压安装.exe
+QPE * 自解压安装.exe
+
+# 旧的 site/ 与 docs/ 重复，已合并到 docs/
+site/
+
+# 本地配置
+Prism_settings.json
+src/Prism_settings.json
+Prism_presets.json
+*.log
+
+# 发布产物不再进仓库：构建后上传到 GitHub Releases
+docs/*.exe
+docs/*.zip

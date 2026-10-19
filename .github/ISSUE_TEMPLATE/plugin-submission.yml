@@ -1,0 +1,83 @@
+name: 插件收录申请
+description: 提交一个希望被 Prism 收录的插件
+title: "[插件] "
+labels: ["plugin"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        请先读 docs/plugin-api.md 与 CONTRIBUTING.md。
+        插件以完整权限运行，我们只收录可读源码、不联网、不破坏原图的插件。
+  - type: input
+    id: plugin_id
+    attributes:
+      label: 插件 id
+      description: PLUGIN["id"] 的值，小写字母/数字/下划线
+      placeholder: myplugin
+    validations:
+      required: true
+  - type: input
+    id: plugin_name
+    attributes:
+      label: 插件名称
+      placeholder: 我的插件
+    validations:
+      required: true
+  - type: input
+    id: api
+    attributes:
+      label: API 版本
+      description: PLUGIN["api"] 的值，当前应为 2
+      placeholder: "2"
+    validations:
+      required: true
+  - type: textarea
+    id: purpose
+    attributes:
+      label: 用途
+      description: 这个插件做什么、适合什么场景
+    validations:
+      required: true
+  - type: textarea
+    id: params
+    attributes:
+      label: 参数
+      description: 每个参数的 key / 类型 / 范围 / 默认值
+      placeholder: |
+        amount  slider  0-100  default 60
+        mode    select  原样/偏暖/偏冷  default 偏暖
+    validations:
+      required: true
+  - type: dropdown
+    id: network
+    attributes:
+      label: 是否联网
+      options:
+        - 否（仅本地计算）
+        - 是（请在下方说明用途）
+    validations:
+      required: true
+  - type: dropdown
+    id: writes
+    attributes:
+      label: 是否会写文件
+      options:
+        - 否
+        - 是（请说明写到哪里）
+    validations:
+      required: true
+  - type: input
+    id: source
+    attributes:
+      label: 源码链接
+      description: 必须可直接阅读完整源码（Gist / 仓库 / PR 均可）
+      placeholder: https://github.com/...
+    validations:
+      required: true
+  - type: textarea
+    id: tested
+    attributes:
+      label: 测试情况
+      description: 在什么图、什么版本、什么系统上测过
+    validations:
+      required: true

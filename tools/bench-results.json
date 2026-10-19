@@ -1,0 +1,270 @@
+{
+  "machine": {
+    "os": "Windows-11-10.0.26200-SP0",
+    "python": "3.12.14",
+    "cpu": "AMD Ryzen 7 H 255 w/ Radeon 780M Graphics",
+    "ram_gb": 19.8,
+    "machine": "AMD64"
+  },
+  "runs": [
+    {
+      "app_version": "8.3.0",
+      "machine": {
+        "os": "Windows-11-10.0.26200-SP0",
+        "python": "3.12.14",
+        "cpu": "AMD Ryzen 7 H 255 w/ Radeon 780M Graphics",
+        "ram_gb": 19.8,
+        "machine": "AMD64"
+      },
+      "repeat": 3,
+      "proxy_limit": 3400,
+      "startup_ms": 1677,
+      "first_frame_40mp_ms": 759,
+      "slider_ms": 77,
+      "proxy_ms": 183,
+      "mem_current_mb": 154,
+      "mem_peak_mb": 241,
+      "note": "real machine, full 16 threads",
+      "paths": {}
+    },
+    {
+      "app_version": "8.3.3",
+      "machine": {
+        "os": "Windows-11-10.0.26200-SP0",
+        "python": "3.12.14",
+        "cpu": "AMD Ryzen 7 H 255 w/ Radeon 780M Graphics",
+        "ram_gb": 19.8,
+        "machine": "AMD64"
+      },
+      "repeat": 3,
+      "proxy_limit": 3400,
+      "startup_ms": 1530,
+      "first_frame_40mp_ms": 411,
+      "slider_ms": 77,
+      "proxy_ms": 1,
+      "mem_current_mb": 179,
+      "mem_peak_mb": 211,
+      "note": "real machine, full 16 threads",
+      "paths": {}
+    },
+    {
+      "app_version": "8.3.5",
+      "machine": {
+        "os": "Windows-11-10.0.26200-SP0",
+        "python": "3.12.14",
+        "cpu": "AMD Ryzen 7 H 255 w/ Radeon 780M Graphics",
+        "ram_gb": 19.8,
+        "machine": "AMD64"
+      },
+      "repeat": 5,
+      "proxy_limit": 3400,
+      "startup_ms": 3768,
+      "startup_sd": 86,
+      "first_frame_40mp_ms": 1677,
+      "first_sd": 123,
+      "first_min": 1557,
+      "first_max": 1928,
+      "slider_ms": 267,
+      "slider_sd": 29,
+      "mem_current_mb": 203,
+      "mem_peak_mb": 227,
+      "note": "2-core bound, 5 rounds, no paths (statistics: median/sd)",
+      "paths": {}
+    },
+    {
+      "app_version": "8.3.5",
+      "machine": {
+        "os": "Windows-11-10.0.26200-SP0",
+        "python": "3.12.14",
+        "cpu": "AMD Ryzen 7 H 255 w/ Radeon 780M Graphics",
+        "ram_gb": 19.8,
+        "machine": "AMD64"
+      },
+      "repeat": 5,
+      "proxy_limit": 2800,
+      "startup_ms": 4560,
+      "startup_sd": 427,
+      "first_frame_40mp_ms": 1782,
+      "first_sd": 125,
+      "first_min": 1535,
+      "first_max": 1834,
+      "slider_ms": 229,
+      "slider_sd": 29,
+      "mem_current_mb": 182,
+      "mem_peak_mb": 206,
+      "note": "2-core bound, 5 rounds, no paths (statistics: median/sd)",
+      "paths": {}
+    },
+    {
+      "machine": {
+        "os": "Windows-11-10.0.26200-SP0",
+        "python": "3.12.14",
+        "cpu": "AMD Ryzen 7 H 255 w/ Radeon 780M Graphics",
+        "ram_gb": 19.8,
+        "machine": "AMD64"
+      },
+      "app_version": "8.3.6",
+      "startup_ms": 4249.4,
+      "first_frame_40mp_ms": 2399.7,
+      "slider_ms": 232.0,
+      "proxy_ms": 1.3,
+      "mem_current_mb": 257.5,
+      "mem_peak_mb": 374.8,
+      "repeat": 3,
+      "proxy_limit": 3400,
+      "note": "realistic 18MB noise image, full 16 threads",
+      "paths": {
+        "draft_1600": {
+          "ms": 556.6846000001533,
+          "mp": 2.5,
+          "mp_s": 4.49,
+          "size": [
+            2000,
+            1250
+          ]
+        },
+        "load_full": {
+          "ms": 725.7747999992716,
+          "mp": 40.0,
+          "mp_s": 55.11,
+          "size": [
+            8000,
+            5000
+          ]
+        },
+        "reduce4_resize1600": {
+          "ms": 222.97070000058739,
+          "mp": 1.6,
+          "mp_s": 7.18,
+          "size": [
+            1600,
+            1000
+          ]
+        },
+        "resize1600_only": {
+          "ms": 811.744999999064,
+          "mp": 1.6,
+          "mp_s": 1.97,
+          "size": [
+            1600,
+            1000
+          ]
+        }
+      }
+    },
+    {
+      "machine": {
+        "os": "Windows-11-10.0.26200-SP0",
+        "python": "3.12.14",
+        "cpu": "AMD Ryzen 7 H 255 w/ Radeon 780M Graphics",
+        "ram_gb": 19.8,
+        "machine": "AMD64"
+      },
+      "app_version": "8.3.6",
+      "startup_ms": 1653.0,
+      "first_frame_40mp_ms": 601.6,
+      "slider_ms": 74.6,
+      "proxy_ms": 1.6,
+      "mem_current_mb": 243.6,
+      "mem_peak_mb": 354.0,
+      "repeat": 3,
+      "proxy_limit": 3400,
+      "note": "realistic 18MB, first frame BILINEAR",
+      "paths": {
+        "draft_1600": {
+          "ms": 554.2885000013484,
+          "mp": 2.5,
+          "mp_s": 4.51,
+          "size": [
+            2000,
+            1250
+          ]
+        },
+        "load_full": {
+          "ms": 703.2286000012391,
+          "mp": 40.0,
+          "mp_s": 56.88,
+          "size": [
+            8000,
+            5000
+          ]
+        },
+        "reduce4_resize1600": {
+          "ms": 175.48229999920295,
+          "mp": 1.6,
+          "mp_s": 9.12,
+          "size": [
+            1600,
+            1000
+          ]
+        },
+        "resize1600_only": {
+          "ms": 811.5170000000944,
+          "mp": 1.6,
+          "mp_s": 1.97,
+          "size": [
+            1600,
+            1000
+          ]
+        }
+      }
+    },
+    {
+      "machine": {
+        "os": "Windows-11-10.0.26200-SP0",
+        "python": "3.12.14",
+        "cpu": "AMD Ryzen 7 H 255 w/ Radeon 780M Graphics",
+        "ram_gb": 19.8,
+        "machine": "AMD64"
+      },
+      "app_version": "8.3.7",
+      "startup_ms": 1103.8,
+      "first_frame_40mp_ms": 223.2,
+      "slider_ms": 51.5,
+      "proxy_ms": 0.0,
+      "mem_current_mb": 241.1,
+      "mem_peak_mb": 340.8,
+      "repeat": 3,
+      "proxy_limit": 3400,
+      "note": "realistic 18MB, two-stage preview load",
+      "paths": {
+        "draft_1600": {
+          "ms": 179.42199999924924,
+          "mp": 2.5,
+          "mp_s": 13.93,
+          "size": [
+            2000,
+            1250
+          ]
+        },
+        "load_full": {
+          "ms": 256.82549999874027,
+          "mp": 40.0,
+          "mp_s": 155.75,
+          "size": [
+            8000,
+            5000
+          ]
+        },
+        "reduce4_resize1600": {
+          "ms": 79.32199999959266,
+          "mp": 1.6,
+          "mp_s": 20.17,
+          "size": [
+            1600,
+            1000
+          ]
+        },
+        "resize1600_only": {
+          "ms": 363.61720000058995,
+          "mp": 1.6,
+          "mp_s": 4.4,
+          "size": [
+            1600,
+            1000
+          ]
+        }
+      }
+    }
+  ]
+}

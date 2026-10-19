@@ -131,6 +131,9 @@ if ((Test-Path (Join-Path $root 'Prism.exe')) -and (Test-Path (Join-Path $root '
     Write-Host '   !! 未找到 onedir 构建，跳过便携版'
 }
 
+Write-Host '== 外观回归截图 =='
+& $py (Join-Path $root 'tools\uishot.py')
+
 # ---- 发布到 GitHub Release（仓库不保存二进制）----
 $page = Join-Path $root 'docs\index.html'
 $pageBak = "$page.bak"

@@ -44,7 +44,7 @@ IS_WIN = sys.platform.startswith("win")
 K = "Command" if IS_MAC else "Control"
 
 APP_NAME = "Prism"
-APP_VERSION = "8.5.5"
+APP_VERSION = "8.5.6"
 APP_BUILD = "2025-12.9"
 # ---------------------------------------------------------------- 运行模式
 # 同一份源码编出两个版本：
@@ -1292,6 +1292,28 @@ class ThumbWorker(threading.Thread):
             except Exception:
                 im = None
             self.out.put((path, im))
+
+
+def _round_window(win):
+    """给顶层窗口申请 Windows 11 的原生圆角。
+
+    Tk 自己的 Toplevel 是直角，自绘圆角需要无边框窗口并自己实现拖动/缩放/关闭，
+    代价很大。Windows 11 的 DWM 提供一个属性（DWMWA_WINDOW_CORNER_PREFERENCE = 33，
+    值 2 = ROUND），系统会替我们画圆角，且不影响拖动与缩放。
+    """
+    if sys.platform != "win32":
+        return
+    try:
+        import ctypes
+        win.update_idletasks()
+        hwnd = ctypes.windll.user32.GetParent(win.winfo_id())
+        if not hwnd:
+            hwnd = win.winfo_id()
+        pref = ctypes.c_int(2)          # DWMWCP_ROUND
+        ctypes.windll.dwmapi.DwmSetWindowAttribute(
+            ctypes.c_void_p(hwnd), 33, ctypes.byref(pref), ctypes.sizeof(pref))
+    except Exception:
+        pass
 
 
 class _QpeRoundButton(tk.Canvas):
@@ -3229,6 +3251,7 @@ class QPEApp(_BASE):
         b("<KP_Subtract>", lambda e: self.zoom_by(1 / 1.25))
         mb("<Mod-0>", lambda e: self.fit_window())
         self.protocol("WM_DELETE_WINDOW", self.on_close)
+        self.after(60, lambda: _round_window(self))
 
     # ------------------------------------------------------------ 打开
 
@@ -5617,6 +5640,50 @@ class QPEApp(_BASE):
             self._last_zoom_txt = zt
 
     # ------------------------------------------------------------ 修图面板
+
+    def _hover_tip(self, widget, text, delay=420):
+        """鼠标停留片刻后弹一行说明（用于插件卡片这种信息压缩场景）。"""
+        state = {"job": None, "win": None}
+
+        def show():
+            state["job"] = None
+            try:
+                w = tk.Toplevel(widget)
+                w.wm_overrideredirect(True)
+                _round_window(w)
+                tk.Label(w, text=text, font=self.ui_font_s, bg=BAR_BG, fg=FG,
+                         justify="left", padx=px(8), pady=px(5),
+                         wraplength=px(320)).pack()
+                x = widget.winfo_rootx() + px(12)
+                y = widget.winfo_rooty() + widget.winfo_height() + px(6)
+                w.wm_geometry("+%d+%d" % (x, y))
+                state["win"] = w
+            except Exception:
+                state["win"] = None
+
+        def enter(_e=None):
+            leave()
+            state["job"] = widget.after(delay, show)
+
+        def leave(_e=None):
+            job = state.get("job")
+            if job is not None:
+                try:
+                    widget.after_cancel(job)
+                except Exception:
+                    pass
+                state["job"] = None
+            win = state.get("win")
+            if win is not None:
+                try:
+                    win.destroy()
+                except Exception:
+                    pass
+                state["win"] = None
+
+        widget.bind("<Enter>", enter, add="+")
+        widget.bind("<Leave>", leave, add="+")
+        return leave
 
     def _panel_btn(self, parent, text, cmd, side="left", wide=False):
         # 圆角按钮：Tk 的 Button 只能画直角，这里换成 Canvas 自绘控件
@@ -8232,21 +8299,22 @@ class QPEApp(_BASE):
             txt.pack(side="left", fill="x", expand=True, padx=px(10),
                      pady=px(6))
             head = item["name"] + (("  " + item["ver"]) if item["ver"] else "")
-            tk.Label(txt, text=head, font=self.ui_font_b, bg=BTN_BG, fg=FG,
-                     anchor="w").pack(fill="x")
-            sub = item["desc"] or item["file"]
+            name_lbl = tk.Label(txt, text=head, font=self.ui_font_b, bg=BTN_BG,
+                                fg=FG, anchor="w")
+            name_lbl.pack(fill="x")
+            # 卡片只留名称；描述/作者/能力收进 hover 提示。
+            # 12 个插件排两列时，每行三行文字会把列表撑得很长。
+            tip = [item["desc"] or item["file"]]
             if item["author"]:
-                sub += "　·　" + item["author"]
-            tk.Label(txt, text=sub, font=self.ui_font_s, bg=BTN_BG, fg=FG_DIM,
-                     anchor="w", justify="left", wraplength=px(180)).pack(
-                         fill="x")
+                tip.append("作者：" + item["author"])
             caps = item.get("caps") or {}
             if caps:
-                cap_txt = "　·　联网 %s · 写文件 %s" % (
+                tip.append("联网 %s · 写文件 %s" % (
                     "是" if caps.get("network") else "否",
-                    "是" if caps.get("writes_files") else "否")
-                tk.Label(txt, text=cap_txt, font=self.ui_font_s, bg=BTN_BG,
-                         fg=FG_DIM, anchor="w").pack(fill="x")
+                    "是" if caps.get("writes_files") else "否"))
+            text_tip = "\n".join(tip)
+            for _w in (row, txt, name_lbl):
+                self._hover_tip(_w, text_tip)
             self._panel_btn(row, "运行", lambda it=item: self.run_plugin(it))
         for fn in getattr(self, "plugins_disabled", []):
             tk.Label(inner, text="已禁用 %s（改回 .py 即可启用）" % fn,

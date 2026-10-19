@@ -44,7 +44,7 @@ IS_WIN = sys.platform.startswith("win")
 K = "Command" if IS_MAC else "Control"
 
 APP_NAME = "Prism"
-APP_VERSION = "8.5.1"
+APP_VERSION = "8.5.2"
 APP_BUILD = "2025-12.9"
 # ---------------------------------------------------------------- 运行模式
 # 同一份源码编出两个版本：
@@ -244,6 +244,16 @@ FONT_SM = 12
 FONT_MD = 13
 FONT_LG = 15
 FONT_XL = 18
+
+# 圆角阶梯（Frame 画不出圆角，目前只用在自绘 Canvas 控件上；
+# 卡片层次用「更深的面板底 + 略亮的分区」来表达）
+RADIUS_SM = 4
+RADIUS_MD = 8
+RADIUS_LG = 12
+
+PANEL_BG = "#141414"      # 面板底（比分区更暗，分区才浮得起来）
+CARD_BG = "#1c1c1c"       # 分区卡片（= 原来的 BAR_BG）
+CARD_LINE = "#2a2a2a"     # 卡片分隔线
 
 def _apply_palette(name):
     """把主题写进模块级颜色常量；之后新建的控件就用新色。"""
@@ -2821,9 +2831,9 @@ class QPEApp(_BASE):
         self.bar_laid_out = True
 
     def _sep(self, parent):
-        f = tk.Frame(parent, bg="#333333", width=max(1, px(1)),
-                     height=px(18))
-        f.pack(side="left", padx=px(6), pady=px(8))
+        f = tk.Frame(parent, bg=CARD_LINE, width=max(1, px(1)),
+                     height=px(20))
+        f.pack(side="left", padx=px(SPACE_SM), pady=px(SPACE_MD))
 
     def _build_ui(self):
         self.bar = tk.Frame(self, bg=BAR_BG, height=px(36))
@@ -5587,21 +5597,23 @@ class QPEApp(_BASE):
     def _section(self, parent, title, opened=True, on_open=None):
         # 分组标题只用「小箭头 + 小字 + 一条细线」，不画底色块、不加强调条。
         # 这样一列分组靠留白和细线区分层次，而不是靠仿 Lightroom 的重标题栏。
-        wrap = tk.Frame(parent, bg=BAR_BG)
-        wrap.pack(fill="x", pady=(px(SPACE_LG), 0))
-        head = tk.Frame(wrap, bg=BAR_BG, cursor="hand2")
+        # 每块分区是一张「卡片」：面板底更深（PANEL_BG），卡片用 CARD_BG，
+        # 靠明度差和 6px 外距分层，而不是靠边框或色块。
+        wrap = tk.Frame(parent, bg=CARD_BG)
+        wrap.pack(fill="x", padx=px(SPACE_MD), pady=(px(SPACE_MD), 0))
+        head = tk.Frame(wrap, bg=CARD_BG, cursor="hand2")
         head.pack(fill="x")
         mark = tk.Label(head, text="▾" if opened else "▸",
-                        font=self.ui_font_s, bg=BAR_BG,
+                        font=self.ui_font_s, bg=CARD_BG,
                         fg=FG_DIM, width=1, cursor="hand2")
         mark.pack(side="left")
-        title_lbl = tk.Label(head, text=title, font=self.ui_font_m, bg=BAR_BG,
+        title_lbl = tk.Label(head, text=title, font=self.ui_font_m, bg=CARD_BG,
                              fg=FG if opened else FG_DIM, anchor="w",
                              cursor="hand2")
         title_lbl.pack(side="left", padx=(px(1), px(SPACE_LG)))
         rule = tk.Frame(head, bg="#2e2e2e", height=max(1, px(1)))
         rule.pack(side="left", fill="x", expand=True, pady=(px(1), 0))
-        body = tk.Frame(parent, bg=BAR_BG)
+        body = tk.Frame(parent, bg=CARD_BG)
         state = {"open": opened, "ran": False}
 
         def ensure():
@@ -5848,7 +5860,7 @@ class QPEApp(_BASE):
         except Exception:
             mean = 0.0
         # 面板只有约 221 逻辑像素宽，长句必然折行错位；改成三段短读数
-        lbl.configure(text="暗 %.2f%%   亮 %.2f%%   均 %.0f" % (
+        lbl.configure(text="暗%5.2f%%   亮%5.2f%%   均%4.0f" % (
             min(100.0, dark * 100.0 / total),
             min(100.0, bright * 100.0 / total), mean),
             fg=("#ff8a6b" if (dark > total * 0.02 or bright > total * 0.02)
@@ -6081,7 +6093,7 @@ class QPEApp(_BASE):
             scrollregion=self.pcan.bbox("all")))
         self.pcan.bind("<Configure>", lambda e: self.pcan.itemconfigure(
             self.pwin, width=e.width))
-        inner = tk.Frame(wrap, bg=BAR_BG)
+        inner = tk.Frame(wrap, bg=PANEL_BG)
         inner.pack(fill="both", expand=True, padx=px(4), pady=px(8))
 
         tk.Label(inner, text="修图", font=self.ui_font_b, bg=BAR_BG, fg=FG,
@@ -6096,13 +6108,13 @@ class QPEApp(_BASE):
         self.hist_can.bind("<Button-3>", self._hist_clear)
         self.hist_can.bind("<Leave>", self._hist_clear)
         self.hist_info = tk.Label(inner, text="", font=self.mono_font,
-                                  bg=BAR_BG, fg=FG_DIM, anchor="w",
+                                  bg=PANEL_BG, fg=FG_DIM, anchor="w",
                                   justify="left")
         self.hist_info.pack(fill="x", pady=(px(1), 0))
 
         # 常驻入口：不依赖滚动位置，任何窗口高度都点得到
         # 2x2 网格：四个按钮塞一行会被面板宽度裁掉（最后一个是半个字）
-        quick = tk.Frame(inner, bg=BAR_BG)
+        quick = tk.Frame(inner, bg=PANEL_BG)
         quick.pack(fill="x", pady=(px(SPACE_SM), px(SPACE_XS)))
         quick.columnconfigure(0, weight=1, uniform="qb")
         quick.columnconfigure(1, weight=1, uniform="qb")
@@ -6116,15 +6128,15 @@ class QPEApp(_BASE):
                     padx=(0 if _i % 2 == 0 else px(SPACE_SM), 0),
                     pady=(0 if _i < 2 else px(SPACE_SM), 0))
         self.ai_status_lbl = tk.Label(inner, text="", font=self.ui_font_s,
-                                      bg=BAR_BG, fg=FG_DIM, anchor="w",
+                                      bg=PANEL_BG, fg=FG_DIM, anchor="w",
                                       justify="left", wraplength=px(200))
         self.ai_status_lbl.pack(fill="x", pady=(0, px(1)))
         # 进度条与进度文字默认**不占位**：之前它们一直 pack 着，
         # 空的时候也吃掉约 50 逻辑像素，状态行到「基本」之间就留出一大块空白。
-        self.ai_bar = tk.Canvas(inner, height=px(5), bg=BAR_BG,
+        self.ai_bar = tk.Canvas(inner, height=px(5), bg=PANEL_BG,
                                 highlightthickness=0, bd=0)
         self.ai_progress_lbl = tk.Label(inner, text="", font=self.ui_font_s,
-                                        bg=BAR_BG, fg=ACCENT, anchor="w")
+                                        bg=PANEL_BG, fg=ACCENT, anchor="w")
         self._ai_extra_shown = False
         self._ai_job = self.after(120, self._refresh_ai_status)
 
@@ -6141,43 +6153,43 @@ class QPEApp(_BASE):
             self._sec_preset, self._sec_snapshot,
         ])
 
-        row = tk.Frame(inner, bg=BAR_BG)
+        row = tk.Frame(inner, bg=PANEL_BG)
         row.pack(fill="x", pady=(px(SPACE_XL), 0))
         self._panel_btn(row, "裁剪", self.toggle_crop)
         # 重置全部 / 复制设置 / 关于 已经收进设置窗口
-        row = tk.Frame(inner, bg=BAR_BG)
+        row = tk.Frame(inner, bg=PANEL_BG)
         row.pack(fill="x", pady=(px(3), 0))
         self.hist_undo_btn = self._panel_btn(row, "撤销", self.undo)
         self.hist_redo_btn = self._panel_btn(row, "重做", self.redo)
-        row = tk.Frame(inner, bg=BAR_BG)
+        row = tk.Frame(inner, bg=PANEL_BG)
         row.pack(fill="x", pady=(px(3), 0))
         self.cmp_btn = self._panel_btn(row, "对比原图", self.toggle_compare)
         self._panel_btn(row, "批量", self.batch_export)
         self._panel_btn(row, "改名", self.batch_rename)
-        row = tk.Frame(inner, bg=BAR_BG)
+        row = tk.Frame(inner, bg=PANEL_BG)
         row.pack(fill="x", pady=(px(3), 0))
         self.split_btn = self._panel_btn(row, "分屏对比", self.toggle_split)
         self._panel_btn(row, "胶片条", self.toggle_strip)
         self._panel_btn(row, "网格", self.toggle_grid)
-        row = tk.Frame(inner, bg=BAR_BG)
+        row = tk.Frame(inner, bg=PANEL_BG)
         row.pack(fill="x", pady=(px(3), 0))
         self.sort_btn = self._panel_btn(row, "排序：文件名", self._sort_menu)
         pass
-        row = tk.Frame(inner, bg=BAR_BG)
+        row = tk.Frame(inner, bg=PANEL_BG)
         row.pack(fill="x", pady=(px(3), 0))
         self._panel_btn(row, "所在文件夹", self.reveal_folder)
-        row = tk.Frame(inner, bg=BAR_BG)
+        row = tk.Frame(inner, bg=PANEL_BG)
         row.pack(fill="x", pady=(px(3), 0))
         self.auto_btn = self._panel_btn(row, "自动色调", self.auto_tone)
         self.clip_btn = self._panel_btn(row, "过曝警告", self.toggle_clip)
-        row = tk.Frame(inner, bg=BAR_BG)
+        row = tk.Frame(inner, bg=PANEL_BG)
         row.pack(fill="x", pady=(px(3), 0))
         self.pick_btn = self._panel_btn(row, "锁定取色", self.toggle_pick_lock)
-        row = tk.Frame(inner, bg=BAR_BG)
+        row = tk.Frame(inner, bg=PANEL_BG)
         row.pack(fill="x", pady=(px(3), 0))
         self.theme_btn = self._panel_btn(row, "设置", self.show_settings)
         pass
-        row = tk.Frame(inner, bg=BAR_BG)
+        row = tk.Frame(inner, bg=PANEL_BG)
         row.pack(fill="x", pady=(px(3), 0))
         self._panel_btn(row, "粘贴设置", self.paste_settings, side="top",
                         wide=True)

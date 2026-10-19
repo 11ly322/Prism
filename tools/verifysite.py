@@ -69,6 +69,18 @@ def get_with_retry(url, deadline, interval=10, method="GET"):
     raise RuntimeError("%s 一直失败：%s" % (url, last))
 
 
+def get_retry(url, tries=3, interval=5):
+    """部署等待结束后，单条检查自己重试，避免被别的慢请求耗尽总预算。"""
+    last = None
+    for _ in range(tries):
+        try:
+            return fetch(url, timeout=25)
+        except Exception as exc:
+            last = exc
+            time.sleep(interval)
+    raise last
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--ver", default="")
@@ -111,8 +123,8 @@ def main():
                          ("en/", 'data-ver="%s"' % ver),
                          ("ja/", 'data-ver="%s"' % ver)):
         try:
-            code, body = get_with_retry(
-                base + lang + "?cb=" + str(int(time.time())), deadline)
+            code, body = get_retry(
+                base + lang + "?cb=" + str(int(time.time())))
             text = body.decode("utf-8", "replace")
             ok("语言页 " + (lang or "zh"), code == 200 and needle in text,
                str(code))
@@ -120,7 +132,7 @@ def main():
             ok("语言页 " + (lang or "zh"), False, str(exc))
 
     try:
-        code, body = get_with_retry(base + "plugins/index.json", deadline)
+        code, body = get_retry(base + "plugins/index.json")
         mod = importlib.machinery.SourceFileLoader(
             "vs", APP).load_module()
         entries = mod.validate_plugin_catalog(json.loads(body.decode("utf-8")))
@@ -140,9 +152,11 @@ def main():
         except Exception as exc:
             ok("清单插件 " + entry["id"], False, str(exc))
 
-    for doc in ("plugin-api.md", "plugin-api.en.md", "plugin-api.ja.md"):
+    for doc in ("plugin-api.md", "plugin-api.en.md", "plugin-api.ja.md",
+                "plugin-guide.html", "plugin-guide.en.html",
+                "plugin-guide.ja.html"):
         try:
-            status, _ = fetch(base + doc)
+            status, _ = get_retry(base + doc)
             ok("文档 " + doc, status == 200, str(status))
         except Exception as exc:
             ok("文档 " + doc, False, str(exc))

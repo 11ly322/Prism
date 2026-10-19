@@ -1,39 +1,92 @@
-# 自带插件
+# Prism 插件索引
 
-12 个插件全是 **api 2**，源码就在本目录，改完约 1.5 秒自动热重载。
-想照着写：先看 _template.py，再看 黑白.py（最短）。
+12 个自带插件全是 **api 2**，源码就在本目录。改完保存，Prism 约 1.5 秒自动热重载。
+想照着写：先看 `_template.py`，再看 `黑白.py`（最短）。
 
-| id | 名称 | 参数（控件 / 默认） | 适用场景 | 源码 |
-| --- | --- | --- | --- | --- |
-| pixelate | 像素化 | slider 方块大小 4~160（24）· select 取样方式 · checkbox 画方块边 | 马赛克 / 像素风头像 | 像素化.py |
-| sepia | 复古胶片 | slider 褐色强度（70）· slider 对比度（96）· slider 暗角（35） | 做旧照片、胶片感 | 复古胶片.py |
-| avatar | 圆形头像 | slider 输出边长（512）· slider 留白比例（8）· select 背景 | 社交平台圆形头像 | 圆形头像.py |
-| border | 白边框 | slider 宽度（28）· select 颜色 · checkbox 内侧细线 | 拍立得式白边 | 白边框.py |
-| sharpen | 锐化 | slider 半径（1.6）· slider 强度（80）· slider 阈值（3） | 风景/人像收尾锐化 | 锐化.py |
-| bw | 黑白 | slider 对比增强（20） | 最简示例，照着改最快 | 黑白.py |
-| autolevel | 自动色阶 | slider 裁切比例（0.4）· slider 强度（100） | 灰蒙蒙的扫描件快修 | 自动色阶.py |
-| watermark | 加文字 | select 署名 · slider 字号（3.2）· slider 边距（2.0）· checkbox 描边 | 作品右下角署名 | 加文字.py |
-| crop169 | 16:9 裁剪 | select 目标比例 · select 对齐 | 视频封面、PPT 配图 | 16比9裁剪.py |
+参数默认值以源码 `PARAMS` 为准，下表由源码核对过（9.4.0）。
+
+| id | 名称 / 版本 | 参数（控件 · 范围 · 默认） | 适用场景 | 联网 | 写文件 | 源码 |
+| --- | --- | --- | --- | --- | --- | --- |
+| pixelate | 像素化 2.0 | slider 方块 4–160（24）· select 取样（平均 / 放大镜）· checkbox 方块边 | 马赛克、像素风头像 | 否 | 否 | `像素化.py` |
+| sepia | 复古胶片 2.0 | slider 褐色 0–100（70）· slider 对比 50–150（96）· slider 暗角 0–100（35） | 做旧、胶片感 | 否 | 否 | `复古胶片.py` |
+| avatar | 圆形头像 2.0 | slider 边长 128–1024（512）· slider 留白 0–30（0）· select 背景（透明 / 白 / 黑） | 社交平台头像 | 否 | 否 | `圆形头像.py` |
+| border | 白边框 2.0 | slider 宽度 1–20（4）· select 颜色（白 / 黑 / 米白）· checkbox 内侧细线 | 拍立得式白边 | 否 | 否 | `白边框.py` |
+| sharpen | 锐化 2.0 | slider 半径 0.5–5（1.4）· slider 强度 10–300（90）· slider 阈值 0–20（3） | 风景 / 人像收尾 | 否 | 否 | `锐化.py` |
+| bw | 黑白 2.0 | slider 对比 0–100（20） | 最简示例，照着改最快 | 否 | 否 | `黑白.py` |
+| autolevel | 自动色阶 2.0 | slider 裁切 0–5（0.4）· slider 强度 0–100（100） | 灰蒙蒙的扫描件快修 | 否 | 否 | `自动色阶.py` |
+| watermark | 加文字 2.1 | text 署名（© Prism）· slider 字号 1–8（3.2）· slider 边距 0–8（2.0）· checkbox 描边 | 作品右下角署名 | 否 | 否 | `加文字.py` |
+| crop169 | 16:9 裁剪 2.0 | select 比例（16:9 / 9:16 / 4:3 / 1:1）· select 对齐（居中 / 偏上 / 偏下） | 视频封面、PPT 配图 | 否 | 否 | `16比9裁剪.py` |
+| god-rays | 丁达尔光 1.0 | slider 取光门槛 50–98（86）· 光束长度 20–220（110）· 角度 -60–60（14）· 强度 10–100（55） | 逆光、树林光束 | 否 | 否 | `丁达尔光.py` |
+| tilt-shift | 移轴微缩 1.0 | slider 清晰带 4–80（26）· 虚化 1–30（12）· 饱和 0–100（45）· select 位置（居中 / 偏上 / 偏下） | 微缩模型效果 | 否 | 否 | `移轴微缩.py` |
+| glitch | 故障艺术 1.0 | slider 通道错位 0–30（8）· 切片 0–40（12）· 随机种子 0–99（7）· checkbox 扫描线 | 数字故障风 | 否 | 否 | `故障艺术.py` |
+
+示例插件 `grad-nd`（渐变减光）不在自带列表里，它是**从网址安装**的演示：
+
+- 地址 `https://11ly322.github.io/Prism/plugins/demo-grad-nd.py`
+- SHA-256 `cf8552bd0a4393e5a798582c00970b2981d6a7f8e14182c682c2eabe666e54ee`
+- 在 Prism 插件窗口点「从网址安装…」→「示例：渐变减光」→「下载并安装」
+
+## 安装插件
+
+三种方式，效果一样：
+
+1. **放进目录**：把 `.py` 丢进插件目录（插件窗口顶部显示完整路径），点「重新扫描」或等 1.5 秒热重载。
+2. **从网址安装**（9.4.0）：插件窗口 →「从网址安装…」→ 填 `.py` 的 http(s) 地址，可再填 SHA-256。
+   下载后先解析、校验，再弹一次确认；确认前插件代码**一次都没执行过**。单个文件上限 2 MB。
+3. **临时停用**：把 `xxx.py` 改名成 `xxx.py.disabled`，插件窗口会显示成「启用 xxx」按钮。
+
+从网址安装只解决「下载到的东西没被改过」（SHA-256），**不解决作者可信不可信**。
+插件声明的 `network` / `writes_files` 会在确认框里显示，但那只是作者自己填的声明。
+
+## 参数会被记住（9.4.0）
+
+每个插件的参数按 `id` 存在设置文件里（`plugin_params`）。下次运行同一个插件时自动恢复上次的值，
+包括重启 Prism 之后。点结果窗口的「恢复默认」会清掉这份记忆。
+
+- 插件改了参数范围：超范围的值会被夹到新范围内。
+- 插件删了某个选项：失效的选项回落到新的默认值。
+- 插件换了 `id`：等于一个新插件，旧记忆不会套上去。
 
 ## 开发流程
 
-1. 复制 _template.py 为 myplugin.py（不要以下划线开头）
-2. 改 PLUGIN / PARAMS / run
+1. 复制 `_template.py` 为 `myplugin.py`（文件名不要以下划线开头，那是给框架文件留的）
+2. 改 `PLUGIN` / `PARAMS` / `run`
 3. 保存，Prism 约 1.5 秒自动重载（插件窗口也能点「重载插件」）
-4. 临时关掉某个插件：改名成 xxx.py.disabled
+4. 出错不会崩主程序：写 `logs/plugins.log`，原图回退
 
 ## 三种控件
 
-| type | 必填字段 | 传给 run 的类型 | 旧写法（仍兼容）|
+| type | 必填字段 | 传给 run 的类型 | 旧写法（仍兼容） |
 | --- | --- | --- | --- |
 | slider | min / max / default，可选 step | float | 省略 type 或写 range |
 | select | options / default | str | type=choice + choices |
 | checkbox | default | bool | type=bool |
-| text | default（可为空串）| str | 无（8.3.0 新增）|
+| text | default（可为空串） | str | 无（8.3.0 新增） |
+
+## PLUGIN 字段
+
+| 字段 | 必填 | 说明 |
+| --- | --- | --- |
+| id | 是 | 唯一标识；参数记忆、安装文件名都用它。只建议 ASCII 字母数字与 `-` `_` |
+| name | 是 | 列表里显示的名字 |
+| version | 建议 | 显示在名字后面 |
+| api | 建议 | 当前支持 1、2；`2` 是 `run(img, **params)` 写法 |
+| author | 建议 | hover 提示里显示 |
+| description | 建议 | hover 提示里显示 |
+| network | 建议 | 是否联网，如实填写 |
+| writes_files | 建议 | 是否写文件，如实填写 |
+
+## 第三方插件怎么放进来
+
+- 单文件、只依赖 Pillow 与 numpy（Prism 已带），不要起线程、不要改 Prism 的内部状态。
+- 文件名用 ASCII，`id` 唯一；不要以 `_` 开头。
+- 自带插件目录是安装目录的一部分，升级会覆盖；自己的插件请放用户插件目录。
+- 想收进这个索引：提 PR 加一行表格 + 一个 `plugins/community/` 下的源码文件，并在描述里写清
+  是否需要联网、是否写文件。带副作用的插件不会被收进自带列表。
 
 ## 复用函数
 
-_utils.py 提供 preview_then_export / downscale_if_needed / upscale_back / preserve_alpha /
-split_alpha / to_rgb / clamp_params，不是框架，复制走也行。
-preview_then_export(func, img) 最省事：降采样 → 跑 func → 放大回原尺寸 → 贴回 alpha。
-导入前需要把插件目录加进 sys.path（见该文件头注释）。
+`_utils.py` 提供 `preview_then_export` / `downscale_if_needed` / `upscale_back` / `preserve_alpha` /
+`split_alpha` / `to_rgb` / `clamp_params`，不是框架，复制走也行。
+`preview_then_export(func, img)` 最省事：降采样 → 跑 func → 放大回原尺寸 → 贴回 alpha。
+导入前需要把插件目录加进 `sys.path`（见该文件头注释）。

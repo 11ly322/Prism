@@ -33,6 +33,27 @@ from tkinter import filedialog, font as tkfont, messagebox, simpledialog
 from PIL import (ExifTags, Image, ImageDraw, ImageEnhance, ImageFile,
                  ImageFilter, ImageOps, ImageStat, ImageTk, ImageChops)
 
+# messagebox 的标题/正文不适合做成控件，_apply_lang 覆盖不到；这里套一层翻译壳。
+# 传进来的仍是中文原文，显示前过 _tr / _trf（带 % 的运行时文案）。
+_TK_MESSAGEBOX = messagebox
+
+
+class _TranslatedMessageBox:
+    def __getattr__(self, name):
+        fn = getattr(_TK_MESSAGEBOX, name)
+        if not callable(fn):
+            return fn
+
+        def call(title=None, message=None, **kw):
+            return fn(_tr(title),
+                      _trf(message) if isinstance(message, str) else message,
+                      **kw)
+
+        return call
+
+
+messagebox = _TranslatedMessageBox()
+
 try:
     import numpy as _np          # 可选：亮度降噪的边缘保护用它算得更准
 except Exception:
@@ -44,7 +65,7 @@ IS_WIN = sys.platform.startswith("win")
 K = "Command" if IS_MAC else "Control"
 
 APP_NAME = "Prism"
-APP_VERSION = "9.3.0"
+APP_VERSION = "9.4.0"
 APP_BUILD = "2025-12.9"
 # ---------------------------------------------------------------- 运行模式
 # 同一份源码编出两个版本：
@@ -367,6 +388,428 @@ LANG_TABLE = {
         "检出 %d 张脸": "%d face(s) found",
         "未检出人脸": "no face found",
         "人像美化：%s · 当前未启用": "Retouch: %s · not applied",
+        # 9.4.0 菜单 / 曲线 / 局部滤镜
+        "%s %s - 纯图片查看器": "%s %s - image viewer",
+        "%s %s - 简约图片查看器": "%s %s - minimalist image viewer",
+        "无法从这个 RAW 文件里提取预览图": "Cannot extract a preview from this RAW file",
+        "（可能是不支持的机型或压缩方式）": " (possibly an unsupported camera or compression method)",
+        "柯达暖调": "Kodak Warm",
+        "富士艳丽": "Fuji Vivid",
+        "伊尔福黑白": "Ilford B&W",
+        "宝丽来": "Polaroid",
+        "图太小": "image too small",
+        "像素太少": "too few pixels",
+        "长宽比极端": "extreme aspect ratio",
+        "没有肤色区域": "no skin-tone areas",
+        "Prism %s 自检": "Prism %s self-test",
+        "比例": "Aspect",
+        "自由": "Free",
+        "原比例": "Original",
+        "构图线：三分": "Grid: rule of thirds",
+        "应用裁剪": "Apply crop",
+        "打开文件…": "Open file…",
+        "批量重命名…": "Batch rename…",
+        "在文件夹中显示": "Show in folder",
+        "退出": "Exit",
+        "原始大小 100%": "Actual size 100%",
+        "逆时针旋转": "Rotate counterclockwise",
+        "顺时针旋转": "Rotate clockwise",
+        "网格浏览": "Grid view",
+        "径向滤镜": "Radial filter",
+        "渐变滤镜": "Linear filter",
+        "人像美化…": "Retouch…",
+        "全屏（兼容模式）": "Fullscreen (compatibility mode)",
+        "载入全分辨率": "Load full resolution",
+        "低内存模式": "Low memory mode",
+        "插件…": "Plugins…",
+        "设置…": "Settings…",
+        "快捷键与说明": "Shortcuts and help",
+        "关于 %s %s": "About %s %s",
+        "隐藏 Prism": "Hide Prism",
+        "打开…": "Open…",
+        "关闭窗口": "Close window",
+        "修图面板": "Edit panel",
+        "快捷键": "Shortcuts",
+        "图片文件": "Image files",
+        "空文件夹": "Empty folder",
+        "这个文件夹里没有可显示的图片。": "This folder contains no displayable images.",
+        "图片超过像素上限，已按代理尺寸载入（F5 载入全分辨率）": "Image exceeds the pixel limit; loaded at proxy size (F5 loads full resolution)",
+        "超大图（>%d 万像素）已按代理尺寸载入，按 F5 载入全分辨率": "Very large image (over %d × 10,000 pixels) loaded at proxy size; press F5 for full resolution",
+        "这张图解码用了 %.1f 秒（文件较大或磁盘较慢）": "Decoding this image took %.1f s (large file or slow disk)",
+        "还没有打开任何文件夹": "No folder open yet",
+        "已在文件管理器中打开：%s": "Opened in the file manager: %s",
+        "打不开目录：%s": "Cannot open folder: %s",
+        "已添加「%s」": "Added “%s”",
+        "主体选择": "Subject selection",
+        "高对比主体": "High-contrast subject",
+        "正在取回原始分辨率…": "Retrieving full resolution…",
+        "旋转 %d°": "Rotate %d°",
+        "垂直翻转": "Flip vertical",
+        "水平翻转": "Flip horizontal",
+        "已建立%s滤镜 · 默认曝光 %+.1f，可在「滤镜参数」里调": "%s filter created · default exposure %+.1f; adjust in “Filter parameters”",
+        "调整局部滤镜": "Adjust local filter",
+        "   | 锁定 %d,%d,%d  Δ %+d,%+d,%+d": "   | Locked %d,%d,%d  Δ %+d,%+d,%+d",
+        "已取消取样锁定": "Sample lock cleared",
+        "把鼠标移到画面上再按锁定": "Move the pointer over the image, then click the Lock picker button",
+        "鼠标不在图片上，无法锁定": "Cannot lock: the pointer is not over the image",
+        "已锁定 %d,%d,%d —— 移动鼠标可看到差值": "Locked %d,%d,%d — move the mouse to see the difference",
+        "低内存模式：%s（预览走代理图 %d，导出仍用原图）": "Low memory mode: %s (preview uses a proxy at %d, export uses the original)",
+        "全屏（兼容模式）：按 Esc 退出": "Fullscreen (compatibility mode): press Esc to exit",
+        "全屏不可用，已回退为窗口最大化": "Fullscreen unavailable; maximized the window instead",
+        "把图片拖到这里": "Drop an image here",
+        "打开一张图片开始浏览": "Open an image to start browsing",
+        "载入中…": "Loading…",
+        "载入中 - %s %s": "Loading - %s %s",
+        "动图 %d 帧%s": "Animated %d frames%s",
+        "（已暂停）": " (paused)",
+        "翻转": "Flipped",
+        "已裁剪": "Cropped",
+        "已调整": "Adjusted",
+        "正在显示原图（再按一次反斜杠或点「对比原图」返回）": "Showing the original (press backslash again or click “Compare” to return)",
+        "幻灯片 %ds": "Slideshow %ds",
+        "联网": "Network",
+        "写文件": "File writes",
+        "输入数值": "Enter a value",
+        "尚未选中滤镜": "No filter selected",
+        "径向  覆盖 %.0f%%  羽化 %.0f%%": "Radial  coverage %.0f%%  feather %.0f%%",
+        "渐变  跨度 x%.2f  角度 %.0f": "Linear  spread x%.2f  angle %.0f",
+        "亮度 %d": "Luminance %d",
+        "亮度 %d · %.2f%%": "Luminance %d · %.2f%%",
+        "打开图片后显示直方图": "Histogram appears after opening an image",
+        "色调曲线": "Tone curve",
+        "曲线：": "Curve: ",
+        "已套用曲线「%s」（%s 通道）": "Applied curve “%s” (%s channel)",
+        "排序：文件名": "Sort: file name",
+        "历史记录": "History",
+        "自动色阶": "Auto levels",
+        "拖动控制点 · 空白处点击可加点": "Drag points · click empty space to add one",
+        "重置本通道": "Reset this channel",
+        "明亮度": "Lightness",
+        "%s 色段（%s）：%+.0f": "%s band (%s): %+.0f",
+        "锐化 · 数量": "Sharpen · Amount",
+        "锐化 · 半径": "Sharpen · Radius",
+        "锐化 · 细节": "Sharpen · Detail",
+        "降噪 · 亮度": "Noise reduction · Luminance",
+        "降噪 · 颜色": "Noise reduction · Color",
+        "去朦胧": "Dehaze",
+        "色调分离色相": "Split toning hue",
+        "镜头 · 胶片 · 人像": "Lens · Film · Portrait",
+        "去油光": "Shine removal",
+        "肤色冷暖": "Skin warmth",
+        "柔光": "Soft glow",
+        "分区强度（作用于磨皮，100 为默认）": "Zone strength (affects smoothing; 100 is default)",
+        "额头": "Forehead",
+        "脸颊": "Cheeks",
+        "下巴": "Chin",
+        "畸变矫正": "Distortion correction",
+        "正值拉直桶形畸变，负值修枕形": "Positive values correct barrel distortion; negative values correct pincushion",
+        "胶片模拟": "Film simulation",
+        "胶片强度": "Film strength",
+        "自然": "Natural",
+        "网红": "Influencer",
+        "素颜": "Bare face",
+        "人像美化（按肤色定位，不是神经网络）": "Retouch (skin-tone based, not a neural network)",
+        "肤色柔化": "Skin smoothing",
+        "肤色提亮": "Skin brightening",
+        "磨皮范围": "Smoothing range",
+        "肤色均匀": "Skin evenness",
+        "祛斑强度": "Blemish removal",
+        # 9.4.0 人像 / 滤镜 / 设置 / 插件文案
+        "斑点大小": "Spot size",
+        "眼周提亮": "Eye brightening",
+        "眼周范围": "Eye area range",
+        "牙齿美白": "Teeth whitening",
+        "唇色增强": "Lip color",
+        "大眼": "Eye size",
+        "磨皮": "Skin smoothing",
+        "祛斑": "Blemish removal",
+        "牙齿": "Teeth",
+        "未检出人脸（按肤色处理）": "No face detected (using skin tone)",
+        "对比中（已关闭）": "Comparing (off)",
+        "人像美化：": "Retouch: ",
+        "人像美化：状态未知（%s）": "Retouch: status unknown (%s)",
+        "对比中：已关闭美颜（松开 B 恢复）": "Comparing: retouch off (release B to restore)",
+        "已套用美颜预设：%s": "Retouch preset applied: %s",
+        "人像美化：拖「肤色柔化」与「肤色提亮」；检测到人脸时只作用于脸": "Retouch: drag Skin softening and Skin brightening; these apply to the face only when one is detected",
+        "胶片模拟：先在下拉框选风格，再用「胶片强度」控制力度": "Film simulation: pick a style from the dropdown, then use Film strength to control the intensity",
+        "镜头畸变矫正：正值拉直桶形，负值修枕形，0 为不处理": "Lens distortion: positive values straighten barrel, negative values correct pincushion, 0 leaves it unchanged",
+        "已打开「镜头 · 胶片 · 人像」": "Opened Lens · Film · Portrait",
+        "色调分离（颜色分级）": "Split toning (color grading)",
+        "点色环选色相": "Click the wheel to pick a hue",
+        "高光 · 饱和度": "Highlights · Saturation",
+        "阴影 · 饱和度": "Shadows · Saturation",
+        "新建径向": "New radial",
+        "新建渐变": "New linear",
+        "清空": "Clear",
+        "复制滤镜": "Copy filter",
+        "粘贴滤镜": "Paste filter",
+        "上移": "Move up",
+        "下移": "Move down",
+        "保存快照": "Save snapshot",
+        "恢复选中": "Restore selected",
+        "把当前整套调整存下来，随时切回": "Save the current adjustments and switch back anytime",
+        "快照 %d": "Snapshot %d",
+        "已存为「快照 %d」": "Saved as \"Snapshot %d\"",
+        "先在列表里选中一个快照": "Select a snapshot in the list first",
+        "快照：%s": "Snapshot: %s",
+        "已删除「%s」": "Deleted \"%s\"",
+        "保存当前为预设": "Save current as preset",
+        "导入…": "Import…",
+        "导出…": "Export…",
+        "单击列表即可套用": "Click a preset in the list to apply it",
+        "暗角": "Vignette",
+        "水印（预览与导出一致）": "Watermark (preview matches export)",
+        "位置：右下": "Position: bottom right",
+        "清除": "Clear",
+        "水印大小": "Watermark size",
+        "水印浓度": "Watermark opacity",
+        "右下": "Bottom right",
+        "左下": "Bottom left",
+        "位置：": "Position: ",
+        "在画面上拖动即可画出%s滤镜": "Drag on the image to draw a %s filter",
+        "主体": "Subject",
+        "（反相）": " (inverted)",
+        "已复制「%s」滤镜（含参数与位置）": "Copied the \"%s\" filter (with parameters and position)",
+        "剪贴板里还没有滤镜（先按「复制滤镜」）": "No filter in the clipboard yet (press Copy filter first)",
+        "粘贴局部滤镜": "Paste local filter",
+        "已粘贴滤镜，共 %d 个": "Pasted filters, %d total",
+        "调整滤镜顺序": "Reorder filters",
+        "滤镜已移到第 %d 位": "Filter moved to position %d",
+        "删除局部滤镜": "Delete local filter",
+        "清空局部滤镜": "Clear local filters",
+        "— 滤镜参数 —": "— Filter settings —",
+        "纵向大小": "Vertical size",
+        "羽化": "Feather",
+        "过渡宽度": "Transition width",
+        "锐化": "Sharpen",
+        "反相": "Invert",
+        "反相局部滤镜": "Invert local filter",
+        "拖动即可画出径向滤镜 · Esc 取消": "Drag to draw a radial filter · Esc to cancel",
+        "拖动即可画出渐变滤镜 · Esc 取消": "Drag to draw a linear filter · Esc to cancel",
+        "点一下画面里应该是中性灰的地方 · Esc 取消": "Click a spot in the image that should be neutral gray · Esc to cancel",
+        "拖动框选裁剪范围 · Enter 应用 · Esc 取消": "Drag to select the crop area · Enter to apply · Esc to cancel",
+        "请点在图片上": "Click on the image",
+        "白平衡：色温 %+.0f  色调 %+.0f": "White balance: Temp %+.0f  Tint %+.0f",
+        "修改时间": "Modified",
+        "文件大小": "File size",
+        "排序：%s%s": "Sort: %s%s",
+        "过曝标红、欠曝标蓝": "Overexposure in red, underexposure in blue",
+        "自动白平衡：色温 %+d  色调 %+d": "Auto white balance: Temp %+d  Tint %+d",
+        "已复制当前调整设置": "Copied current adjustments",
+        "剪贴板里还没有设置（先按 Ctrl+Shift+C）": "No settings in the clipboard yet (press Ctrl+Shift+C first)",
+        "已粘贴调整设置": "Pasted adjustments",
+        "中文": "中文",
+        "日本語": "日本語",
+        "更多": "More",
+        "完成": "Done",
+        "主题与提示开关会恢复默认，确定吗？": "Theme and warning toggles will be reset. Continue?",
+        "已恢复默认设置": "Defaults restored",
+        "缺少 run %s": "Missing run %s",
+        "缺少 run(img, **params) 函数": "Missing run(img, **params) function",
+        "插件 %s 需要 API %s，当前为 %s": "Plugin %s requires API %s, current is %s",
+        "on_load 出错：%s": "on_load error: %s",
+        "已安装插件": "Installed plugins",
+        "已开启热重载：改完插件约 1.5 秒自动生效（也可以点「重载插件」）。": "Hot reload is on: plugin changes take effect in about 1.5 seconds (or click Reload).",
+        "点「重新扫描」即可。": "Click Rescan.",
+        "作者：": "Author: ",
+        "联网 %s · 写文件 %s": "Network %s · Writes files %s",
+        "加载失败 %s：%s": "Failed to load %s: %s",
+        "写模板失败：%s": "Failed to write template: %s",
+        "模板已打开，另存为你自己的名字即可": "Template opened; save it under your own name",
+        "插件切换失败：%s": "Failed to switch plugin: %s",
+        "已启用 ": "Enabled ",
+        "已禁用 ": "Disabled ",
+        "插件已自动重载：%d 个": "Plugins auto-reloaded: %d",
+        "插件已重载：%d 个": "Plugins reloaded: %d",
+        "插件 %s 执行耗时 %.0f ms": "Plugin %s ran in %.0f ms",
+        "只安装你信任的插件。": "Only install plugins you trust.",
+        "当前已经是全分辨率": "Already at full resolution",
+        "正在载入全分辨率…": "Loading full resolution…",
+        "载入全分辨率失败：%s": "Failed to load full resolution: %s",
+        "已载入全分辨率 %dx%d": "Loaded full resolution %dx%d",
+        "切换失败：%s": "Switch failed: %s",
+        "先打开一张图片": "Open an image first",
+        "插件出错": "Plugin error",
+        "插件 %s 没有返回图片": "Plugin %s returned no image",
+        "run() 应返回 PIL.Image，实际是 %s": "run() should return PIL.Image, got %s",
+        "插件 %s 已运行（%.0f ms，预览用代理图 %dx%d）": "Plugin %s ran (%.0f ms, preview uses a proxy image %dx%d)",
+        "正在生成预览…": "Generating preview…",
+        "%s · 结果": "%s · Result",
+        "插件出错：%s": "Plugin error: %s",
+        "预览基于代理图（长边 ≤2048）；保存时按原分辨率重算": "Preview uses a proxy image (long edge ≤2048); recalculated at full resolution on save",
+        "正在按原分辨率重算…": "Recalculating at full resolution…",
+        "已保存 %s": "Saved %s",
+        "保存失败": "Save failed",
+        # 9.4.0 批量导出 / 重命名 / 信息面板 / 帮助
+        "主题：%s": "Theme: %s",
+        "已切换主题：%s": "Theme switched: %s",
+        "还没有预设可以导出": "No presets to export yet",
+        "导出预设": "Export presets",
+        "已导出 %d 个预设": "Exported %d presets",
+        "这个文件里没有可用的预设。": "This file contains no usable presets.",
+        "没有解析出任何预设。": "No presets could be parsed.",
+        "已导入 %d 个预设（同名会覆盖）": "Imported %d presets (same names are overwritten)",
+        "预设保存失败：%s": "Failed to save presets: %s",
+        "预设：%s": "Preset: %s",
+        "已套用预设「%s」": "Applied preset \"%s\"",
+        "保存预设": "Save preset",
+        "预设名称：": "Preset name:",
+        "已保存预设「%s」": "Saved preset \"%s\"",
+        "先在上面选中一个预设": "Select a preset above first",
+        "已删除预设「%s」": "Deleted preset \"%s\"",
+        "先打开一个文件夹": "Open a folder first",
+        "网格浏览 · %d 张": "Grid view · %d images",
+        "目录": "Folder",
+        "起始": "Start",
+        "位数": "Digits",
+        "源目录不存在。": "The source folder does not exist.",
+        "起始序号和位数必须是整数。": "The start number and digits must be integers.",
+        "这个文件夹里没有图片。": "There are no images in this folder.",
+        "%d 个文件": "%d files",
+        "  （不变）": "  (unchanged)",
+        "… 还有 %d 个": "… and %d more",
+        "%s，其中 %d 个名字不变": "%s, %d names unchanged",
+        "名字都没有变化，无需重命名。": "No names have changed, so there is nothing to rename.",
+        "重命名完成：成功 %d 个%s": "Rename complete: %d renamed%s",
+        "，失败 %d 个": ", %d failed",
+        "先打开一张图片，批量导出会套用当前的调整设置。": "Open an image first; batch export will apply the current adjustments.",
+        "源目录": "Source folder",
+        "输出到": "Output to",
+        "快捷尺寸": "Quick sizes",
+        "原尺寸": "Original size",
+        "  质量": "  Quality",
+        "已存在同名文件时覆盖": "Overwrite files with the same name",
+        "准备就绪": "Ready",
+        "缩放": "Scale",
+        "请填写输出目录。": "Enter an output folder.",
+        "源目录里没有可导出的图片。": "There are no exportable images in the source folder.",
+        "无法创建输出目录：%s": "Could not create the output folder: %s",
+        "正在停止…（当前这张处理完就停）": "Stopping… (will stop after the current image)",
+        "已存在，跳过": "Exists, skipped",
+        "已停止": "Stopped",
+        "批量导出完成：成功 %d 张": "Batch export complete: %d exported",
+        "三分": "Rule of thirds",
+        "黄金分割": "Golden ratio",
+        "中心十字": "Center cross",
+        "构图线：%s": "Grid overlay: %s",
+        "构图辅助线：%s": "Grid overlay: %s",
+        "选区太小了，拖一个大一点的框。": "The selection is too small. Drag a larger box.",
+        "裁剪 %d×%d": "Crop %d×%d",
+        "还没有打开图片。": "No image is open.",
+        "保存图片": "Save image",
+        "%s_编辑%s": "%s_edit%s",
+        "无法覆盖": "Cannot overwrite",
+        "RAW 原文件不能被覆盖，请换一个文件名。": "The original RAW file cannot be overwritten. Choose a different file name.",
+        "覆盖原文件": "Overwrite original file",
+        "已保存：%s": "Saved: %s",
+        "图片信息": "Image info",
+        "图片信息已复制到剪贴板": "Image info copied to clipboard",
+        "复制全部": "Copy all",
+        "亮度降噪": "Luminance NR",
+        "颜色降噪": "Color NR",
+        "主曲线": "Master curve",
+        "红曲线": "Red curve",
+        "绿曲线": "Green curve",
+        "蓝曲线": "Blue curve",
+        "已调": " adjusted",
+        "饱和": "Saturation",
+        "明度": "Lightness",
+        "HSL-%s %d 段": "HSL-%s %d bands",
+        "色调分离": "Split toning",
+        "局部滤镜 %d 个": "%d local filters",
+        "水印": "Watermark",
+        "  名称      %s": "  Name      %s",
+        "  路径      %s": "  Path      %s",
+        "  大小      %s (%d 字节)": "  Size      %s (%d bytes)",
+        "  修改时间  %s": "  Modified  %s",
+        "图像": "Image",
+        "  格式      %s%s": "  Format      %s%s",
+        "（RAW 内嵌预览）": " (RAW embedded preview)",
+        "  显示尺寸  %d × %d": "  Display size  %d × %d",
+        "  原始尺寸  %d × %d": "  Original size  %d × %d",
+        "  色彩模式  %s": "  Color mode  %s",
+        "  帧数      %d": "  Frames      %d",
+        "  透明通道  %s": "  Alpha  %s",
+        "  缩放      %d%%": "  Scale      %d%%",
+        "EXIF      无": "EXIF      None",
+        "内存缓存": "Memory cache",
+        "  渲染瓦片  %.1f MB": "  Render tiles  %.1f MB",
+        "  细节缓存  %.1f MB": "  Detail cache  %.1f MB",
+        "当前调整": "Current adjustments",
+        "  （未做任何调整）": "  (No adjustments)",
+        "关于 %s": "About %s",
+        "打开快 · 切图快 · 调色准": "Opens fast · switches fast · accurate color",
+        "「打开快」不是口号 —— 它只处理你眼睛能看到的像素。": "\"Opens fast\" is not a slogan; it only processes the pixels you can see.",
+        "按可见区域渲染，4000 万像素的照片首帧不到一秒。": "Renders only the visible area, so a 40-megapixel photo's first frame appears in under a second.",
+        "「调色准」也不是 —— 预览和导出走同一套渲染管，": "\"Accurate color\" is not a slogan either: preview and export share the same rendering pipeline,",
+        "实测平均逐像素差 0.000。你看到的就是你存下的。": "with a measured average per-pixel difference of 0.000. What you see is what you save.",
+        "  没有 Electron、没有浏览器内核、不联网、不需要管理员权限": "  No Electron, no browser engine, no network, no admin rights",
+        "性能档位（命令行）：--perf-profile fast-slider 拖动最快（默认）、": "Performance profiles (command line): --perf-profile fast-slider is fastest while dragging (default),",
+        "PhotoImage 更新方式。另有 --proxy N 与 --low-mem。": "PhotoImage update mode. Also --proxy N and --low-mem.",
+        "格式：JPEG · PNG · WebP · TIFF · BMP · GIF · ICO，": "Formats: JPEG · PNG · WebP · TIFF · BMP · GIF · ICO,",
+        "以及尼康 NEF 等 RAW 的内嵌预览（不需要 RAW 解码库）。": "plus embedded previews from RAW files such as Nikon NEF (no RAW decoder library needed).",
+        "它不做什么：不做图库、不做液化、不做 AI 抠图。": "What it does not do: no photo library, no liquify, no AI cutout.",
+        "全屏做成了兼容模式（无边框最大化 + Esc 退出），": "Full screen uses a compatibility mode (borderless maximized window + Esc to exit);",
+        "系统级全屏在个别驱动上会黑屏，所以不用它。": "system-level full screen can go black on some drivers, so it is not used.",
+        "官网": "Website",
+        "快捷键 - %s %s": "Shortcuts - %s %s",
+        "路径已复制到剪贴板": "Path copied to clipboard",
+        "删除文件": "Delete file",
+        "删除失败": "Delete failed",
+        "  …        另有 %d 个标签": "  …        %d more tags",
+        "Prism 自检": "Prism self-check",
+        # 9.4.0 插件安装（URL + SHA-256）
+        "是": "Yes",
+        "否": "No",
+        "从网址安装…": "Install from URL…",
+        "安装插件": "Install plugin",
+        "插件网址（.py）": "Plugin URL (.py)",
+        "SHA-256（可选，填了就强制校验）": "SHA-256 (optional; verified when filled)",
+        "下载后先解析、校验，再问你一次；确认后才写入插件目录。\n只安装你信任的插件。": "Parsed and verified first, then one confirmation — nothing is written before that.\nOnly install plugins you trust.",
+        "安装失败：%s": "Install failed: %s",
+        "SHA-256 不匹配\n填写：%s…\n实际：%s…": "SHA-256 mismatch\nExpected: %s…\nActual: %s…",
+        "确定安装吗？": "Install it?",
+        "已存在同名插件，覆盖吗？\n%s": "A plugin with this name already exists. Overwrite?\n%s",
+        "已取消安装。": "Install cancelled.",
+        "请填写插件网址。": "Please enter a plugin URL.",
+        "下载中…": "Downloading…",
+        "已填入示例地址与 SHA-256，点「下载并安装」即可。": "Example URL and SHA-256 filled in. Click “Download and install”.",
+        "下载并安装": "Download and install",
+        "示例：渐变减光": "Example: Grad ND",
+        "已安装「%s」": "Installed “%s”",
+        "参数会自动记住 · 下次运行这个插件直接恢复": "Parameters are remembered · restored next time you run this plugin",
+        "\n\nCtrl+O 打开文件    Ctrl+Shift+O 打开文件夹\n\n按 F1 查看全部快捷键": "\n\nCtrl+O open file    Ctrl+Shift+O open folder\n\nPress F1 for all shortcuts",
+        "无法打开这个文件\n\n%s": "Could not open this file\n\n%s",
+        "文件太大（超过 %s）": "File too large (over %s)",
+        "只支持 http/https 链接": "Only http/https links are supported",
+        "下载到的是空文件": "The download was empty",
+        "源码不是 UTF-8 文本": "Source is not UTF-8 text",
+        "语法错误：%s（第 %s 行）": "Syntax error: %s (line %s)",
+        "PLUGIN 必须是纯字面量字典": "PLUGIN must be a plain literal dict",
+        "缺少 PLUGIN 字典": "Missing PLUGIN dict",
+        "缺少 run() 函数": "Missing run() function",
+        "PLUGIN 缺少 id": "PLUGIN is missing id",
+        "PLUGIN.api 必须是数字": "PLUGIN.api must be a number",
+        "需要 API %s，当前支持 %s": "Requires API %s; supported: %s",
+        "API %d · id %s": "API %d · id %s",
+        "作者：%s": "Author: %s",
+        # 9.4.0 插件安装（错误文案）
+        "%d 字节": "%d bytes",
+        "SHA-256 不匹配（实际 %s…）": "SHA-256 mismatch (actual %s…)",
+        # 9.4.0 批量导出状态
+        "%s：成功 %d 张，失败/跳过 %d 张 → %s": "%s: %d done, %d failed/skipped → %s",
+        # 9.4.0 插件名 / 插件窗口提示
+        "像素化": "Pixelate",
+        "复古胶片": "Vintage film",
+        "圆形头像": "Round avatar",
+        "白边框": "White frame",
+        "黑白": "Mono",
+        "加文字": "Text",
+        "16比9裁剪": "16:9 crop",
+        "丁达尔光": "God rays",
+        "移轴微缩": "Tilt-shift",
+        "故障艺术": "Glitch",
+        "已开启热重载：改完插件约 1.5 秒自动生效（也可以点「重载插件」）。禁用：把 xxx.py 改名为 xxx.py.disabled。日志：logs/plugins.log": "Hot reload is on: edits apply in about 1.5 s (or click Reload). To disable one, rename xxx.py to xxx.py.disabled. Log: logs/plugins.log",
     },
     "ja": {
         "文件": "ファイル", "编辑": "編集", "视图": "表示", "工具": "ツール",
@@ -500,6 +943,428 @@ LANG_TABLE = {
         "检出 %d 张脸": "%d 件の顔を検出",
         "未检出人脸": "顔は未検出",
         "人像美化：%s · 当前未启用": "人物補正：%s · 未適用",
+        # 9.4.0 菜单 / 曲线 / 局部滤镜
+        "%s %s - 纯图片查看器": "%s %s - 画像ビューア",
+        "%s %s - 简约图片查看器": "%s %s - ミニマルな画像ビューア",
+        "无法从这个 RAW 文件里提取预览图": "この RAW ファイルからプレビューを抽出できません",
+        "（可能是不支持的机型或压缩方式）": "（未対応の機種または圧縮方式の可能性があります）",
+        "柯达暖调": "コダック ウォーム",
+        "富士艳丽": "フジ ビビッド",
+        "伊尔福黑白": "イルフォード モノクロ",
+        "宝丽来": "ポラロイド",
+        "图太小": "画像が小さすぎます",
+        "像素太少": "画素数が不足",
+        "长宽比极端": "極端な縦横比",
+        "没有肤色区域": "肌色の領域なし",
+        "Prism %s 自检": "Prism %s セルフテスト",
+        "比例": "比率",
+        "自由": "自由",
+        "原比例": "元の比率",
+        "构图线：三分": "グリッド：三分割",
+        "应用裁剪": "トリミングを適用",
+        "打开文件…": "ファイルを開く…",
+        "批量重命名…": "一括名前変更…",
+        "在文件夹中显示": "フォルダで表示",
+        "退出": "終了",
+        "原始大小 100%": "元のサイズ 100%",
+        "逆时针旋转": "反時計回りに回転",
+        "顺时针旋转": "時計回りに回転",
+        "网格浏览": "グリッド表示",
+        "径向滤镜": "円形フィルタ",
+        "渐变滤镜": "グラデーションフィルタ",
+        "人像美化…": "人物補正…",
+        "全屏（兼容模式）": "全画面（互換モード）",
+        "载入全分辨率": "フル解像度を読み込む",
+        "低内存模式": "低メモリモード",
+        "插件…": "プラグイン…",
+        "设置…": "設定…",
+        "快捷键与说明": "ショートカットと説明",
+        "关于 %s %s": "%s %s について",
+        "隐藏 Prism": "Prism を隠す",
+        "打开…": "開く…",
+        "关闭窗口": "ウィンドウを閉じる",
+        "修图面板": "編集パネル",
+        "快捷键": "ショートカット",
+        "图片文件": "画像ファイル",
+        "空文件夹": "空のフォルダ",
+        "这个文件夹里没有可显示的图片。": "このフォルダには表示できる画像がありません。",
+        "图片超过像素上限，已按代理尺寸载入（F5 载入全分辨率）": "画像がピクセル上限を超えたため、プロキシサイズで読み込みました（F5 でフル解像度）",
+        "超大图（>%d 万像素）已按代理尺寸载入，按 F5 载入全分辨率": "巨大画像（%d 万画素超）はプロキシサイズで読み込みました（F5 でフル解像度）",
+        "这张图解码用了 %.1f 秒（文件较大或磁盘较慢）": "この画像のデコードに %.1f 秒かかりました（ファイルが大きい、またはディスクが遅い可能性）",
+        "还没有打开任何文件夹": "フォルダがまだ開かれていません",
+        "已在文件管理器中打开：%s": "ファイルマネージャーで開きました：%s",
+        "打不开目录：%s": "フォルダを開けません：%s",
+        "已添加「%s」": "「%s」を追加しました",
+        "主体选择": "被写体選択",
+        "高对比主体": "高コントラスト被写体",
+        "正在取回原始分辨率…": "元の解像度を取得中…",
+        "旋转 %d°": "回転 %d°",
+        "垂直翻转": "上下反転",
+        "水平翻转": "左右反転",
+        "已建立%s滤镜 · 默认曝光 %+.1f，可在「滤镜参数」里调": "%sフィルタを作成 · 既定の露出 %+.1f（「フィルタパラメータ」で調整できます）",
+        "调整局部滤镜": "ローカルフィルタを調整",
+        "   | 锁定 %d,%d,%d  Δ %+d,%+d,%+d": "   | 固定 %d,%d,%d  Δ %+d,%+d,%+d",
+        "已取消取样锁定": "サンプリング固定を解除しました",
+        "把鼠标移到画面上再按锁定": "画像上にマウスを移動してから「スポイト固定」を押してください",
+        "鼠标不在图片上，无法锁定": "マウスが画像上にないため固定できません",
+        "已锁定 %d,%d,%d —— 移动鼠标可看到差值": "%d,%d,%d を固定しました — マウスを動かすと差分が表示されます",
+        "低内存模式：%s（预览走代理图 %d，导出仍用原图）": "低メモリモード：%s（プレビューはプロキシ画像 %d、書き出しは元画像）",
+        "全屏（兼容模式）：按 Esc 退出": "全画面（互換モード）：Esc で終了",
+        "全屏不可用，已回退为窗口最大化": "全画面を利用できないため、ウィンドウの最大化に切り替えました",
+        "把图片拖到这里": "ここに画像をドラッグ",
+        "打开一张图片开始浏览": "画像を開いて閲覧を開始",
+        "载入中…": "読み込み中…",
+        "载入中 - %s %s": "読み込み中 - %s %s",
+        "动图 %d 帧%s": "アニメーション %d フレーム%s",
+        "（已暂停）": "（一時停止）",
+        "翻转": "反転",
+        "已裁剪": "トリミング済み",
+        "已调整": "調整済み",
+        "正在显示原图（再按一次反斜杠或点「对比原图」返回）": "元画像を表示中（もう一度バックスラッシュを押すか「元画像と比較」をクリックすると戻ります）",
+        "幻灯片 %ds": "スライドショー %ds",
+        "联网": "ネットワーク",
+        "写文件": "ファイル書き込み",
+        "输入数值": "数値を入力",
+        "尚未选中滤镜": "フィルタが未選択",
+        "径向  覆盖 %.0f%%  羽化 %.0f%%": "円形  カバー %.0f%%  ぼかし %.0f%%",
+        "渐变  跨度 x%.2f  角度 %.0f": "グラデーション  幅 x%.2f  角度 %.0f",
+        "亮度 %d": "輝度 %d",
+        "亮度 %d · %.2f%%": "輝度 %d · %.2f%%",
+        "打开图片后显示直方图": "画像を開くとヒストグラムが表示されます",
+        "色调曲线": "トーンカーブ",
+        "曲线：": "カーブ：",
+        "已套用曲线「%s」（%s 通道）": "カーブ「%s」を適用しました（%s チャンネル）",
+        "排序：文件名": "並べ替え：ファイル名",
+        "历史记录": "履歴",
+        "自动色阶": "自動レベル",
+        "拖动控制点 · 空白处点击可加点": "制御点をドラッグ · 空白クリックで追加",
+        "重置本通道": "このチャンネルをリセット",
+        "明亮度": "明度",
+        "%s 色段（%s）：%+.0f": "%s カラーバンド（%s）：%+.0f",
+        "锐化 · 数量": "シャープ · 量",
+        "锐化 · 半径": "シャープ · 半径",
+        "锐化 · 细节": "シャープ · ディテール",
+        "降噪 · 亮度": "ノイズ軽減 · 輝度",
+        "降噪 · 颜色": "ノイズ軽減 · 色",
+        "去朦胧": "かすみ除去",
+        "色调分离色相": "スプリットトーニング色相",
+        "镜头 · 胶片 · 人像": "レンズ · フィルム · 人物",
+        "去油光": "テカリ除去",
+        "肤色冷暖": "肌の色温度",
+        "柔光": "ソフトグロー",
+        "分区强度（作用于磨皮，100 为默认）": "ゾーン強度（肌補正に適用、100 が既定値）",
+        "额头": "額",
+        "脸颊": "頬",
+        "下巴": "あご",
+        "畸变矫正": "歪み補正",
+        "正值拉直桶形畸变，负值修枕形": "正の値で樽型歪みを補正、負の値で糸巻き型を補正",
+        "胶片模拟": "フィルムシミュレーション",
+        "胶片强度": "フィルム強度",
+        "自然": "ナチュラル",
+        "网红": "インフルエンサー",
+        "素颜": "素肌",
+        "人像美化（按肤色定位，不是神经网络）": "人物補正（肌色で判定、ニューラルネットワーク不使用）",
+        "肤色柔化": "肌の滑らかさ",
+        "肤色提亮": "肌の明るさ",
+        "磨皮范围": "肌補正の範囲",
+        "肤色均匀": "肌の均一化",
+        "祛斑强度": "シミ取りの強さ",
+        # 9.4.0 人像 / 滤镜 / 设置 / 插件文案
+        "斑点大小": "シミのサイズ",
+        "眼周提亮": "目元の明るさ",
+        "眼周范围": "目元の範囲",
+        "牙齿美白": "歯の美白",
+        "唇色增强": "唇の色",
+        "大眼": "目の大きさ",
+        "磨皮": "肌のスムージング",
+        "祛斑": "シミ取り",
+        "牙齿": "歯",
+        "未检出人脸（按肤色处理）": "顔は未検出（肌色で処理）",
+        "对比中（已关闭）": "比較中（オフ）",
+        "人像美化：": "人物補正：",
+        "人像美化：状态未知（%s）": "人物補正：状態不明（%s）",
+        "对比中：已关闭美颜（松开 B 恢复）": "比較中：人物補正オフ（B を離すと戻る）",
+        "已套用美颜预设：%s": "人物補正プリセットを適用しました：%s",
+        "人像美化：拖「肤色柔化」与「肤色提亮」；检测到人脸时只作用于脸": "人物補正：「肌の柔らかさ」と「肌の明るさ」をドラッグ。顔を検出したときは顔にのみ適用されます",
+        "胶片模拟：先在下拉框选风格，再用「胶片强度」控制力度": "フィルムシミュレーション：先にドロップダウンでスタイルを選び、「フィルム強度」で強さを調整します",
+        "镜头畸变矫正：正值拉直桶形，负值修枕形，0 为不处理": "レンズ歪み補正：正の値は樽型を、負の値は糸巻き型を補正し、0 では補正しません",
+        "已打开「镜头 · 胶片 · 人像」": "「レンズ · フィルム · 人物」を開きました",
+        "色调分离（颜色分级）": "スプリットトーン（カラーグレーディング）",
+        "点色环选色相": "カラーホイールをクリックして色相を選択",
+        "高光 · 饱和度": "ハイライト · 彩度",
+        "阴影 · 饱和度": "シャドウ · 彩度",
+        "新建径向": "円形を追加",
+        "新建渐变": "グラデーションを追加",
+        "清空": "クリア",
+        "复制滤镜": "フィルターをコピー",
+        "粘贴滤镜": "フィルターを貼り付け",
+        "上移": "上へ",
+        "下移": "下へ",
+        "保存快照": "スナップショットを保存",
+        "恢复选中": "選択を復元",
+        "把当前整套调整存下来，随时切回": "現在の調整一式を保存し、いつでも戻せます",
+        "快照 %d": "スナップショット %d",
+        "已存为「快照 %d」": "「スナップショット %d」として保存しました",
+        "先在列表里选中一个快照": "先に一覧からスナップショットを選択してください",
+        "快照：%s": "スナップショット：%s",
+        "已删除「%s」": "「%s」を削除しました",
+        "保存当前为预设": "現在の設定をプリセットとして保存",
+        "导入…": "読み込み…",
+        "导出…": "書き出し…",
+        "单击列表即可套用": "一覧をクリックするだけで適用できます",
+        "暗角": "周辺減光",
+        "水印（预览与导出一致）": "透かし（プレビューと書き出しは同じ）",
+        "位置：右下": "位置：右下",
+        "清除": "消去",
+        "水印大小": "透かしのサイズ",
+        "水印浓度": "透かしの濃さ",
+        "右下": "右下",
+        "左下": "左下",
+        "位置：": "位置：",
+        "在画面上拖动即可画出%s滤镜": "画像上をドラッグすると%sフィルターを描けます",
+        "主体": "被写体",
+        "（反相）": "（反転）",
+        "已复制「%s」滤镜（含参数与位置）": "「%s」フィルターをコピーしました（パラメータと位置を含む）",
+        "剪贴板里还没有滤镜（先按「复制滤镜」）": "クリップボードにフィルターがありません（先に「フィルターをコピー」を押してください）",
+        "粘贴局部滤镜": "ローカルフィルターを貼り付け",
+        "已粘贴滤镜，共 %d 个": "フィルターを貼り付けました（合計 %d 個）",
+        "调整滤镜顺序": "フィルターの順序を変更",
+        "滤镜已移到第 %d 位": "フィルターを %d 番目に移動しました",
+        "删除局部滤镜": "ローカルフィルターを削除",
+        "清空局部滤镜": "ローカルフィルターをクリア",
+        "— 滤镜参数 —": "— フィルター設定 —",
+        "纵向大小": "縦のサイズ",
+        "羽化": "ぼかし",
+        "过渡宽度": "移行幅",
+        "锐化": "シャープ",
+        "反相": "反転",
+        "反相局部滤镜": "ローカルフィルターを反転",
+        "拖动即可画出径向滤镜 · Esc 取消": "ドラッグで円形フィルターを描画 · Esc でキャンセル",
+        "拖动即可画出渐变滤镜 · Esc 取消": "ドラッグでグラデーションフィルターを描画 · Esc でキャンセル",
+        "点一下画面里应该是中性灰的地方 · Esc 取消": "画像内でニュートラルグレーであるべき場所をクリック · Esc でキャンセル",
+        "拖动框选裁剪范围 · Enter 应用 · Esc 取消": "ドラッグでトリミング範囲を選択 · Enter で適用 · Esc でキャンセル",
+        "请点在图片上": "画像上をクリックしてください",
+        "白平衡：色温 %+.0f  色调 %+.0f": "ホワイトバランス：色温度 %+.0f  色合い %+.0f",
+        "修改时间": "更新日時",
+        "文件大小": "ファイルサイズ",
+        "排序：%s%s": "並べ替え：%s%s",
+        "过曝标红、欠曝标蓝": "白飛びを赤、黒つぶれを青で表示",
+        "自动白平衡：色温 %+d  色调 %+d": "自動ホワイトバランス：色温度 %+d  色合い %+d",
+        "已复制当前调整设置": "現在の調整設定をコピーしました",
+        "剪贴板里还没有设置（先按 Ctrl+Shift+C）": "クリップボードに設定がありません（先に Ctrl+Shift+C を押してください）",
+        "已粘贴调整设置": "調整設定を貼り付けました",
+        "中文": "中文",
+        "日本語": "日本語",
+        "更多": "その他",
+        "完成": "完了",
+        "主题与提示开关会恢复默认，确定吗？": "テーマと警告の設定が初期値に戻ります。よろしいですか？",
+        "已恢复默认设置": "初期設定に戻しました",
+        "缺少 run %s": "run %s がありません",
+        "缺少 run(img, **params) 函数": "run(img, **params) 関数がありません",
+        "插件 %s 需要 API %s，当前为 %s": "プラグイン %s は API %s が必要です（現在 %s）",
+        "on_load 出错：%s": "on_load エラー：%s",
+        "已安装插件": "インストール済みプラグイン",
+        "已开启热重载：改完插件约 1.5 秒自动生效（也可以点「重载插件」）。": "ホットリロード有効：プラグインの変更は約 1.5 秒で反映されます（「再読み込み」でも可）。",
+        "点「重新扫描」即可。": "「再スキャン」を押してください。",
+        "作者：": "作者：",
+        "联网 %s · 写文件 %s": "ネットワーク %s · ファイル書き込み %s",
+        "加载失败 %s：%s": "%s の読み込みに失敗：%s",
+        "写模板失败：%s": "テンプレートの書き込みに失敗：%s",
+        "模板已打开，另存为你自己的名字即可": "テンプレートを開きました。自分の名前で別名保存してください",
+        "插件切换失败：%s": "プラグインの切り替えに失敗：%s",
+        "已启用 ": "有効化 ",
+        "已禁用 ": "無効化 ",
+        "插件已自动重载：%d 个": "プラグインを自動再読み込みしました：%d 件",
+        "插件已重载：%d 个": "プラグインを再読み込みしました：%d 件",
+        "插件 %s 执行耗时 %.0f ms": "プラグイン %s の実行時間 %.0f ms",
+        "只安装你信任的插件。": "信頼できるプラグインだけをインストールしてください。",
+        "当前已经是全分辨率": "すでに全解像度です",
+        "正在载入全分辨率…": "全解像度を読み込み中…",
+        "载入全分辨率失败：%s": "全解像度の読み込みに失敗：%s",
+        "已载入全分辨率 %dx%d": "全解像度 %dx%d を読み込みました",
+        "切换失败：%s": "切り替えに失敗：%s",
+        "先打开一张图片": "先に画像を開いてください",
+        "插件出错": "プラグインエラー",
+        "插件 %s 没有返回图片": "プラグイン %s が画像を返しませんでした",
+        "run() 应返回 PIL.Image，实际是 %s": "run() は PIL.Image を返す必要があります（実際は %s）",
+        "插件 %s 已运行（%.0f ms，预览用代理图 %dx%d）": "プラグイン %s を実行しました（%.0f ms、プレビューはプロキシ画像 %dx%d）",
+        "正在生成预览…": "プレビューを生成中…",
+        "%s · 结果": "%s · 結果",
+        "插件出错：%s": "プラグインエラー：%s",
+        "预览基于代理图（长边 ≤2048）；保存时按原分辨率重算": "プレビューはプロキシ画像（長辺 ≤2048）を使用し、保存時に原解像度で再計算します",
+        "正在按原分辨率重算…": "原解像度で再計算中…",
+        "已保存 %s": "%s を保存しました",
+        "保存失败": "保存に失敗",
+        # 9.4.0 批量导出 / 重命名 / 信息面板 / 帮助
+        "主题：%s": "テーマ：%s",
+        "已切换主题：%s": "テーマを切り替えました：%s",
+        "还没有预设可以导出": "書き出せるプリセットはまだありません",
+        "导出预设": "プリセットの書き出し",
+        "已导出 %d 个预设": "%d 個のプリセットを書き出しました",
+        "这个文件里没有可用的预设。": "このファイルには使用できるプリセットがありません。",
+        "没有解析出任何预设。": "プリセットを解析できませんでした。",
+        "已导入 %d 个预设（同名会覆盖）": "%d 個のプリセットを読み込みました（同名は上書きされます）",
+        "预设保存失败：%s": "プリセットの保存に失敗しました：%s",
+        "预设：%s": "プリセット：%s",
+        "已套用预设「%s」": "プリセット「%s」を適用しました",
+        "保存预设": "プリセットを保存",
+        "预设名称：": "プリセット名：",
+        "已保存预设「%s」": "プリセット「%s」を保存しました",
+        "先在上面选中一个预设": "上でプリセットを選択してください",
+        "已删除预设「%s」": "プリセット「%s」を削除しました",
+        "先打开一个文件夹": "先にフォルダを開いてください",
+        "网格浏览 · %d 张": "グリッド表示 · %d 枚",
+        "目录": "フォルダ",
+        "起始": "開始",
+        "位数": "桁数",
+        "源目录不存在。": "ソースフォルダが存在しません。",
+        "起始序号和位数必须是整数。": "開始番号と桁数は整数で指定してください。",
+        "这个文件夹里没有图片。": "このフォルダに画像がありません。",
+        "%d 个文件": "%d 個のファイル",
+        "  （不变）": "  （変更なし）",
+        "… 还有 %d 个": "… ほか %d 個",
+        "%s，其中 %d 个名字不变": "%s、うち %d 件は名前変更なし",
+        "名字都没有变化，无需重命名。": "名前が変わらないため、名前変更は不要です。",
+        "重命名完成：成功 %d 个%s": "名前変更完了：成功 %d 件%s",
+        "，失败 %d 个": "、失敗 %d 件",
+        "先打开一张图片，批量导出会套用当前的调整设置。": "先に画像を開いてください。一括書き出しでは現在の調整設定が適用されます。",
+        "源目录": "ソースフォルダ",
+        "输出到": "出力先",
+        "快捷尺寸": "クイックサイズ",
+        "原尺寸": "元のサイズ",
+        "  质量": "  品質",
+        "已存在同名文件时覆盖": "同名ファイルがある場合は上書き",
+        "准备就绪": "準備完了",
+        "缩放": "スケール",
+        "请填写输出目录。": "出力先を指定してください。",
+        "源目录里没有可导出的图片。": "ソースフォルダに書き出せる画像がありません。",
+        "无法创建输出目录：%s": "出力先を作成できません：%s",
+        "正在停止…（当前这张处理完就停）": "停止中…（現在の画像を処理し次第停止します）",
+        "已存在，跳过": "既存のためスキップ",
+        "已停止": "停止",
+        "批量导出完成：成功 %d 张": "一括書き出し完了：%d 枚を書き出しました",
+        "三分": "三分割",
+        "黄金分割": "黄金比",
+        "中心十字": "中央十字",
+        "构图线：%s": "グリッド線：%s",
+        "构图辅助线：%s": "グリッド線：%s",
+        "选区太小了，拖一个大一点的框。": "選択範囲が小さすぎます。もう少し大きな枠をドラッグしてください。",
+        "裁剪 %d×%d": "トリミング %d×%d",
+        "还没有打开图片。": "画像が開かれていません。",
+        "保存图片": "画像を保存",
+        "%s_编辑%s": "%s_編集%s",
+        "无法覆盖": "上書きできません",
+        "RAW 原文件不能被覆盖，请换一个文件名。": "RAW の元ファイルは上書きできません。別のファイル名を指定してください。",
+        "覆盖原文件": "元ファイルを上書き",
+        "已保存：%s": "保存しました：%s",
+        "图片信息": "画像情報",
+        "图片信息已复制到剪贴板": "画像情報をクリップボードにコピーしました",
+        "复制全部": "すべてコピー",
+        "亮度降噪": "輝度ノイズ除去",
+        "颜色降噪": "カラーノイズ除去",
+        "主曲线": "マスターカーブ",
+        "红曲线": "赤カーブ",
+        "绿曲线": "緑カーブ",
+        "蓝曲线": "青カーブ",
+        "已调": "（調整済み）",
+        "饱和": "彩度",
+        "明度": "明度",
+        "HSL-%s %d 段": "HSL-%s %d 段",
+        "色调分离": "スプリットトーニング",
+        "局部滤镜 %d 个": "ローカルフィルター %d 個",
+        "水印": "ウォーターマーク",
+        "  名称      %s": "  名前      %s",
+        "  路径      %s": "  パス      %s",
+        "  大小      %s (%d 字节)": "  サイズ      %s (%d バイト)",
+        "  修改时间  %s": "  更新日時  %s",
+        "图像": "画像",
+        "  格式      %s%s": "  形式      %s%s",
+        "（RAW 内嵌预览）": "（RAW 埋め込みプレビュー）",
+        "  显示尺寸  %d × %d": "  表示サイズ  %d × %d",
+        "  原始尺寸  %d × %d": "  元のサイズ  %d × %d",
+        "  色彩模式  %s": "  カラーモード  %s",
+        "  帧数      %d": "  フレーム数      %d",
+        "  透明通道  %s": "  アルファ  %s",
+        "  缩放      %d%%": "  表示倍率      %d%%",
+        "EXIF      无": "EXIF      なし",
+        "内存缓存": "メモリキャッシュ",
+        "  渲染瓦片  %.1f MB": "  レンダータイル  %.1f MB",
+        "  细节缓存  %.1f MB": "  ディテールキャッシュ  %.1f MB",
+        "当前调整": "現在の調整",
+        "  （未做任何调整）": "  （調整なし）",
+        "关于 %s": "%s について",
+        "打开快 · 切图快 · 调色准": "開くのが速い · 切り替えが速い · 色が正確",
+        "「打开快」不是口号 —— 它只处理你眼睛能看到的像素。": "「開くのが速い」はスローガンではなく、目に見えるピクセルだけを処理します。",
+        "按可见区域渲染，4000 万像素的照片首帧不到一秒。": "可視領域だけを描画するため、4000 万画素の写真でも初回表示は 1 秒未満です。",
+        "「调色准」也不是 —— 预览和导出走同一套渲染管，": "「色が正確」もスローガンではありません。プレビューと書き出しは同じレンダリングパイプラインを使っており、",
+        "实测平均逐像素差 0.000。你看到的就是你存下的。": "実測の平均ピクセル差は 0.000 です。見たままが保存されます。",
+        "  没有 Electron、没有浏览器内核、不联网、不需要管理员权限": "  Electron なし、ブラウザエンジンなし、ネット接続なし、管理者権限不要",
+        "性能档位（命令行）：--perf-profile fast-slider 拖动最快（默认）、": "性能プロファイル（コマンドライン）：--perf-profile fast-slider はドラッグ時に最速（デフォルト）、",
+        "PhotoImage 更新方式。另有 --proxy N 与 --low-mem。": "PhotoImage 更新方式。ほかに --proxy N と --low-mem。",
+        "格式：JPEG · PNG · WebP · TIFF · BMP · GIF · ICO，": "形式：JPEG · PNG · WebP · TIFF · BMP · GIF · ICO、",
+        "以及尼康 NEF 等 RAW 的内嵌预览（不需要 RAW 解码库）。": "およびニコン NEF などの RAW の埋め込みプレビュー（RAW デコーダーライブラリ不要）。",
+        "它不做什么：不做图库、不做液化、不做 AI 抠图。": "やらないこと：ライブラリ機能、液化、AI 切り抜きには対応していません。",
+        "全屏做成了兼容模式（无边框最大化 + Esc 退出），": "全画面は互換モード（枠なし最大化 + Esc で終了）にしており、",
+        "系统级全屏在个别驱动上会黑屏，所以不用它。": "システムレベルの全画面は一部のドライバーで黒画面になるため、採用していません。",
+        "官网": "ウェブサイト",
+        "快捷键 - %s %s": "ショートカット - %s %s",
+        "路径已复制到剪贴板": "パスをクリップボードにコピーしました",
+        "删除文件": "ファイルを削除",
+        "删除失败": "削除失敗",
+        "  …        另有 %d 个标签": "  …        ほか %d 個のタグ",
+        "Prism 自检": "Prism セルフチェック",
+        # 9.4.0 插件安装（URL + SHA-256）
+        "是": "はい",
+        "否": "いいえ",
+        "从网址安装…": "URL からインストール…",
+        "安装插件": "プラグインをインストール",
+        "插件网址（.py）": "プラグインの URL（.py）",
+        "SHA-256（可选，填了就强制校验）": "SHA-256（任意・入力すると照合）",
+        "下载后先解析、校验，再问你一次；确认后才写入插件目录。\n只安装你信任的插件。": "まず解析・検証し、確認してからプラグインフォルダに書き込みます。\n信頼できるプラグインだけをインストールしてください。",
+        "安装失败：%s": "インストール失敗：%s",
+        "SHA-256 不匹配\n填写：%s…\n实际：%s…": "SHA-256 が一致しません\n入力：%s…\n実際：%s…",
+        "确定安装吗？": "インストールしますか？",
+        "已存在同名插件，覆盖吗？\n%s": "同名のプラグインが既にあります。上書きしますか？\n%s",
+        "已取消安装。": "インストールを中止しました。",
+        "请填写插件网址。": "プラグインの URL を入力してください。",
+        "下载中…": "ダウンロード中…",
+        "已填入示例地址与 SHA-256，点「下载并安装」即可。": "例の URL と SHA-256 を入力しました。「ダウンロードしてインストール」を押してください。",
+        "下载并安装": "ダウンロードしてインストール",
+        "示例：渐变减光": "例：グラデ ND",
+        "已安装「%s」": "「%s」をインストールしました",
+        "参数会自动记住 · 下次运行这个插件直接恢复": "パラメータは自動保存 · 次回このプラグインを実行すると復元されます",
+        "\n\nCtrl+O 打开文件    Ctrl+Shift+O 打开文件夹\n\n按 F1 查看全部快捷键": "\n\nCtrl+O ファイルを開く    Ctrl+Shift+O フォルダを開く\n\nF1 でショートカット一覧",
+        "无法打开这个文件\n\n%s": "このファイルを開けません\n\n%s",
+        "文件太大（超过 %s）": "ファイルが大きすぎます（上限 %s）",
+        "只支持 http/https 链接": "http/https のリンクのみ対応しています",
+        "下载到的是空文件": "ダウンロードしたファイルが空です",
+        "源码不是 UTF-8 文本": "ソースが UTF-8 テキストではありません",
+        "语法错误：%s（第 %s 行）": "構文エラー：%s（%s 行目）",
+        "PLUGIN 必须是纯字面量字典": "PLUGIN はリテラルの辞書である必要があります",
+        "缺少 PLUGIN 字典": "PLUGIN 辞書がありません",
+        "缺少 run() 函数": "run() 関数がありません",
+        "PLUGIN 缺少 id": "PLUGIN に id がありません",
+        "PLUGIN.api 必须是数字": "PLUGIN.api は数値である必要があります",
+        "需要 API %s，当前支持 %s": "API %s が必要です（対応：%s）",
+        "API %d · id %s": "API %d · id %s",
+        "作者：%s": "作者：%s",
+        # 9.4.0 插件安装（错误文案）
+        "%d 字节": "%d バイト",
+        "SHA-256 不匹配（实际 %s…）": "SHA-256 が一致しません（実際 %s…）",
+        # 9.4.0 批量导出状态
+        "%s：成功 %d 张，失败/跳过 %d 张 → %s": "%s：成功 %d 枚、失敗/スキップ %d 枚 → %s",
+        # 9.4.0 插件名 / 插件窗口提示
+        "像素化": "ピクセル化",
+        "复古胶片": "ビンテージフィルム",
+        "圆形头像": "丸アバター",
+        "白边框": "白フチ",
+        "黑白": "モノクロ",
+        "加文字": "文字入れ",
+        "16比9裁剪": "16:9 トリミング",
+        "丁达尔光": "光芒",
+        "移轴微缩": "チルトシフト",
+        "故障艺术": "グリッチ",
+        "已开启热重载：改完插件约 1.5 秒自动生效（也可以点「重载插件」）。禁用：把 xxx.py 改名为 xxx.py.disabled。日志：logs/plugins.log": "ホットリロード有効：変更は約 1.5 秒で反映（「再読み込み」でも可）。無効化は xxx.py を xxx.py.disabled に改名。ログ：logs/plugins.log",
     },
 }
 
@@ -509,6 +1374,77 @@ def _tr(text):
     if not text or APP_LANG == "zh":
         return text
     return LANG_TABLE.get(APP_LANG, {}).get(text, text)
+
+
+# 运行期文案（"已保存 foo.jpg"）在进词典前已经格式化过了，整串查不到译文。
+# 这里把带 % 的词条编译成模板：先用占位符切段，再按段匹配，命中后用译文重新拼。
+_TRF_CACHE = {}
+_PH_RE = re.compile(r"%(?:[-+ #0]*\d*(?:\.\d+)?[sdifgeE])|%%")
+
+
+def _format_regex(key):
+    """把 "已保存 %s" 这类词条编译成 ^已保存 (.+?)$ 形式的正则。"""
+    parts, groups, last = [], 0, 0
+    for m in _PH_RE.finditer(key):
+        parts.append(re.escape(key[last:m.start()]))
+        if m.group(0) == "%%":
+            parts.append("%")
+        else:
+            groups += 1
+            parts.append("(.+?)")
+        last = m.end()
+    parts.append(re.escape(key[last:]))
+    return re.compile("^" + "".join(parts) + "$", re.S), groups
+
+
+def _sprintf_like(template, values):
+    """用已经格式化好的片段填进译文模板（不再走 % 运算，避免 %d 收到字符串）。"""
+    out, last, i = [], 0, 0
+    for m in _PH_RE.finditer(template):
+        out.append(template[last:m.start()])
+        if m.group(0) == "%%":
+            out.append("%")
+        else:
+            out.append(values[i] if i < len(values) else "")
+            i += 1
+        last = m.end()
+    out.append(template[last:])
+    return "".join(out)
+
+
+def _trf(text):
+    """翻译已经格式化好的运行期文案；查不到就原样返回。
+
+    例：词典里有 "已保存 %s" → "Saved %s"，传入 "已保存 a.jpg" 返回 "Saved a.jpg"。
+    """
+    if not text or APP_LANG == "zh" or not isinstance(text, str):
+        return text
+    table = LANG_TABLE.get(APP_LANG, {})
+    hit = table.get(text)
+    if hit is not None:
+        return hit
+    cache = _TRF_CACHE.get(APP_LANG)
+    if cache is None:
+        rows = []
+        for key, val in table.items():
+            if "%" not in key:
+                continue
+            try:
+                rx, groups = _format_regex(key)
+            except Exception:
+                continue
+            rows.append((len(rx.pattern), groups, rx, val))
+        # 字面部分越长越具体，优先匹配，避免 "已保存 %s" 抢了更长的模板
+        rows.sort(key=lambda r: (-r[0], -r[1]))
+        cache = _TRF_CACHE[APP_LANG] = rows
+    for _n, groups, rx, val in cache:
+        m = rx.match(text)
+        if not m:
+            continue
+        if groups and len(m.groups()) != groups:
+            continue
+        return _sprintf_like(val, m.groups())
+    return text
 
 
 # ---------------------------------------------------------------- 设计令牌
@@ -1266,6 +2202,134 @@ def _plugin_log(msg, plugin_id="-", api="-", stage="-", exc=None):
         return line
     except Exception:
         return ""
+
+
+# ---------------------------------------------------------------- 插件安装（URL）
+# 不做应用商店：一个网址 + 可选 SHA-256，下载、校验、落地，三步都在本机完成。
+# 校验只保证「下载到的东西没被改过」，不保证作者可信 —— 安装前必须让用户确认。
+PLUGIN_MAX_BYTES = 2 * 1024 * 1024      # 插件源码上限；正常几 KB，2 MB 足够
+PLUGIN_FETCH_TIMEOUT = 15
+# 「示例：渐变减光」的一键安装地址与指纹。改了 docs/plugins/demo-grad-nd.py
+# 就必须同步改这里的 SHA-256，否则示例会按设计校验失败。
+DEMO_PLUGIN_URL = "https://11ly322.github.io/Prism/plugins/demo-grad-nd.py"
+DEMO_PLUGIN_SHA256 = ("cf8552bd0a4393e5a798582c00970b29"
+                      "81d6a7f8e14182c682c2eabe666e54ee")
+
+
+class PluginSourceError(ValueError):
+    """插件源码不合格：语法错、缺 PLUGIN / run、API 不支持、哈希不符。"""
+
+
+def fetch_plugin_source(url, max_bytes=PLUGIN_MAX_BYTES,
+                        timeout=PLUGIN_FETCH_TIMEOUT):
+    """下载插件源码，返回 bytes。只接受 http/https，且限制大小。"""
+    import urllib.parse
+    import urllib.request
+    scheme = urllib.parse.urlsplit(str(url).strip()).scheme.lower()
+    if scheme not in ("http", "https"):
+        raise PluginSourceError(_tr("只支持 http/https 链接"))
+    req = urllib.request.Request(
+        str(url).strip(),
+        headers={"User-Agent": "Prism/%s" % APP_VERSION})
+    limit = ("%d KB" % (max_bytes // 1024) if max_bytes >= 1024
+             else "%d 字节" % max_bytes)
+    with urllib.request.urlopen(req, timeout=timeout) as resp:
+        try:
+            length = int(resp.headers.get("Content-Length") or 0)
+        except Exception:
+            length = 0
+        if length > max_bytes:
+            raise PluginSourceError(_tr("文件太大（超过 %s）") % limit)
+        data = resp.read(max_bytes + 1)
+    if len(data) > max_bytes:
+        raise PluginSourceError(_tr("文件太大（超过 %s）") % limit)
+    if not data:
+        raise PluginSourceError(_tr("下载到的是空文件"))
+    return data
+
+
+def parse_plugin_source(data):
+    """只看 AST，不执行代码。返回插件元信息，不合格就抛 PluginSourceError。
+
+    这样做的好处：用户确认之前，插件代码一次都没跑过。
+    """
+    import ast
+    try:
+        text = (data.decode("utf-8-sig") if isinstance(data, (bytes, bytearray))
+                else str(data))
+    except UnicodeDecodeError:
+        raise PluginSourceError(_tr("源码不是 UTF-8 文本"))
+    try:
+        tree = ast.parse(text)
+    except SyntaxError as exc:
+        raise PluginSourceError(_tr("语法错误：%s（第 %s 行）")
+                                % (exc.msg, exc.lineno))
+    meta = None
+    has_run = False
+    for node in tree.body:
+        if isinstance(node, ast.Assign):
+            for target in node.targets:
+                if isinstance(target, ast.Name) and target.id == "PLUGIN":
+                    try:
+                        meta = ast.literal_eval(node.value)
+                    except Exception:
+                        raise PluginSourceError(_tr("PLUGIN 必须是纯字面量字典"))
+        elif isinstance(node, ast.FunctionDef) and node.name == "run":
+            has_run = True
+    if not isinstance(meta, dict):
+        raise PluginSourceError(_tr("缺少 PLUGIN 字典"))
+    if not has_run:
+        raise PluginSourceError(_tr("缺少 run() 函数"))
+    pid = str(meta.get("id") or "").strip()
+    if not pid:
+        raise PluginSourceError(_tr("PLUGIN 缺少 id"))
+    try:
+        api = int(meta.get("api", 1))
+    except Exception:
+        raise PluginSourceError(_tr("PLUGIN.api 必须是数字"))
+    if api not in PLUGIN_API_SUPPORTED:
+        raise PluginSourceError(_tr("需要 API %s，当前支持 %s") % (
+            api, "/".join(str(v) for v in PLUGIN_API_SUPPORTED)))
+    return {"id": pid,
+            "name": str(meta.get("name") or pid),
+            "version": str(meta.get("version") or ""),
+            "author": str(meta.get("author") or ""),
+            "description": str(meta.get("description") or ""),
+            "network": bool(meta.get("network")),
+            "writes_files": bool(meta.get("writes_files")),
+            "api": api,
+            "source": text}
+
+
+def safe_plugin_filename(pid):
+    """id -> 文件名主干：只留 ASCII 字母数字与 _-，避免路径穿越。"""
+    base = re.sub(r"[^A-Za-z0-9_-]+", "-", str(pid)).strip("-_")
+    return (base or "plugin")[:40]
+
+
+def install_plugin_bytes(data, sha256="", folder=None, overwrite=False):
+    """校验 SHA-256、解析元信息并写入插件目录。返回元信息（含 path）。"""
+    import hashlib
+    meta = parse_plugin_source(data)
+    if sha256:
+        got = hashlib.sha256(data).hexdigest()
+        want = str(sha256).strip().lower()
+        if got.lower() != want:
+            raise PluginSourceError("SHA-256 不匹配（实际 %s…）" % got[:12])
+    meta["sha256"] = hashlib.sha256(data).hexdigest()
+    folder = folder or _plugin_dir()
+    try:
+        os.makedirs(folder, exist_ok=True)
+    except Exception:
+        pass
+    path = os.path.join(folder, safe_plugin_filename(meta["id"]) + ".py")
+    if os.path.exists(path) and not overwrite:
+        raise FileExistsError(path)
+    with open(path, "wb") as fh:
+        fh.write(data if isinstance(data, (bytes, bytearray))
+                 else meta["source"].encode("utf-8"))
+    meta["path"] = path
+    return meta
 
 
 def _data_dir():
@@ -2753,6 +3817,8 @@ class QPEApp(_BASE):
 
         # 预设：存成脚本同目录下的 json，随用随取
         self.presets = {}
+        # 插件参数：按插件 id 记住上次用的值，下次运行直接恢复
+        self.plug_params = {}
         self.preset_box = None
         self.batch_win = None
         self.b_files = []
@@ -4957,7 +6023,7 @@ class QPEApp(_BASE):
         del self.history[self.hist_i + 1:]
         del self.hist_labels[self.hist_i + 1:]
         self.history.append(snap)
-        self.hist_labels.append(label or "调整")
+        self.hist_labels.append(_trf(label) if label else "调整")
         if len(self.history) > 60:
             self.history.pop(0)
             self.hist_labels.pop(0)
@@ -5564,7 +6630,7 @@ class QPEApp(_BASE):
         self.preview_img = None
         self.tile_cache.clear()
         try:
-            self._save_settings()
+            self._save_setting("low_mem", self.low_mem)
         except Exception:
             pass
         self._mark_fast()
@@ -5651,7 +6717,7 @@ class QPEApp(_BASE):
         cw = max(1, self.canvas.winfo_width())
         ch = max(1, self.canvas.winfo_height())
         self.canvas.coords(self.text_item, cw // 2, ch // 2)
-        self.canvas.itemconfigure(self.text_item, text=msg,
+        self.canvas.itemconfigure(self.text_item, text=_trf(msg),
                                   state="normal" if msg else "hidden")
         if msg:
             self.canvas.tag_raise(self.text_item)
@@ -5668,11 +6734,13 @@ class QPEApp(_BASE):
 
         if self.doc is None:
             if not self.files:
-                hint = "把图片拖到这里" if _DND_OK else "打开一张图片开始浏览"
-                self._set_text(hint + "\n\nCtrl+O 打开文件    Ctrl+Shift+O 打开文件夹"
-                                      "\n\n按 F1 查看全部快捷键")
+                hint = ("把图片拖到这里" if _DND_OK
+                        else "打开一张图片开始浏览")
+                self._set_text(_tr(hint) + _tr(
+                    "\n\nCtrl+O 打开文件    Ctrl+Shift+O 打开文件夹"
+                    "\n\n按 F1 查看全部快捷键"))
             elif self.error is not None:
-                self._set_text("无法打开这个文件\n\n%s" % self.error)
+                self._set_text(_trf("无法打开这个文件\n\n%s" % self.error))
             else:
                 self._set_text("载入中…")
             return
@@ -5891,9 +6959,9 @@ class QPEApp(_BASE):
             self.title("%s - %s %s" % (os.path.basename(self.doc.path),
                                          APP_NAME, APP_VERSION))
         elif self.loading:
-            self.title("载入中 - %s %s" % (APP_NAME, APP_VERSION))
+            self.title(_trf("载入中 - %s %s" % (APP_NAME, APP_VERSION)))
         else:
-            self.title(APP_TITLE)
+            self.title(_trf(APP_TITLE))
 
     def _update_status(self):
         if not getattr(self, "alive", True):
@@ -5907,24 +6975,25 @@ class QPEApp(_BASE):
         name = os.path.basename(doc.path)
         marks = []
         if doc.n_frames > 1:
-            marks.append("动图 %d 帧%s" % (doc.n_frames, "（已暂停）" if self.paused else ""))
+            marks.append(_trf("动图 %d 帧%s" % (
+                doc.n_frames, _tr("（已暂停）") if self.paused else "")))
         rots = sum(op[1] for op in self.geom if op[0] == "rot")
         flips = sum(1 for op in self.geom if op[0] == "flip")
         crops = sum(1 for op in self.geom if op[0] == "crop")
         if rots % 360:
-            marks.append("旋转 %d°" % (rots % 360))
+            marks.append(_trf("旋转 %d°" % (rots % 360)))
         if flips:
-            marks.append("翻转")
+            marks.append(_tr("翻转"))
         if crops:
-            marks.append("已裁剪")
+            marks.append(_tr("已裁剪"))
         if not self._adj_identity():
-            marks.append("已调整")
+            marks.append(_tr("已调整"))
         if self.show_original:
-            marks.append("正在显示原图（再按一次反斜杠或点「对比原图」返回）")
+            marks.append(_tr("正在显示原图（再按一次反斜杠或点「对比原图」返回）"))
         if getattr(doc, "draft_ratio", 1.0) < 1.0:
-            marks.append("快速预览（按 1:1 自动换全分辨率）")
+            marks.append(_tr("快速预览（按 1:1 自动换全分辨率）"))
         if self.slideshow:
-            marks.append("幻灯片 %ds" % self.interval)
+            marks.append(_tr("幻灯片 %ds") % self.interval)
         full = name + ("    " + " · ".join(marks) if marks else "")
 
         im = self._view_image()
@@ -5983,8 +7052,8 @@ class QPEApp(_BASE):
                 if caps:
                     inc = tk.Frame(w, bg=BAR_BG)
                     inc.pack(fill="x", padx=px(8), pady=(0, px(5)))
-                    for label, on in (("联网", bool(caps.get("network"))),
-                                      ("写文件", bool(caps.get("writes_files")))):
+                    for label, on in ((_tr("联网"), bool(caps.get("network"))),
+                                      (_tr("写文件"), bool(caps.get("writes_files")))):
                         col = "#ff8a6b" if on else "#5c5c5c"
                         tk.Label(inc, text="●", font=self.ui_font_s,
                                  bg=BAR_BG, fg=col).pack(side="left")
@@ -7207,7 +8276,7 @@ class QPEApp(_BASE):
                 return
             ok, why = _beauty_guard(src)
             if not ok:
-                lbl.configure(text=_tr("人像美化：本图不适用（%s）") % why)
+                lbl.configure(text=_tr("人像美化：本图不适用（%s）") % _tr(why))
                 return
             if _is_grayish(src):
                 lbl.configure(text=_tr("人像美化：本图不适用（黑白照片）"))
@@ -7215,7 +8284,7 @@ class QPEApp(_BASE):
             skin = _skin_mask(src, 4)
             ok, why = _beauty_guard(src, skin)
             if not ok:
-                lbl.configure(text="人像美化：本图不适用（%s）" % why)
+                lbl.configure(text=_tr("人像美化：本图不适用（%s）") % _tr(why))
                 return
             faces = _face_boxes(skin)
             a = self.adj
@@ -7231,16 +8300,16 @@ class QPEApp(_BASE):
             if faces:
                 parts.append(_tr("检出 %d 张脸") % len(faces))
             else:
-                parts.append("未检出人脸（按肤色处理）")
-            detail = " ".join("%s%.0f" % (n, a.get(k, 0)) for n, k in
+                parts.append(_tr("未检出人脸（按肤色处理）"))
+            detail = " ".join("%s%.0f" % (_tr(n), a.get(k, 0)) for n, k in
                               (("磨皮", "skin_smooth"), ("祛斑", "skin_blemish"),
                                ("眼周", "skin_eye_care"), ("瘦脸", "skin_slim"))
                               if a.get(k))
             if detail:
                 parts.append(detail)
             if getattr(self, "beauty_off", False):
-                parts.append("对比中（已关闭）")
-            lbl.configure(text="人像美化：" + " · ".join(parts))
+                parts.append(_tr("对比中（已关闭）"))
+            lbl.configure(text=_tr("人像美化：") + " · ".join(parts))
         except Exception as exc:
             lbl.configure(text="人像美化：状态未知（%s）" % str(exc)[:24])
 
@@ -7658,6 +8727,25 @@ class QPEApp(_BASE):
                         cls = ch.winfo_class()
                     except Exception:
                         continue
+                    if isinstance(ch, tk.Toplevel):
+                        # 窗口标题不是控件文字，_apply_lang 原来管不到。
+                        # 存下原文再翻；"%s · 结果" 这类带占位符的走模板匹配。
+                        try:
+                            cur_title = ch.title()
+                        except Exception:
+                            cur_title = ""
+                        if cur_title:
+                            orig_title = getattr(ch, "_orig_title", None)
+                            if orig_title is None:
+                                orig_title = cur_title
+                                try:
+                                    ch._orig_title = cur_title
+                                except Exception:
+                                    pass
+                            try:
+                                ch.title(_trf(orig_title))
+                            except Exception:
+                                pass
                     if cls == "Menu":
                         try:
                             last = ch.index("end")
@@ -7678,7 +8766,7 @@ class QPEApp(_BASE):
                                 if i not in store:
                                     store[i] = label
                                 try:
-                                    ch.entryconfigure(i, label=_tr(store[i]))
+                                    ch.entryconfigure(i, label=_trf(store[i]))
                                 except Exception:
                                     pass
                     elif isinstance(ch, _QpeRoundButton):
@@ -7691,7 +8779,7 @@ class QPEApp(_BASE):
                             except Exception:
                                 pass
                         try:
-                            ch.configure(text=_tr(orig))
+                            ch.configure(text=_trf(orig))
                         except Exception:
                             pass
                     elif cls in ("Label", "Button", "Checkbutton",
@@ -7709,7 +8797,7 @@ class QPEApp(_BASE):
                                 except Exception:
                                     pass
                             try:
-                                ch.configure(text=_tr(orig))
+                                ch.configure(text=_trf(orig))
                             except Exception:
                                 pass
                     do_widget(ch)
@@ -8166,9 +9254,10 @@ class QPEApp(_BASE):
                       reverse=desc)
 
     def _sort_label(self):
-        names = {"name": "文件名", "mtime": "修改时间", "size": "文件大小"}
-        return "排序：%s%s" % (names.get(self.sort_key, "文件名"),
-                              "↓" if self.sort_desc else "")
+        names = {"name": _tr("文件名"), "mtime": _tr("修改时间"),
+                 "size": _tr("文件大小")}
+        return _tr("排序：%s%s") % (names.get(self.sort_key, _tr("文件名")),
+                                    "↓" if self.sort_desc else "")
 
     def _refresh_sort_btn(self):
         if self.sort_btn is not None and self.sort_btn.winfo_exists():
@@ -8751,8 +9840,7 @@ class QPEApp(_BASE):
         tk.Label(win, text=_plugin_dir(), font=self.ui_font_s, bg=BAR_BG,
                  fg=FG_DIM, anchor="w", wraplength=px(520)).pack(
                      fill="x", padx=px(16))
-        hint = ("已开启热重载：改完插件约 1.5 秒自动生效（也可以点「重载插件」）。"
-                "禁用：把 xxx.py 改名为 xxx.py.disabled。日志：logs/plugins.log")
+        hint = "已开启热重载：改完插件约 1.5 秒自动生效（也可以点「重载插件」）。禁用：把 xxx.py 改名为 xxx.py.disabled。日志：logs/plugins.log"
         tk.Label(win, text=hint, font=self.ui_font_s, bg=BAR_BG, fg=FG_DIM,
                  anchor="w", justify="left", wraplength=px(520)).pack(
                      fill="x", padx=px(16), pady=(px(4), 0))
@@ -8785,20 +9873,25 @@ class QPEApp(_BASE):
             txt = tk.Frame(row, bg=BTN_BG)
             txt.pack(side="left", fill="x", expand=True, padx=px(10),
                      pady=px(6))
-            head = item["name"] + (("  " + item["ver"]) if item["ver"] else "")
-            name_lbl = tk.Label(txt, text=head, font=self.ui_font_b, bg=BTN_BG,
-                                fg=FG, anchor="w")
-            name_lbl.pack(fill="x")
+            head = tk.Frame(txt, bg=BTN_BG)
+            head.pack(fill="x")
+            name_lbl = tk.Label(head, text=item["name"], font=self.ui_font_b,
+                                bg=BTN_BG, fg=FG, anchor="w")
+            name_lbl.pack(side="left")
+            if item["ver"]:
+                # 版本号单独一个 Label：_apply_lang 只翻名字，不会把 "2.0" 也存成原文
+                tk.Label(head, text="  " + item["ver"], font=self.ui_font_s,
+                         bg=BTN_BG, fg=FG_DIM, anchor="w").pack(side="left")
             # 卡片只留名称；描述/作者/能力收进 hover 提示。
             # 12 个插件排两列时，每行三行文字会把列表撑得很长。
             tip = [item["desc"] or item["file"]]
             if item["author"]:
-                tip.append("作者：" + item["author"])
+                tip.append(_tr("作者：") + item["author"])
             caps = item.get("caps") or {}
             if caps:
-                tip.append("联网 %s · 写文件 %s" % (
-                    "是" if caps.get("network") else "否",
-                    "是" if caps.get("writes_files") else "否"))
+                tip.append(_tr("联网 %s · 写文件 %s") % (
+                    _tr("是") if caps.get("network") else _tr("否"),
+                    _tr("是") if caps.get("writes_files") else _tr("否")))
             text_tip = "\n".join(tip[:2]) if len(tip) > 2 else "\n".join(tip)
             for _w in (row, txt, name_lbl):
                 self._hover_tip(_w, text_tip, caps=caps)
@@ -8824,6 +9917,142 @@ class QPEApp(_BASE):
         self._panel_btn(bar2, "重载插件", self._reload_plugins)
         self._panel_btn(bar2, "新建插件", self._new_plugin)
         self._panel_btn(bar2, "插件说明", self.show_plugin_help)
+        self._panel_btn(bar2, "从网址安装…", self.show_plugin_install)
+
+    def show_plugin_install(self):
+        """从网址安装插件：下载 → 解析（不执行）→ 校验 → 确认 → 写入。
+
+        网络请求放后台线程，界面不卡；确认对话框在写入前，用户随时能反悔。
+        """
+        win = tk.Toplevel(self)
+        win.title("安装插件")
+        win.configure(bg=BAR_BG)
+        win.geometry("%dx%d" % (px(560), px(330)))
+        win.transient(self)
+        win.after(40, self._apply_lang)
+        try:
+            win.iconbitmap(os.path.join(_res_dir(), "Prism.ico"))
+        except Exception:
+            pass
+
+        tk.Label(win, text="安装插件", font=self.ui_font_b, bg=BAR_BG, fg=FG,
+                 anchor="w").pack(fill="x", padx=px(16), pady=(px(14), px(6)))
+        tk.Label(win, text="插件网址（.py）", font=self.ui_font_s, bg=BAR_BG,
+                 fg=FG_DIM, anchor="w").pack(fill="x", padx=px(16))
+        url_var = tk.StringVar()
+        tk.Entry(win, textvariable=url_var, bg=DEEP_BG, fg=FG,
+                 insertbackground=FG, relief="flat", bd=0,
+                 highlightthickness=0, font=self.ui_font_s).pack(
+                     fill="x", padx=px(16), pady=(px(2), px(8)), ipady=px(4))
+        tk.Label(win, text="SHA-256（可选，填了就强制校验）", font=self.ui_font_s,
+                 bg=BAR_BG, fg=FG_DIM, anchor="w").pack(fill="x", padx=px(16))
+        sha_var = tk.StringVar()
+        tk.Entry(win, textvariable=sha_var, bg=DEEP_BG, fg=FG,
+                 insertbackground=FG, relief="flat", bd=0,
+                 highlightthickness=0, font=self.ui_font_s).pack(
+                     fill="x", padx=px(16), pady=(px(2), px(8)), ipady=px(4))
+        hint = "下载后先解析、校验，再问你一次；确认后才写入插件目录。\n只安装你信任的插件。"
+        tk.Label(win, text=hint, font=self.ui_font_s, bg=BAR_BG, fg=FG_DIM,
+                 anchor="w", justify="left", wraplength=px(520)).pack(
+                     fill="x", padx=px(16))
+        status = tk.Label(win, text="", font=self.ui_font_s, bg=BAR_BG,
+                          fg=FG_DIM, anchor="w", justify="left",
+                          wraplength=px(520))
+        status.pack(fill="x", padx=px(16), pady=(px(6), 0))
+        row = tk.Frame(win, bg=BAR_BG)
+        row.pack(fill="x", padx=px(16), pady=(px(10), px(12)))
+
+        def fail(exc):
+            try:
+                status.configure(text=_tr("安装失败：%s") % exc)
+            except Exception:
+                pass
+            try:
+                messagebox.showerror(_tr("安装插件"), str(exc), parent=win)
+            except Exception:
+                pass
+
+        def fetched(data, url):
+            try:
+                meta = parse_plugin_source(data)
+            except PluginSourceError as exc:
+                return fail(exc)
+            except Exception as exc:
+                return fail(exc)
+            want = sha_var.get().strip()
+            if want:
+                import hashlib
+                got = hashlib.sha256(data).hexdigest()
+                if got.lower() != want.lower():
+                    return fail(PluginSourceError(
+                        _tr("SHA-256 不匹配\n填写：%s…\n实际：%s…")
+                        % (want[:16], got[:16])))
+            caps = _tr("联网 %s · 写文件 %s") % (
+                _tr("是") if meta["network"] else _tr("否"),
+                _tr("是") if meta["writes_files"] else _tr("否"))
+            detail = ["%s  %s" % (meta["name"], meta["version"]),
+                      meta["description"][:80],
+                      _tr("作者：%s") % (meta["author"] or "-"),
+                      caps,
+                      _tr("API %d · id %s") % (meta["api"], meta["id"]),
+                      "", _tr("确定安装吗？")]
+            if not messagebox.askyesno(_tr("安装插件"), "\n".join(detail),
+                                       parent=win):
+                status.configure(text=_tr("已取消安装。"))
+                return
+            path = os.path.join(_plugin_dir(),
+                                safe_plugin_filename(meta["id"]) + ".py")
+            overwrite = False
+            if os.path.exists(path):
+                if not messagebox.askyesno(
+                        _tr("安装插件"),
+                        _tr("已存在同名插件，覆盖吗？\n%s") % path,
+                        parent=win):
+                    status.configure(text=_tr("已取消安装。"))
+                    return
+                overwrite = True
+            try:
+                meta = install_plugin_bytes(data, want, overwrite=overwrite)
+            except Exception as exc:
+                return fail(exc)
+            _plugin_log("installed %s from %s sha256=%s" % (
+                meta["id"], url, meta["sha256"]), plugin_id=meta["id"],
+                api=meta["api"], stage="install")
+            try:
+                win.destroy()
+            except Exception:
+                pass
+            self._rescan_plugins()
+            try:
+                self._flash(_tr("已安装「%s」") % meta["name"], 2800)
+            except Exception:
+                pass
+
+        def do_install():
+            url = url_var.get().strip()
+            if not url:
+                status.configure(text=_tr("请填写插件网址。"))
+                return
+            status.configure(text=_tr("下载中…"))
+
+            def worker():
+                try:
+                    data = fetch_plugin_source(url)
+                except Exception as exc:
+                    self.after(0, lambda e=exc: fail(e))
+                    return
+                self.after(0, lambda d=data: fetched(d, url))
+
+            threading.Thread(target=worker, daemon=True).start()
+
+        def use_demo():
+            url_var.set(DEMO_PLUGIN_URL)
+            sha_var.set(DEMO_PLUGIN_SHA256)
+            status.configure(text=_tr("已填入示例地址与 SHA-256，点「下载并安装」即可。"))
+
+        self._panel_btn(row, "下载并安装", do_install)
+        self._panel_btn(row, "取消", win.destroy)
+        self._panel_btn(row, "示例：渐变减光", use_demo)
 
     PLUGIN_TEMPLATE = '''# -*- coding: utf-8 -*-
 # Prism 插件模板（api = 2）。另存为 myplugin.py 放进插件目录即可，约 1.5 秒热重载。
@@ -8948,7 +10177,7 @@ def run(img, **params):
                 self.show_plugins()
         except Exception:
             pass
-        self._flash(("已启用 " if enabled else "已禁用 ") + fn, 2200)
+        self._flash((_tr("已启用 ") if enabled else _tr("已禁用 ")) + fn, 2200)
 
     def _reload_plugins(self, auto=False):
         """重新加载插件目录并刷新界面（热重载与手动重载共用）。"""
@@ -9030,6 +10259,77 @@ def run(img, **params):
 
     def _plugin_defaults(self, spec):
         return {p["key"]: p["default"] for p in spec}
+
+    # ------------------------------------------------------------ 插件参数记忆
+    # 键是插件 id（没有 id 时退回文件名），值是上次跑完的参数。存在设置文件里，
+    # 所以升级、重启都还在；插件自己改了默认值也不会丢用户调过的值。
+
+    @staticmethod
+    def _plugin_key(item):
+        return str(item.get("id") or item.get("file") or "")
+
+    def _plugin_params(self, item, spec):
+        """默认值 + 上次记住的值。坏值（类型不对、超出范围、选项已删）回落默认。"""
+        saved = (getattr(self, "plug_params", {}) or {}).get(
+            self._plugin_key(item)) or {}
+        if not isinstance(saved, dict):
+            saved = {}
+        out = self._plugin_defaults(spec)
+        for p in spec:
+            if p["key"] in saved:
+                out[p["key"]] = self._coerce_plugin_param(p, saved[p["key"]])
+        return out
+
+    @staticmethod
+    def _coerce_plugin_param(p, value):
+        """把设置文件里读回来的值收敛成控件能用的类型/范围内。"""
+        kind = p["type"]
+        if kind == "bool":
+            if isinstance(value, str):
+                return value.strip().lower() not in ("", "0", "false",
+                                                     "no", "off", "none")
+            return bool(value)
+        if kind == "choice":
+            return value if value in p["choices"] else p["default"]
+        if kind == "text":
+            return str(value)[:200]
+        try:
+            lo, hi = float(p["min"]), float(p["max"])
+            v = float(value)
+        except (TypeError, ValueError):
+            return p["default"]
+        if lo > hi:
+            lo, hi = hi, lo
+        return max(lo, min(hi, v))
+
+    def _remember_plugin_params(self, item, params):
+        """记下这次用的参数（只存 json 能表示的基本类型）。"""
+        pid = self._plugin_key(item)
+        if not pid or not isinstance(params, dict):
+            return
+        clean = {}
+        for k, v in params.items():
+            if isinstance(v, (bool, int, float, str)):
+                clean[str(k)] = v
+        if not clean:
+            return
+        if not isinstance(getattr(self, "plug_params", None), dict):
+            self.plug_params = {}
+        self.plug_params[pid] = clean
+        try:
+            self._save_setting("plugin_params", self.plug_params)
+        except Exception:
+            pass
+
+    def _forget_plugin_params(self, item):
+        """「恢复默认」时把记住的值删掉，否则重开还是旧参数。"""
+        pid = self._plugin_key(item)
+        try:
+            if pid and isinstance(getattr(self, "plug_params", None), dict):
+                self.plug_params.pop(pid, None)
+                self._save_setting("plugin_params", self.plug_params)
+        except Exception:
+            pass
 
     def _call_plugin(self, item, im, path, params):
         """调用插件。失败时写日志、提示用户、回退原图，绝不带崩主程序。"""
@@ -9237,28 +10537,29 @@ def run(img, **params):
         if full is None:
             return
         spec = self._plugin_params_spec(item)
-        params = self._plugin_defaults(spec) if spec else None
+        params = self._plugin_params(item, spec) if spec else None
         path = getattr(self.doc, "path", None)
 
         def ready(im):
+            disp = _tr(item["name"])
             try:
                 out = self._call_plugin(item, im, path, params)
             except Exception as exc:
-                messagebox.showerror("插件出错", "%s\n\n%s" % (item["name"], exc),
+                messagebox.showerror("插件出错", "%s\n\n%s" % (disp, exc),
                                      parent=self)
                 return
             if out is None:
-                self._flash("插件 %s 没有返回图片" % item["name"])
+                self._flash("插件 %s 没有返回图片" % disp)
                 return
             if not isinstance(out, Image.Image):
                 messagebox.showerror(
                     "插件出错", "run() 应返回 PIL.Image，实际是 %s" %
                     type(out).__name__, parent=self)
                 return
-            self._show_plugin_result(item["name"], out, item, im,
+            self._show_plugin_result(disp, out, item, im,
                                     spec, params, full=full)
             self._flash("插件 %s 已运行（%.0f ms，预览用代理图 %dx%d）"
-                        % (item["name"], getattr(self, "_plugin_last_ms", 0.0),
+                        % (disp, getattr(self, "_plugin_last_ms", 0.0),
                            im.size[0], im.size[1]), 3000)
 
         # 代理图在后台线程生成（12MP 约 60~120ms），主线程不阻塞
@@ -9325,9 +10626,28 @@ def run(img, **params):
                      font=self.ui_font_s, bg=BAR_BG, fg=FG_DIM, anchor="w",
                      justify="left", wraplength=px(700)).pack(
                          fill="x", padx=px(14), pady=(px(2), 0))
+            tk.Label(box, text="参数会自动记住 · 下次运行这个插件直接恢复",
+                     font=self.ui_font_s, bg=BAR_BG, fg=FG_DIM, anchor="w",
+                     justify="left", wraplength=px(700)).pack(
+                         fill="x", padx=px(14), pady=(px(2), 4))
+
+            def persist():
+                """把当前控件里的值写进设置文件（关窗口 / 保存 / 恢复默认前调用）。"""
+                try:
+                    vals = (state.get("collect") or (lambda: params))()
+                    self._remember_plugin_params(item, vals)
+                except Exception:
+                    pass
+
+            def reset_defaults():
+                # 先删记忆再重开：顺序反了会把旧值又写回去
+                self._forget_plugin_params(item)
+                win.destroy()
+                self.run_plugin(item)
+
             self._panel_btn(row, "重新应用", do_run)
-            self._panel_btn(row, "恢复默认",
-                            lambda: (win.destroy(), self.run_plugin(item)))
+            self._panel_btn(row, "恢复默认", reset_defaults)
+            win.protocol("WM_DELETE_WINDOW", lambda: (persist(), win.destroy()))
 
         bar = tk.Frame(win, bg=BG)
         bar.pack(pady=px(10))
@@ -9356,11 +10676,27 @@ def run(img, **params):
                     out = out.convert("RGB")
                 out.save(path)
                 self._flash("已保存 %s" % os.path.basename(path))
+                # 导出成功说明这套参数是满意的，顺手记住
+                try:
+                    vals = (state.get("collect") or (lambda: params))()
+                    self._remember_plugin_params(item, vals)
+                except Exception:
+                    pass
             except Exception as exc:
                 messagebox.showerror("保存失败", str(exc), parent=win)
 
         self._panel_btn(bar, "保存为…", save_as)
-        self._panel_btn(bar, "关闭", win.destroy)
+
+        def close_win():
+            try:
+                if spec and item is not None:
+                    vals = (state.get("collect") or (lambda: params))()
+                    self._remember_plugin_params(item, vals)
+            except Exception:
+                pass
+            win.destroy()
+
+        self._panel_btn(bar, "关闭", close_win)
 
     def _apply_outline(self, color, widget=None):
         """描边主题：给容器和文字类控件加一圈 1 像素边框。
@@ -9393,14 +10729,15 @@ def run(img, **params):
         self._apply_outline(THEMES[name].get("outline"))
         self.theme = name
         if self.theme_btn is not None and self.theme_btn.winfo_exists():
-            self.theme_btn.configure(text="主题：%s" % THEME_NAMES[name])
+            self.theme_btn.configure(
+                text=_tr("主题：%s") % _tr(THEME_NAMES[name]))
         if persist:
             self.save_settings()
         try:
             self._render()
         except Exception:
             pass
-        self._flash("已切换主题：%s" % THEME_NAMES[name])
+        self._flash(_tr("已切换主题：%s") % _tr(THEME_NAMES[name]))
 
     def cycle_theme(self):
         i = THEME_ORDER.index(self.theme) if self.theme in THEME_ORDER else 0
@@ -9444,6 +10781,13 @@ def run(img, **params):
             self.wm_alpha = max(5.0, min(100.0, float(d.get("wm_alpha", 65))))
             self.clip_warn = bool(d.get("clip_warn", False))
             self.fast_skip_fx = bool(d.get("fast_skip_fx", False))
+            # 命令行 --low-mem 优先，其余情况恢复上次的选择
+            if not globals().get("LOW_MEM_ARG", False):
+                self.low_mem = bool(d.get("low_mem", getattr(self, "low_mem", False)))
+            raw = d.get("plugin_params")
+            if isinstance(raw, dict):
+                self.plug_params = {str(k): v for k, v in raw.items()
+                                    if isinstance(v, dict)}
             last = str(d.get("last_dir", "") or "")
             if last and os.path.isdir(last):
                 self.last_dir = last
@@ -9485,21 +10829,39 @@ def run(img, **params):
             return self.saved_geom or ""
 
     def save_settings(self):
+        """写回偏好。
+
+        先读旧文件再覆盖：语言、插件参数这类用 _save_setting 单独写过的键，
+        如果这里用固定字典整份重写就会被抹掉（之前确实丢过语言设置）。
+        """
         try:
-            with open(self._settings_path(), "w", encoding="utf-8") as fh:
-                json.dump({"sort_key": self.sort_key,
-                           "sort_desc": self.sort_desc,
-                           "wm_text": self.wm_text,
-                           "wm_pos": self.wm_pos,
-                           "wm_size": self.wm_size,
-                           "wm_alpha": self.wm_alpha,
-                           "clip_warn": self.clip_warn,
-                           "last_dir": self.folder or "",
-                           "geom": self._safe_geom(),
-                           "panel": bool(self.panel_shown),
-                           "theme": getattr(self, "theme", "dark"),
-                           "fast_skip_fx": bool(getattr(self, "fast_skip_fx", False))},
-                          fh, ensure_ascii=False, indent=1)
+            path = self._settings_path()
+            data = {}
+            try:
+                if os.path.exists(path):
+                    with open(path, "r", encoding="utf-8") as fh:
+                        data = json.load(fh) or {}
+                if not isinstance(data, dict):
+                    data = {}
+            except Exception:
+                data = {}
+            data.update({"sort_key": self.sort_key,
+                         "sort_desc": self.sort_desc,
+                         "wm_text": self.wm_text,
+                         "wm_pos": self.wm_pos,
+                         "wm_size": self.wm_size,
+                         "wm_alpha": self.wm_alpha,
+                         "clip_warn": self.clip_warn,
+                         "last_dir": self.folder or "",
+                         "geom": self._safe_geom(),
+                         "panel": bool(self.panel_shown),
+                         "theme": getattr(self, "theme", "dark"),
+                         "lang": getattr(self, "lang", "zh"),
+                         "low_mem": bool(getattr(self, "low_mem", False)),
+                         "plugin_params": getattr(self, "plug_params", {}),
+                         "fast_skip_fx": bool(getattr(self, "fast_skip_fx", False))})
+            with open(path, "w", encoding="utf-8") as fh:
+                json.dump(data, fh, ensure_ascii=False, indent=1)
         except Exception:
             pass
 
@@ -10354,7 +11716,7 @@ def run(img, **params):
         self.b_stop = True
         try:
             self.b_stop_btn.configure(state="disabled")
-            self.b_msg.configure(text="正在停止…（当前这张处理完就停）")
+            self.b_msg.configure(text=_tr("正在停止…（当前这张处理完就停）"))
         except Exception:
             pass
 
@@ -10404,8 +11766,8 @@ def run(img, **params):
     def _batch_finish(self):
         if self.batch_win is not None and self.batch_win.winfo_exists():
             self.b_go.configure(state="normal")
-            tag = "已停止" if getattr(self, "b_stop", False) else "完成"
-            msg = "%s：成功 %d 张，失败/跳过 %d 张 → %s" % (
+            tag = _tr("已停止") if getattr(self, "b_stop", False) else _tr("完成")
+            msg = _tr("%s：成功 %d 张，失败/跳过 %d 张 → %s") % (
                 tag, self.b_ok, len(self.b_fail), self.b_out_dir)
             try:
                 self.b_stop_btn.configure(state="normal")
@@ -10419,7 +11781,7 @@ def run(img, **params):
         self._flash("批量导出完成：成功 %d 张" % self.b_ok, 3200)
 
     def _flash(self, text, ms=2200):
-        self.meta_lbl.configure(text=text)
+        self.meta_lbl.configure(text=_trf(text))
         if self.flash_job is not None:
             try:
                 self.after_cancel(self.flash_job)
@@ -10836,23 +12198,23 @@ def run(img, **params):
         out = []
         for k, label in names:
             if abs(float(a.get(k, 0)) - float(d.get(k, 0))) > 1e-6:
-                out.append("%s %+g" % (label, a[k]))
+                out.append("%s %+g" % (_tr(label), a[k]))
         for k, label in (("curve", "主曲线"), ("curve_r", "红曲线"),
                          ("curve_g", "绿曲线"), ("curve_b", "蓝曲线")):
             if not _curve_is_identity(a.get(k, d[k])):
-                out.append(label + "已调")
+                out.append(_tr(label) + _tr("已调"))
         for mode, label in (("hue", "色相"), ("sat", "饱和"), ("lum", "明度")):
             vals = [v for v in a["hsl"].get(mode, []) if abs(v) > 1e-6]
             if vals:
-                out.append("HSL-%s %d 段" % (label, len(vals)))
+                out.append(_tr("HSL-%s %d 段") % (_tr(label), len(vals)))
         if a.get("grayscale"):
-            out.append("灰度")
+            out.append(_tr("灰度"))
         if a.get("split_hi_sat") or a.get("split_lo_sat"):
-            out.append("色调分离")
+            out.append(_tr("色调分离"))
         if self.locals:
-            out.append("局部滤镜 %d 个" % len(self.locals))
+            out.append(_tr("局部滤镜 %d 个") % len(self.locals))
         if self._watermark():
-            out.append("水印")
+            out.append(_tr("水印"))
         return out
 
     def _info_text(self, doc):
@@ -10901,7 +12263,8 @@ def run(img, **params):
         else:
             L.append("  （未做任何调整）")
         L.append("")
-        return "\n".join(L)
+        # 逐行翻译：信息面板每行都是 "  名称      %s" 这种带占位符的词条
+        return "\n".join(_trf(line) for line in L)
 
     def show_about(self):
         if self.about_win is not None:
@@ -10990,7 +12353,9 @@ def run(img, **params):
                       wrap="word", font=self.mono_font, padx=px(18),
                       pady=px(16))
         txt.pack(fill="both", expand=True)
-        txt.insert("1.0", HELP_TEXT)
+        body = {"en": HELP_TEXT_EN, "ja": HELP_TEXT_JA}.get(APP_LANG,
+                                                HELP_TEXT)
+        txt.insert("1.0", body)
         txt.configure(state="disabled")
         win.bind("<Escape>", lambda e: win.destroy())
 
@@ -11206,7 +12571,7 @@ HELP_TEXT = """快捷键
   缩放              滚轮（以光标为中心）  +  -
   适应窗口          F  或  双击左键
   适应宽度          W
-  原始大小 100%%     1
+  原始大小 100%     1
   顺时针 / 逆时针    R / Shift+R
   水平 / 垂直翻转    H / V
   重置旋转翻转      Ctrl+R
@@ -11279,6 +12644,172 @@ HELP_TEXT = """快捷键
         —— 直接读取文件内嵌的 JPEG 预览，不需要任何 RAW 解码库
   可选：安装 pillow-heif 后支持 iPhone 的 HEIC / HEIF
 """
+
+# 帮助窗口的英/日版本：行数与对齐跟中文一致，改中文时一起改。
+HELP_TEXT_EN = """Shortcuts
+
+  Open file         Ctrl+O
+  Open folder       Ctrl+Shift+O
+  Previous / Next   ← →  PageUp PageDown  Space
+  First / Last      Home / End
+  Zoom              Wheel (centered on cursor)  +  -
+  Fit window        F  or  double-click left button
+  Fit width         W
+  Actual size 100%  1
+  Rotate CW / CCW   R / Shift+R
+  Flip horizontal / vertical  H / V
+  Reset rotation/flip  Ctrl+R
+  Pan by drag       hold the left or middle button and drag
+  Pan horizontally  Shift+wheel
+  Slideshow         S (right-click the "Slideshow" button to change the interval)
+  Pause animation   P
+  Image info        I
+    Copy file path  Ctrl+C
+  Delete file       Delete
+  Close             Esc  Ctrl+W
+
+Retouch panel (E toggles; Lightroom-like)
+  White balance   Temperature / Tint (placed first; set color before adjusting brightness)
+  Basic           Exposure Contrast Highlights Shadows Whites Blacks Vibrance Saturation
+           Auto levels / Grayscale
+  Tone curve      Drag control points; click empty space to add one; double-click a slider label to reset
+  HSL             8 hues (red orange yellow green cyan blue purple magenta) × hue / saturation / luminance
+           Only the selected hue is affected; other colors stay unchanged per pixel
+  Detail          Sharpening (amount/radius/detail) · Noise reduction (luminance/color) · Clarity · Dehaze
+  Split toning    Highlights / shadows tinted separately (color grading)
+  Local adjustments  The "Radial" and "Gradient" buttons on the toolbar, or J / Shift+J
+           After pressing, drag on the image to draw the filter; a single click gives it a default size
+           New filters come with a default exposure (radial +0.6 / gradient -0.6), so the moment one is drawn
+           the effect is visible. After drawing, drag inside the filter to move it; Esc to exit
+           Each filter's own sliders carry a "·" prefix to distinguish them from the global sliders of the same name
+           Each filter can set size/feather/angle + exposure/contrast/highlights/shadows/
+           temperature/tint/saturation/sharpening, and can also invert
+  White balance eyedropper K:  click a spot in the image that should be neutral gray; temperature and tint are solved automatically
+  Effects         Vignette
+  History         List at the bottom of the panel; click any step to jump back
+  Compare original  Hold the backslash key (or click the panel button) to see the original at any time
+  Modifier keys   Command on macOS, Ctrl on Windows/Linux (both work on macOS)
+  Split compare   Ctrl/Cmd+backslash: original on the left, edited on the right; drag the divider in the middle
+  Filmstrip       T toggles: filmstrip at the bottom; click to switch, hover to scroll
+  Grid view       G: lays the whole folder out as a thumbnail grid; click any to open it (Esc closes)
+  Sort            Click the panel's "Sort" button to sort by file name / modified time / file size, ascending or descending
+  Precise input   Right-click the value to the right of a slider to type an exact number; double-click the label or value to reset
+  Feather range   With a radial filter selected, an inner dashed ring marks the boundary where full strength starts to fall off
+  Drag preview    While dragging a slider, the large image renders at half resolution for responsiveness, then returns to full resolution on release
+  Toolbar icons   ◀ ▶ previous/next, ⤢ fit window, left/right curved arrows rotate 90° (self-drawn icons, no font dependency)
+  Containing folder  F2 or the panel button: open the current image's folder in the system file manager
+  Preset import/export  "Import... / Export..." in the presets section; JSON files, easy to share or back up
+  Batch rename    Panel's "Rename": prefix + sequence number for uniform renaming; preview first, then apply; handles name swaps
+  Auto tone       U: sets exposure/contrast/black and white points from the histogram
+  Auto white balance  Shift+U: solves temperature and tint under the gray-world assumption
+  Clipping warning  L: pixels blown to white are marked red, those crushed to black marked blue
+  Lock color pick  Panel's "Lock color pick": pins the current pixel color; hovering later shows ΔRGB against it
+  Color sampling  Hovering shows that point's RGB / HSV in the status bar
+  Crop ratio      The crop bar can lock original ratio / 1:1 / 4:3 / 3:2 / 16:9, and can also straighten
+  Copy settings   Ctrl+Shift+C copy / Ctrl+Shift+V paste onto another image
+  Crop            C, drag to select, Enter to apply, Esc to cancel
+  Undo/redo       Ctrl+Z / Ctrl+Y      Reset all: button on the panel
+  Save            Ctrl+S (saves as originalname_edit.jpg by default; RAW is never overwritten)
+  Batch export    Ctrl+B: applies the current adjustments to the whole folder and exports
+  Snapshots       Panel's "Snapshots" section: saves the whole current adjustment set to switch back anytime; restoring also enters history (and can be undone again)
+  Watermark       Just type text in the effects section; position / size / opacity are adjustable, and preview matches export
+  Filter management  Local adjustments section: copy filter / paste filter / move up / move down
+  Export size     "Quick sizes" in batch export: original size / 1080 / 1920 / 2048 / 4096
+  Copy info       Press I to open the info window; "Copy all" at the bottom copies EXIF and the adjustment summary together
+  Settings memory  Sort order, watermark, clipping warning, and last folder are remembered automatically and restored on next launch
+  Slideshow label  During a slideshow the file name and progress are shown at the bottom
+  Presets         "Presets" section at the bottom of the panel; save / apply frequently used color grades
+
+Supported formats
+  Common: JPEG  PNG  GIF  WebP  BMP  TIFF  ICO  TGA  PSD  AVIF
+        JPEG 2000  QOI  PCX  PNM  XBM  XPM  ICNS  MPO
+  Animated: GIF  WebP  APNG
+  Camera RAW: NEF(Nikon) NRW CR2/CRW(Canon) ARW/SR2(Sony) DNG RW2 ORF PEF
+        —— Reads the embedded JPEG preview directly from the file; no RAW decoding library needed
+  Optional: install pillow-heif to support iPhone HEIC / HEIF"""
+
+HELP_TEXT_JA = """ショートカット
+
+  ファイルを開く      Ctrl+O
+  フォルダーを開く    Ctrl+Shift+O
+  前へ / 次へ         ← →  PageUp PageDown  スペース
+  先頭 / 末尾         Home / End
+  ズーム              ホイール（カーソル中心）  +  -
+  ウィンドウに合わせる  F  または  左ボタンをダブルクリック
+  幅に合わせる        W
+  原寸 100%           1
+  右回転 / 左回転     R / Shift+R
+  水平 / 垂直反転     H / V
+  回転・反転リセット  Ctrl+R
+  ドラッグでパン      左または中ボタンを押したままドラッグ
+  水平パン            Shift+ホイール
+  スライドショー      S（「スライドショー」ボタンを右クリックで間隔を変更）
+  アニメーション停止  P
+  画像情報            I
+    ファイルパスをコピー  Ctrl+C
+  ファイルを削除      Delete
+  閉じる              Esc  Ctrl+W
+
+レタッチパネル（E で開閉、Lightroom 風）
+  ホワイトバランス  色温度 / 色合い（先頭に配置、色を決めてから明暗を調整）
+  基本              露出 コントラスト ハイライト シャドウ 白レベル 黒レベル 自然な彩度 彩度
+           自動レベル / グレースケール
+  トーンカーブ      コントロールポイントをドラッグ、空白をクリックで追加、スライダーラベルをダブルクリックでリセット
+  HSL               8 色相（赤 橙 黄 緑 シアン 青 紫 マゼンタ）× 色相 / 彩度 / 明度
+           選択した色相のみに影響し、他の色はピクセル単位でそのまま
+  詳細              シャープ（量/半径/細部）· ノイズ軽減（輝度/色）· 明瞭度 · かすみの除去
+  スプリットトーニング  ハイライト / シャドウを個別に着色（カラーグレーディング）
+  局部調整          ツールバーの「放射」「グラデーション」ボタン、または J / Shift+J
+           押した後キャンバス上でドラッグするとフィルターを描けます。クリックするだけの場合は既定サイズになります
+           新しいフィルターには既定の露出（放射 +0.6 / グラデーション -0.6）が付くので、描いた瞬間に
+           効果が見えます。描いた後フィルター内部をドラッグすると移動、Esc で終了
+           フィルター自身のスライダーには「·」の接頭辞が付き、同名のグローバルスライダーと区別できます
+           各フィルターで サイズ/ぼかし/角度 + 露出/コントラスト/ハイライト/シャドウ/
+           色温度/色合い/彩度/シャープ、反転も可能
+  ホワイトバランススポイト K：  画面内で中性グレーであるべき場所をクリックすると、色温度と色合いを自動で逆算
+  効果              周辺減光
+  履歴              パネル下部のリスト。任意のステップをクリックするとその時点に戻れます
+  元画像と比較      バックスラッシュキーを押す（またはパネルのボタンをクリック）と、いつでも元画像を表示
+  修飾キー          macOS は Command、Windows/Linux は Ctrl（macOS では両方とも認識）
+  分割比較          Ctrl/Cmd+バックスラッシュ：左が元画像、右が効果、中央の分割線はドラッグ可能
+  サムネイルバー    T で開閉：下部のフィルムストリップ、クリックで切り替え、ホバーでスクロール
+  グリッド表示      G：フォルダ全体をサムネイルグリッドに並べ、クリックした画像を開きます（Esc で閉じる）
+  並べ替え          パネルの「並べ替え」ボタンで、ファイル名 / 更新日時 / ファイルサイズの昇順または降順
+  数値入力          スライダー右側の数値を右クリックすると正確な数値を入力できます。ラベルまたは数値をダブルクリックでリセット
+  ぼかし範囲        放射フィルターを選択すると内側に破線の輪が描かれ、「最大強度から減衰が始まる」境界を示します
+  ドラッグプレビュー  スライダーをドラッグ中は大きな画像を半解像度で描画して追従性を確保し、離すと全解像度に戻ります
+  ツールバーアイコン  ◀ ▶ 前/次、⤢ ウィンドウに合わせる、左/右の弧状矢印で 90° 回転（自前描画アイコン、フォント非依存）
+  フォルダーを開く  F2 またはパネルのボタン：現在の画像があるフォルダーをシステムのファイルマネージャーで開きます
+  プリセットの読み込み/書き出し  プリセットセクションの「読み込み… / 書き出し…」、JSON ファイルで共有やバックアップに便利
+  一括リネーム      パネルの「名前変更」：接頭辞 + 連番でまとめて改名、プレビューしてから実行、入れ替えにも対応
+  自動トーン        U：ヒストグラムに基づき露出/コントラスト/黒白点を自動設定
+  自動ホワイトバランス  Shift+U：グレーワールド仮定で色温度と色合いを逆算
+  クリッピング警告  L：白に飽和したピクセルを赤、黒に潰れたピクセルを青で表示
+  カラー固定        パネルの「カラー固定」：現在のピクセル色を固定し、以降のホバーでその色との ΔRGB を表示
+  色サンプリング    マウスをホバーすると、その点の RGB / HSV をステータスバーに表示
+  トリミング比率    トリミングバーで元の比率 / 1:1 / 4:3 / 3:2 / 16:9 を固定でき、まっすぐ補正も可能
+  設定をコピー      Ctrl+Shift+C でコピー / Ctrl+Shift+V で別の画像に貼り付け
+  トリミング        C、ドラッグで範囲選択、Enter で適用、Esc でキャンセル
+  元に戻す/やり直し  Ctrl+Z / Ctrl+Y      すべてリセット：パネルのボタン
+  保存              Ctrl+S（既定では 元の名前_編集.jpg として保存、RAW は上書きしません）
+  一括書き出し      Ctrl+B：現在の調整をフォルダ全体に適用して書き出します
+  スナップショット  パネルの「スナップショット」セクション：現在の調整一式を保存していつでも切り替え、復元も履歴に入ります（再度元に戻せます）
+  ウォーターマーク  効果セクションで文字を入力するだけ。位置 / サイズ / 濃さを調整でき、プレビューと書き出しは一致
+  フィルター管理    局部調整セクション：フィルターをコピー / 貼り付け / 上へ / 下へ
+  書き出しサイズ    一括書き出しの「クイックサイズ」：元のサイズ / 1080 / 1920 / 2048 / 4096
+  情報コピー        I を押して情報ウィンドウを開き、下部の「すべてコピー」で EXIF と調整の概要をまとめてコピー
+  設定の記憶        並べ替え方法、ウォーターマーク、クリッピング警告、前回のフォルダーを自動記憶し、次回起動時に復元
+  スライドショーラベル  スライドショー中は画面下部にファイル名と進捗を表示
+  プリセット        パネル下部の「プリセット」セクション、よく使う色調整を保存/適用
+
+対応形式
+  一般：JPEG  PNG  GIF  WebP  BMP  TIFF  ICO  TGA  PSD  AVIF
+        JPEG 2000  QOI  PCX  PNM  XBM  XPM  ICNS  MPO
+  アニメーション：GIF  WebP  APNG
+  カメラ RAW：NEF(ニコン) NRW CR2/CRW(キヤノン) ARW/SR2(ソニー) DNG RW2 ORF PEF
+        —— ファイルに埋め込まれた JPEG プレビューを直接読み込み、RAW デコードライブラリは不要
+  オプション：pillow-heif をインストールすると iPhone の HEIC / HEIF に対応"""
+
 
 
 # ---------------------------------------------------------------- 入口

@@ -9,6 +9,14 @@ $env:PYTHONIOENCODING = 'utf-8'
 
 $ver = (Select-String -Path (Join-Path $root 'src\Prism.pyw') -Pattern 'APP_VERSION = "(.*)"').Matches[0].Groups[1].Value
 
+# ---- 词条门禁：新增界面文案必须三语，缺一条就不许发 ----
+Write-Host '-- 0/4 词条自检（新增文案必须三语）'
+& $py (Join-Path $root 'tools\i18ncheck_app.py') --strict
+if ($LASTEXITCODE -ne 0) {
+    Write-Host '词条自检失败：先跑 tools\i18ncheck_app.py --list 400 看缺什么' -ForegroundColor Red
+    exit 1
+}
+
 # ---- 只做链接自检，不打包：提交前先跑这个 ----
 if ($CheckOnly) {
     $pg = Join-Path $root 'docs\index.html'
@@ -168,6 +176,9 @@ try {
             $html = [regex]::Replace($html, '<i>\d+\.\d+\.\d+</i>', "<i>$ver</i>")
             $html = [regex]::Replace($html, '版本 \d+\.\d+\.\d+', "版本 $ver")
             $html = [regex]::Replace($html, 'Prism \d+\.\d+\.\d+ ·', "Prism $ver ·")
+            # data-ver 与 JSON-LD 里的软件版本不会出现在可见文字里，单独替换
+            $html = [regex]::Replace($html, 'data-ver="\d+\.\d+\.\d+"', 'data-ver="' + $ver + '"')
+            $html = [regex]::Replace($html, '"softwareVersion":"\d+\.\d+\.\d+"', '"softwareVersion":"' + $ver + '"')
             Set-Content -LiteralPath $page -Value $html -Encoding UTF8 -NoNewline
             Write-Host ("   页面已更新 SHA " + $sha.Substring(0, 12) + " / " + $sizeMb + " MB / 版本 $ver")
         }

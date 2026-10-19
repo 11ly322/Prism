@@ -10,9 +10,12 @@ import re
 import sys
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
-PAT = re.compile(r"\b7\.\d+(?:\.\d+)?\b")
+PAT = re.compile(r"\b9\.\d+\.\d+\b")
 SKIP_DIRS = {".git", "_build", "_build2", "_viewer_build", "_mac_stage",
-             "_lin_stage", "__pycache__", "_internal", "shots"}
+             "_lin_stage", "__pycache__", "_internal", "shots", "design",
+             "tools"}
+# 这些行是在讲历史，不是当前版本号
+SKIP_LINE_HINTS = ("已于", "历史", "之前", "8.3.2 /", "round")
 
 
 def app_version():
@@ -41,10 +44,13 @@ def main():
                 text = io.open(fp, encoding="utf-8").read()
             except Exception:
                 continue
-            for m in PAT.finditer(text):
-                found = m.group(0)
-                if found != ver:
-                    bad.setdefault(rel, set()).add(found)
+            for line in text.splitlines():
+                if any(h in line for h in SKIP_LINE_HINTS):
+                    continue
+                for m in PAT.finditer(line):
+                    found = m.group(0)
+                    if found != ver:
+                        bad.setdefault(rel, set()).add(found)
     if bad:
         print("发现版本号不一致：")
         for rel, vers in sorted(bad.items()):

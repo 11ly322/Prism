@@ -1,12 +1,18 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """应用内词条覆盖率自检。
 
 扫描 src/Prism.pyw 里的中文字符串，报告哪些还没进 LANG_TABLE。
 
-跑法：python tools/i18ncheck_app.py [--list N]
+跑法：python tools/i18ncheck_app.py [--list N] [--json out.json] [--strict]
+
+--strict 有未译词条就返回 1，用于发布前门禁。
+
+--json 输出每条未译词条的完整原文、出现次数、行号与所在源码行，
+补词条时按它逐条翻译（终端里的表格会截断长串）。
 """
 import importlib.machinery
 import io
+import json
 import os
 import re
 import sys
@@ -27,8 +33,20 @@ def load_keys():
     return set(mod.LANG_TABLE["en"].keys())
 
 
+def _blank(match):
+    """把匹配到的块替换成等长空白（保留换行），这样行号不会错位。"""
+    return re.sub(r"[^\n]", " ", match.group(0))
+
+
 def main():
     only_list = "--list" in sys.argv
+    json_out = None
+    if "--json" in sys.argv:
+        try:
+            json_out = sys.argv[sys.argv.index("--json") + 1]
+        except Exception:
+            print("--json 后面要跟输出路径")
+            return 2
     limit = 15
     if only_list:
         try:
@@ -36,18 +54,18 @@ def main():
         except Exception:
             pass
     src = io.open(APP, encoding="utf-8").read()
-    # 去掉三引号块与注释行，减少误报
-    # 词典本身的译文也是中文字面量，必须先剔除，否则统计会把译文算成缺失
-    src = re.sub(r"LANG_TABLE = \{.*?\n\}\n", "", src, flags=re.S)
-    src = re.sub(r'""".*?"""', "", src, flags=re.S)
-    src = re.sub(r"'''.*?'''", "", src, flags=re.S)
-    lines = [ln for ln in src.splitlines()
-             if not ln.strip().startswith("#")]
+    # 去掉三引号块与词典本身，减少误报；用等长空白替换以保住行号
+    src = re.sub(r"LANG_TABLE = \{.*?\n\}\n", _blank, src, flags=re.S)
+    src = re.sub(r'""".*?"""', _blank, src, flags=re.S)
+    src = re.sub(r"'''.*?'''", _blank, src, flags=re.S)
+    numbered = [(i, ln) for i, ln in enumerate(src.splitlines(), 1)
+                if not ln.strip().startswith("#")]
     keys = load_keys()
 
     from collections import Counter
     missing = Counter()
-    for ln in lines:
+    places = {}
+    for lineno, ln in numbered:
         for m in LIT.finditer(ln):
             s = m.group(1)
             if not CJK.search(s):
@@ -57,6 +75,7 @@ def main():
             if s in keys:
                 continue
             missing[s] += 1
+            places.setdefault(s, []).append([lineno, ln.strip()[:110]])
 
     total_untranslated = sum(missing.values())
     print("  词典键数 = %d" % len(keys))
@@ -64,6 +83,17 @@ def main():
           % (len(missing), total_untranslated))
     for s, n in missing.most_common(limit):
         print("     %-40s ×%d" % (s[:38], n))
+    if json_out:
+        items = []
+        for s in sorted(missing, key=lambda k: places[k][0][0]):
+            items.append({"zh": s, "count": missing[s],
+                          "places": places[s]})
+        with io.open(json_out, "w", encoding="utf-8") as fh:
+            fh.write(json.dumps(items, ensure_ascii=False, indent=1))
+        print("  已写出 %s（%d 条）" % (json_out, len(items)))
+    if "--strict" in sys.argv and missing:
+        print("  !! 有 %d 条新文案还没做三语，发布前必须补齐" % len(missing))
+        return 1
     return 0
 
 

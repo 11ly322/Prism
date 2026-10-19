@@ -12,7 +12,7 @@
 
 <div align="center">
 
-![version](https://img.shields.io/badge/version-9.3.0-3d7dff?style=flat-square)
+![version](https://img.shields.io/badge/version-9.4.0-3d7dff?style=flat-square)
 ![platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-2b2f36?style=flat-square)
 ![python](https://img.shields.io/badge/python-3.9%2B-3776ab?style=flat-square&logo=python&logoColor=white)
 ![license](https://img.shields.io/badge/license-MIT-3ddc84?style=flat-square)
@@ -48,7 +48,7 @@ Prism 服务两种场景 ——
 | **调色** | 基本面板 · 曲线 · HSL 八通道 · 色调分离 · 暗角 · 颗粒 · 水印 |
 | **镜头/胶片/人像** | 径向畸变矫正 · 胶片模拟（柯达/富士/黑白/宝丽来）· 肤色柔化与提亮 |
 | **局部** | 径向滤镜 · 渐变滤镜 · 主体/高对比自动选区 |
-| **插件** | 一个 .py 即插件，**自带 9 个**，内置模板一键生成 |
+| **插件** | 一个 .py 即插件，**自带 12 个**，内置模板一键生成；可从网址安装 |
 | **一致性** | 预览与导出走同一套渲染管，实测平均逐像素差 **0.000** |
 
 ---
@@ -57,10 +57,10 @@ Prism 服务两种场景 ——
 
 | 平台 | 文件 | 说明 |
 | :--- | :--- | :--- |
-| Windows | `Prism-Setup-9.3.0.exe` | 安装包 · 含修图面板与插件 · 39.8 MB |
-| Windows | `Prism-Viewer-9.3.0.zip` | 纯看图版 · 便携免安装 · 29.9 MB |
-| macOS | `Prism-macOS-9.3.0.zip` | 源码运行 · 需 Python 3 + Pillow |
-| Linux | `Prism-Linux-9.3.0.zip` | 源码运行 · 带 `.desktop` |
+| Windows | `Prism-Setup-9.4.0.exe` | 安装包 · 含修图面板与插件 · 40.0 MB |
+| Windows | `Prism-Viewer-9.4.0.zip` | 纯看图版 · 便携免安装 · 30.0 MB |
+| macOS | `Prism-macOS-9.4.0.zip` | 源码运行 · 需 Python 3 + Pillow · 193 KB |
+| Linux | `Prism-Linux-9.4.0.zip` | 源码运行 · 带 `.desktop` · 193 KB |
 
 <div align="center">
 
@@ -201,7 +201,7 @@ api 必须是 2（旧的 1 仍能加载）。版本更高的插件会被跳过�
 不会崩溃，也不会静默失败。完整字段与约束见 [docs/plugin-api.md](docs/plugin-api.md)，
 提交上游见 [CONTRIBUTING.md](CONTRIBUTING.md)。
 
-### 自带的 9 个插件
+### 自带的 12 个插件
 
 | id | 名称 | 参数 | 适用场景 |
 | :--- | :--- | :--- | :--- |
@@ -214,9 +214,19 @@ api 必须是 2（旧的 1 仍能加载）。版本更高的插件会被跳过�
 | autolevel | 自动色阶 | 裁切比例 · 强度 | 灰蒙蒙的图快速拉正 |
 | watermark | 加文字 | 署名 · 字号 · 边距 · 描边 | 右下角署名 |
 | crop169 | 16:9 裁剪 | 目标比例 · 对齐 | 视频封面、PPT 配图 |
+| god-rays | 丁达尔光 | 取光门槛 · 光束长度 · 角度 · 强度 | 逆光、树林光束 |
+| tilt-shift | 移轴微缩 | 清晰带 · 虚化 · 饱和 · 位置 | 微缩模型效果 |
+| glitch | 故障艺术 | 通道错位 · 切片 · 随机种子 · 扫描线 | 数字故障风 |
 
-逐个说明与源码文件见 [plugins/README.md](plugins/README.md)；
+参数默认值以源码为准，逐个说明见 [plugins/README.md](plugins/README.md)；
 模板见 [plugins/_template.py](plugins/_template.py)。
+
+### 从网址安装 / 参数记忆（9.4.0）
+
+- 插件窗口 →「从网址安装…」：填 `.py` 的 http(s) 直链，可选填 SHA-256。
+  下载后**只解析 AST、不执行代码**，先确认再写盘；单文件上限 2 MB。
+  示例插件 `grad-nd`（渐变减光）在网页 `docs/plugins/demo-grad-nd.py`，按钮可一键填入。
+- 每个插件的参数按 `PLUGIN.id` 自动记住，重启后仍在；「恢复默认」会清空记忆。
 
 ### 调试
 

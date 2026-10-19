@@ -82,6 +82,53 @@ def main():
        ("%.0f ms" % found) if found else "未出现")
     ok("异步不阻塞界面", ret_ms < (found or 1e9), "返回 %.1f < 窗口 %.0f" % (ret_ms, found or 0))
 
+    # --- 参数记忆（9.4）---
+    print("--- 插件参数持久化 ---")
+    item = app.plugins[0]
+    app._remember_plugin_params(item, {"amount": 73.5})
+    ok("记住本次参数", app._plugin_params(item, spec).get("amount") == 73.5,
+       str(app._plugin_params(item, spec)))
+    app.plug_params = {}                 # 模拟重启：内存清空，只从设置文件读
+    app.load_settings()
+    ok("重启后恢复", app._plugin_params(item, spec).get("amount") == 73.5,
+       str(app.plug_params.get("gray")))
+    app._remember_plugin_params(item, {"amount": 999})
+    ok("越界收敛到上限", app._plugin_params(item, spec).get("amount") == 100.0,
+       str(app._plugin_params(item, spec).get("amount")))
+    app._remember_plugin_params(item, {"amount": "abc"})
+    ok("坏值回落默认", app._plugin_params(item, spec).get("amount") == 50,
+       str(app._plugin_params(item, spec).get("amount")))
+    choice = [{"key": "mode", "label": "模式", "type": "choice",
+               "choices": ["a", "b"], "default": "a", "min": 0, "max": 1,
+               "step": 1}]
+    app._remember_plugin_params(item, {"mode": "zzz"})
+    ok("失效选项回落默认", app._plugin_params(item, choice)["mode"] == "a")
+    app._forget_plugin_params(item)
+    ok("恢复默认会清空记忆", app._plugin_params(item, spec).get("amount") == 50
+       and "gray" not in app.plug_params)
+
+    # 安装窗口能打开（只建界面，不发网络请求）
+    tops_before = [w for w in app.winfo_children() if isinstance(w, tk.Toplevel)]
+    app.show_plugin_install()
+    for _ in range(20):
+        app.update(); time.sleep(0.01)
+    tops_now = [w for w in app.winfo_children() if isinstance(w, tk.Toplevel)]
+    ok("网址安装窗口能打开", len(tops_now) > len(tops_before),
+       "%d -> %d" % (len(tops_before), len(tops_now)))
+    for w in tops_now:
+        if w not in tops_before:
+            w.destroy()
+    app.update()
+
+    # 语言不被 save_settings 整份覆盖（旧 bug）
+    app.lang = "ja"
+    app._save_setting("lang", "ja")
+    app.save_settings()
+    import json
+    with open(S, encoding="utf-8") as fh:
+        saved = json.load(fh)
+    ok("save_settings 保留语言", saved.get("lang") == "ja", str(saved.get("lang")))
+
     app.destroy()
     if os.path.exists(S):
         os.remove(S)

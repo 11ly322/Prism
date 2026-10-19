@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """用 Prism 自己的渲染管线生成网页用的效果图（真实照片，不是色块示意）。
 
 跑法：python tools/make_shots.py <源图>
@@ -70,7 +70,7 @@ def main():
 
     app.destroy()
     for n in ("shot-original", "shot-graded", "shot-mono", "shot-frame"):
-        p = os.path.join(OUT, n + ".jpg")
+        p = os.path.join(OUT, n + ".webp")
         print("   %-16s %5.0f KB" % (n + ".webp", os.path.getsize(p) / 1024.0))
     return 0
 

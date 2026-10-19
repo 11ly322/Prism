@@ -17,6 +17,14 @@ if ($LASTEXITCODE -ne 0) {
     exit 1
 }
 
+# ---- 插件索引门禁：README 表格 / docs 清单必须与源码 + index.json 一致 ----
+Write-Host '-- 0/4 插件索引自检'
+& $py (Join-Path $root 'tools\make_plugin_index.py') --check
+if ($LASTEXITCODE -ne 0) {
+    Write-Host '插件索引不是最新：先跑 python tools\make_plugin_index.py' -ForegroundColor Red
+    exit 1
+}
+
 # ---- 只做链接自检，不打包：提交前先跑这个 ----
 if ($CheckOnly) {
     $pg = Join-Path $root 'docs\index.html'

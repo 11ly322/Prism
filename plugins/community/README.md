@@ -1,10 +1,12 @@
-# 社区插件目录
+# 社区 / 官方插件目录
 
-Prism 自带 12 个插件（索引见 `../README.md`），这里放外部作者的插件。
-收录形式：**一个 `.py` + 下面表格里的一行**。
+Prism 自带 12 个插件（索引见 `../README.md`）。外部插件有两种收录方式：
 
-从 9.4.0 起，外部插件也可以不放进仓库，直接让用户用「插件 → 从网址安装…」装：
-给一个 `.py` 的 http(s) 直链 + SHA-256 即可。这里的索引同时充当推荐清单。
+1. **进官方清单** `plugins/index.json`：用户在「插件市场」里能浏览、一键安装、检查更新。
+2. **不进仓库**：给一个 `.py` 的 http(s) 直链 + SHA-256，用户用「插件 → 从网址安装…」装。
+
+`plugins/README.md` 里的两张表格由 `tools/make_plugin_index.py` 从
+**插件源码 + index.json** 生成，不手改表格。
 
 ## 收录标准
 
@@ -14,8 +16,13 @@ Prism 自带 12 个插件（索引见 `../README.md`），这里放外部作者�
 - 必须声明 `api`，且与当前支持的版本（1 / 2）一致。
 - 提交前请按 `.github/ISSUE_TEMPLATE/plugin-submission.yml` 填表。
 
-## 索引
+## 进官方清单的 PR 要改什么
 
-| id | 名称 | 作者 | 参数 | 联网 | 写文件 | 源码 / 安装地址 |
-| --- | --- | --- | --- | --- | --- | --- |
-| grad-nd | 渐变减光（示例） | Prism | slider 减光强度 · select 压暗一侧 · slider 过渡宽度 | 否 | 否 | `docs/plugins/demo-grad-nd.py`（SHA-256 `cf8552bd…54ee`） |
+1. `docs/plugins/<文件名>.py`：插件源码（文件名用 ASCII）。
+2. `plugins/index.json`：加一项，字段见 [docs/plugin-api.md](../../docs/plugin-api.md)：
+   `id` / `name`（zh/en/ja）/ `version` / `api` / `author` / `description`（zh/en/ja）/
+   `network` / `writes_files` / `url` / `sha256` / `source`。
+3. 跑 `python tools/make_plugin_index.py --check`，必须通过（它会校验 SHA-256、
+   三语字段、README 与 docs 副本是否最新）。
+
+应用侧不会执行清单里的任何代码；安装时仍然只解析 AST，SHA-256 不符直接拒绝。

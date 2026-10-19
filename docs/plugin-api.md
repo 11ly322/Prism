@@ -108,7 +108,54 @@ Prism 按 PLUGIN.id 记住每个插件上次用的参数，存在 `Prism_setting
 
 插件不需要为此写任何代码；PARAMS 里声明的默认值仍然是首次运行时的值。
 
-## 安装与分发（9.4.0）
+## 安装与分发
+
+### 插件市场（9.5.0）
+
+插件窗口 →「插件市场」：列表来自官方清单 `plugins/index.json`，可看
+「已安装 / 可更新 / 未安装」，点按钮直接安装或更新。
+
+- 清单地址默认 `https://11ly322.github.io/Prism/plugins/index.json`；
+  环境变量 `PRISM_PLUGIN_CATALOG` 可以指向自己的清单（自建市场 / 内网镜像 / 测试）。
+- 拉清单失败时自动用上次成功拉取的缓存（`plugin_catalog.json`，与设置文件同目录），
+  窗口里会标明「离线缓存」。
+- 安装/更新流程与「从网址安装」完全一致：下载 → 只解析 AST → 校验 SHA-256 → 确认 → 写盘。
+  更新会写回原来的文件名，避免同一个 id 出现两份。
+- 清单里的 `version` 用来判断「可更新」：按数字段比较（`1.10 > 1.9`）。
+
+清单格式（schema 1）：
+
+~~~json
+{
+  "schema": 1,
+  "updated": "2026-10-19",
+  "homepage": "https://11ly322.github.io/Prism/",
+  "plugins": [
+    {
+      "id": "grad-nd",
+      "name": {"zh": "渐变减光", "en": "Grad ND", "ja": "グラデ ND"},
+      "version": "1.0",
+      "api": 2,
+      "author": "Prism",
+      "description": {"zh": "…", "en": "…", "ja": "…"},
+      "network": false,
+      "writes_files": false,
+      "url": "https://11ly322.github.io/Prism/plugins/demo-grad-nd.py",
+      "sha256": "cf8552bd0a4393e5a798582c00970b2981d6a7f8e14182c682c2eabe666e54ee",
+      "source": "docs/plugins/demo-grad-nd.py"
+    }
+  ]
+}
+~~~
+
+- `name` / `description` 三语至少要 zh；缺当前语言时回落中文。
+- `url` 必须是 http(s)，文件名要和 `source` 一致；`sha256` 必须与源码逐字节一致。
+- `source` 只用于仓库内校验与生成 README，应用不读它。
+- 仓库里 `plugins/index.json` 是唯一数据源；`tools/make_plugin_index.py`
+  会校验它、生成 `plugins/README.md` 的两块表格，并复制到 `docs/plugins/index.json`。
+  发布门禁会跑 `make_plugin_index.py --check`。
+
+### 从网址安装（9.4.0）
 
 插件窗口 →「从网址安装…」：填一个 `.py` 的 http(s) 直链，可选再填 SHA-256。
 

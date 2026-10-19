@@ -65,7 +65,7 @@ IS_WIN = sys.platform.startswith("win")
 K = "Command" if IS_MAC else "Control"
 
 APP_NAME = "Prism"
-APP_VERSION = "9.4.0"
+APP_VERSION = "9.5.0"
 APP_BUILD = "2025-12.9"
 # ---------------------------------------------------------------- 运行模式
 # 同一份源码编出两个版本：
@@ -810,6 +810,38 @@ LANG_TABLE = {
         "移轴微缩": "Tilt-shift",
         "故障艺术": "Glitch",
         "已开启热重载：改完插件约 1.5 秒自动生效（也可以点「重载插件」）。禁用：把 xxx.py 改名为 xxx.py.disabled。日志：logs/plugins.log": "Hot reload is on: edits apply in about 1.5 s (or click Reload). To disable one, rename xxx.py to xxx.py.disabled. Log: logs/plugins.log",
+        # 9.5.0 插件市场
+        "插件市场": "Plugin marketplace",
+        "正在获取清单…": "Fetching catalog…",
+        "清单不是合法的 JSON 对象": "Catalog is not a JSON object",
+        "清单 schema 不是 1": "Catalog schema is not 1",
+        "清单缺少 plugins 列表": "Catalog has no plugins list",
+        "清单是空的": "Catalog is empty",
+        "清单条目必须是对象": "Catalog entries must be objects",
+        "清单条目缺少 id": "Catalog entry is missing id",
+        "清单里 id 重复：%s": "Duplicate id in catalog: %s",
+        "插件 %s 的 api 不是数字": "Plugin %s has a non-numeric api",
+        "插件 %s 的 api=%s 不受支持": "Plugin %s requires api=%s, which is not supported",
+        "插件 %s 的 url 必须是 http(s)": "Plugin %s url must be http(s)",
+        "插件 %s 的 sha256 格式不对": "Plugin %s has an invalid sha256",
+        "清单不是合法的 JSON": "Catalog is not valid JSON",
+        "刷新": "Refresh",
+        "离线缓存（%s）": "Offline cache (%s)",
+        "获取清单失败：%s": "Could not load catalog: %s",
+        "共 %d 个插件": "%d plugins",
+        "没有可安装的插件": "No plugins available",
+        "未安装": "Not installed",
+        "安装": "Install",
+        "可更新 %s → %s": "Update %s → %s",
+        "更新": "Update",
+        "已安装": "Installed",
+        "重新安装": "Reinstall",
+        "确定安装「%s」吗？": "Install “%s”?",
+        "确定把「%s」更新到 %s 吗？": "Update “%s” to %s?",
+        "更新插件": "Update plugin",
+        "下载并校验中…": "Downloading and verifying…",
+        "下载到的插件 id 与清单不一致": "Downloaded plugin id does not match the catalog",
+        "已更新「%s」到 %s": "Updated “%s” to %s",
     },
     "ja": {
         "文件": "ファイル", "编辑": "編集", "视图": "表示", "工具": "ツール",
@@ -1365,6 +1397,38 @@ LANG_TABLE = {
         "移轴微缩": "チルトシフト",
         "故障艺术": "グリッチ",
         "已开启热重载：改完插件约 1.5 秒自动生效（也可以点「重载插件」）。禁用：把 xxx.py 改名为 xxx.py.disabled。日志：logs/plugins.log": "ホットリロード有効：変更は約 1.5 秒で反映（「再読み込み」でも可）。無効化は xxx.py を xxx.py.disabled に改名。ログ：logs/plugins.log",
+        # 9.5.0 插件市场
+        "插件市场": "プラグインマーケット",
+        "正在获取清单…": "カタログを取得中…",
+        "清单不是合法的 JSON 对象": "カタログが JSON オブジェクトではありません",
+        "清单 schema 不是 1": "カタログの schema が 1 ではありません",
+        "清单缺少 plugins 列表": "カタログに plugins リストがありません",
+        "清单是空的": "カタログが空です",
+        "清单条目必须是对象": "カタログの各項目はオブジェクトである必要があります",
+        "清单条目缺少 id": "カタログ項目に id がありません",
+        "清单里 id 重复：%s": "カタログ内で id が重複：%s",
+        "插件 %s 的 api 不是数字": "プラグイン %s の api が数値ではありません",
+        "插件 %s 的 api=%s 不受支持": "プラグイン %s の api=%s は非対応です",
+        "插件 %s 的 url 必须是 http(s)": "プラグイン %s の url は http(s) である必要があります",
+        "插件 %s 的 sha256 格式不对": "プラグイン %s の sha256 形式が不正です",
+        "清单不是合法的 JSON": "カタログが JSON として不正です",
+        "刷新": "再取得",
+        "离线缓存（%s）": "オフラインキャッシュ（%s）",
+        "获取清单失败：%s": "カタログを取得できません：%s",
+        "共 %d 个插件": "%d 個のプラグイン",
+        "没有可安装的插件": "インストールできるプラグインがありません",
+        "未安装": "未インストール",
+        "安装": "インストール",
+        "可更新 %s → %s": "%s → %s に更新",
+        "更新": "更新",
+        "已安装": "インストール済み",
+        "重新安装": "再インストール",
+        "确定安装「%s」吗？": "「%s」をインストールしますか？",
+        "确定把「%s」更新到 %s 吗？": "「%s」を %s に更新しますか？",
+        "更新插件": "プラグインを更新",
+        "下载并校验中…": "ダウンロードして検証中…",
+        "下载到的插件 id 与清单不一致": "ダウンロードしたプラグインの id がカタログと一致しません",
+        "已更新「%s」到 %s": "「%s」を %s に更新しました",
     },
 }
 
@@ -2205,15 +2269,15 @@ def _plugin_log(msg, plugin_id="-", api="-", stage="-", exc=None):
 
 
 # ---------------------------------------------------------------- 插件安装（URL）
-# 不做应用商店：一个网址 + 可选 SHA-256，下载、校验、落地，三步都在本机完成。
+# 不做应用商店：清单 / 网址 + SHA-256，下载、校验、落地，三步都在本机完成。
 # 校验只保证「下载到的东西没被改过」，不保证作者可信 —— 安装前必须让用户确认。
 PLUGIN_MAX_BYTES = 2 * 1024 * 1024      # 插件源码上限；正常几 KB，2 MB 足够
 PLUGIN_FETCH_TIMEOUT = 15
-# 「示例：渐变减光」的一键安装地址与指纹。改了 docs/plugins/demo-grad-nd.py
-# 就必须同步改这里的 SHA-256，否则示例会按设计校验失败。
-DEMO_PLUGIN_URL = "https://11ly322.github.io/Prism/plugins/demo-grad-nd.py"
-DEMO_PLUGIN_SHA256 = ("cf8552bd0a4393e5a798582c00970b29"
-                      "81d6a7f8e14182c682c2eabe666e54ee")
+# 官方清单：应用内「插件市场」读它。可用环境变量指向自己的清单（自建市场 / 测试）。
+PLUGIN_CATALOG_URL = (os.environ.get("PRISM_PLUGIN_CATALOG")
+                      or "https://11ly322.github.io/Prism/plugins/index.json")
+PLUGIN_CATALOG_MAX_BYTES = 256 * 1024   # 清单只是索引，256 KB 足够
+PLUGIN_CATALOG_CACHE = "plugin_catalog.json"
 
 
 class PluginSourceError(ValueError):
@@ -2307,22 +2371,31 @@ def safe_plugin_filename(pid):
     return (base or "plugin")[:40]
 
 
-def install_plugin_bytes(data, sha256="", folder=None, overwrite=False):
-    """校验 SHA-256、解析元信息并写入插件目录。返回元信息（含 path）。"""
+def install_plugin_bytes(data, sha256="", folder=None, overwrite=False,
+                         filename=None):
+    """校验 SHA-256、解析元信息并写入插件目录。返回元信息（含 path）。
+
+    filename 只用于「更新已安装插件」：写回它原来的文件名，避免同一个 id
+    在插件目录里出现两份（一份 id.py、一份手工命名）。
+    """
     import hashlib
     meta = parse_plugin_source(data)
     if sha256:
         got = hashlib.sha256(data).hexdigest()
         want = str(sha256).strip().lower()
         if got.lower() != want:
-            raise PluginSourceError("SHA-256 不匹配（实际 %s…）" % got[:12])
+            raise PluginSourceError(_tr("SHA-256 不匹配（实际 %s…）") % got[:12])
     meta["sha256"] = hashlib.sha256(data).hexdigest()
     folder = folder or _plugin_dir()
     try:
         os.makedirs(folder, exist_ok=True)
     except Exception:
         pass
-    path = os.path.join(folder, safe_plugin_filename(meta["id"]) + ".py")
+    name = filename or (safe_plugin_filename(meta["id"]) + ".py")
+    name = os.path.basename(str(name))          # 再挡一次路径穿越
+    if not name.endswith(".py"):
+        name += ".py"
+    path = os.path.join(folder, name)
     if os.path.exists(path) and not overwrite:
         raise FileExistsError(path)
     with open(path, "wb") as fh:
@@ -2330,6 +2403,111 @@ def install_plugin_bytes(data, sha256="", folder=None, overwrite=False):
                  else meta["source"].encode("utf-8"))
     meta["path"] = path
     return meta
+
+
+# ---------------------------------------------------------------- 插件清单
+# 官方清单 plugins/index.json（发布到网页 docs/plugins/index.json）。应用内「插件市场」
+# 读它；每项都带 sha256，下载后仍走 parse_plugin_source + install_plugin_bytes。
+def plugin_catalog_cache_path():
+    return os.path.join(_data_dir(), PLUGIN_CATALOG_CACHE)
+
+
+def _catalog_text(value, lang=None):
+    """清单里的名字/说明是 {zh,en,ja}；缺当前语言就回落中文。"""
+    if isinstance(value, dict):
+        for key in (lang or APP_LANG, "zh", "en", "ja"):
+            text = str(value.get(key) or "").strip()
+            if text:
+                return text
+        return ""
+    return str(value or "")
+
+
+def validate_plugin_catalog(obj):
+    """校验收到的清单，返回规范化后的条目列表。"""
+    if not isinstance(obj, dict):
+        raise PluginSourceError(_tr("清单不是合法的 JSON 对象"))
+    try:
+        schema = int(obj.get("schema") or 0)
+    except Exception:
+        schema = 0
+    if schema != 1:
+        raise PluginSourceError(_tr("清单 schema 不是 1"))
+    plugins = obj.get("plugins")
+    if not isinstance(plugins, list):
+        raise PluginSourceError(_tr("清单缺少 plugins 列表"))
+    if not plugins:
+        raise PluginSourceError(_tr("清单是空的"))
+    out, seen = [], set()
+    for raw in plugins:
+        if not isinstance(raw, dict):
+            raise PluginSourceError(_tr("清单条目必须是对象"))
+        pid = str(raw.get("id") or "").strip()
+        if not pid:
+            raise PluginSourceError(_tr("清单条目缺少 id"))
+        if pid in seen:
+            raise PluginSourceError(_tr("清单里 id 重复：%s") % pid)
+        seen.add(pid)
+        try:
+            api = int(raw.get("api", 1))
+        except Exception:
+            raise PluginSourceError(_tr("插件 %s 的 api 不是数字") % pid)
+        if api not in PLUGIN_API_SUPPORTED:
+            raise PluginSourceError(_tr("插件 %s 的 api=%s 不受支持") % (pid, api))
+        url = str(raw.get("url") or "").strip()
+        if not url.lower().startswith(("http://", "https://")):
+            raise PluginSourceError(_tr("插件 %s 的 url 必须是 http(s)") % pid)
+        sha = str(raw.get("sha256") or "").strip().lower()
+        if len(sha) != 64 or any(c not in "0123456789abcdef" for c in sha):
+            raise PluginSourceError(_tr("插件 %s 的 sha256 格式不对") % pid)
+        out.append({
+            "id": pid,
+            "name": raw.get("name") or pid,
+            "version": str(raw.get("version") or ""),
+            "api": api,
+            "author": str(raw.get("author") or ""),
+            "description": raw.get("description") or "",
+            "network": bool(raw.get("network")),
+            "writes_files": bool(raw.get("writes_files")),
+            "url": url,
+            "sha256": sha,
+        })
+    return out
+
+
+def fetch_plugin_catalog(url=None):
+    """拉清单并缓存。返回 (条目列表, 实际 URL)；失败抛异常，不静默。"""
+    target = str(url or PLUGIN_CATALOG_URL)
+    raw = fetch_plugin_source(target, max_bytes=PLUGIN_CATALOG_MAX_BYTES)
+    try:
+        obj = json.loads(raw.decode("utf-8-sig"))
+    except Exception:
+        raise PluginSourceError(_tr("清单不是合法的 JSON"))
+    entries = validate_plugin_catalog(obj)
+    try:
+        with open(plugin_catalog_cache_path(), "wb") as fh:
+            fh.write(raw)
+    except Exception:
+        pass
+    return entries, target
+
+
+def load_plugin_catalog_cache():
+    """上次成功拉取的清单；没有或坏了返回 []，用于断网时还能装。"""
+    try:
+        with open(plugin_catalog_cache_path(), "r", encoding="utf-8") as fh:
+            return validate_plugin_catalog(json.load(fh))
+    except Exception:
+        return []
+
+
+def catalog_version_tuple(ver):
+    parts = re.findall(r"\d+", str(ver or ""))
+    return tuple(int(x) for x in parts[:4]) or (0,)
+
+
+def catalog_is_newer(remote, local):
+    return catalog_version_tuple(remote) > catalog_version_tuple(local)
 
 
 def _data_dir():
@@ -9853,7 +10031,10 @@ class QPEApp(_BASE):
         bar.pack(side="right", fill="y")
         canvas.pack(side="left", fill="both", expand=True)
         inner = tk.Frame(canvas, bg=BAR_BG)
-        canvas.create_window((0, 0), window=inner, anchor="nw")
+        win_item = canvas.create_window((0, 0), window=inner, anchor="nw")
+        # 让内容宽度跟着画布走，否则卡片只占左半边、右边留一大片空
+        canvas.bind("<Configure>",
+                    lambda e, i=win_item: canvas.itemconfigure(i, width=e.width))
         inner.bind("<Configure>", lambda e: canvas.configure(
             scrollregion=canvas.bbox("all")))
         if not self.plugins:
@@ -9911,13 +10092,268 @@ class QPEApp(_BASE):
                      justify="left", wraplength=px(460)).pack(
                          fill="x", pady=px(2))
         bar2 = tk.Frame(win, bg=BAR_BG)
-        bar2.pack(fill="x", padx=px(16), pady=(0, px(12)))
-        self._panel_btn(bar2, "打开插件目录",
+        bar2.pack(fill="x", padx=px(16), pady=(0, px(4)))
+        # 按钮多了排两行，窄窗口（1024）下也不会被裁掉
+        row_a = tk.Frame(bar2, bg=BAR_BG)
+        row_a.pack(fill="x")
+        self._panel_btn(row_a, "插件市场", self.show_plugin_market)
+        self._panel_btn(row_a, "从网址安装…", self.show_plugin_install)
+        self._panel_btn(row_a, "新建插件", self._new_plugin)
+        row_b = tk.Frame(bar2, bg=BAR_BG)
+        row_b.pack(fill="x", pady=(px(2), px(8)))
+        self._panel_btn(row_b, "打开插件目录",
                         lambda: self._open_path(_plugin_dir()))
-        self._panel_btn(bar2, "重载插件", self._reload_plugins)
-        self._panel_btn(bar2, "新建插件", self._new_plugin)
-        self._panel_btn(bar2, "插件说明", self.show_plugin_help)
-        self._panel_btn(bar2, "从网址安装…", self.show_plugin_install)
+        self._panel_btn(row_b, "重载插件", self._reload_plugins)
+        self._panel_btn(row_b, "插件说明", self.show_plugin_help)
+
+    # ------------------------------------------------------------ 插件市场
+    def _async_call(self, work, done):
+        """后台执行 work()，主线程回调 done(result, error)。
+
+        用队列 + 主线程轮询，而不是从工作线程直接 self.after —— 后者在没有
+        mainloop 的环境（测试、刚启动的瞬间）会报 "main thread is not in main loop"。
+        """
+        q = queue.Queue()
+
+        def runner():
+            try:
+                q.put((work(), None))
+            except BaseException as exc:
+                q.put((None, exc))
+
+        threading.Thread(target=runner, daemon=True).start()
+
+        def poll():
+            try:
+                result, err = q.get_nowait()
+            except queue.Empty:
+                self.after(40, poll)
+                return
+            try:
+                done(result, err)
+            except BaseException:
+                pass
+
+        self.after(40, poll)
+
+    def show_plugin_market(self):
+        """官方清单：浏览、已安装/可更新状态、一键安装。
+
+        清单在后台线程拉；失败用上次缓存，窗口里明确标出「离线缓存」。
+        """
+        win = getattr(self, "market_win", None)
+        if win is not None and win.winfo_exists():
+            win.lift()
+            return
+        self._scan_plugins()
+        win = tk.Toplevel(self)
+        self.market_win = win
+        win.title("插件市场")
+        win.configure(bg=BAR_BG)
+        win.geometry("%dx%d" % (px(640), px(600)))
+        win.transient(self)
+        win.after(40, self._apply_lang)
+        try:
+            win.iconbitmap(os.path.join(_res_dir(), "Prism.ico"))
+        except Exception:
+            pass
+
+        head = tk.Frame(win, bg=BAR_BG)
+        head.pack(fill="x", padx=px(16), pady=(px(14), 0))
+        tk.Label(head, text="插件市场", font=self.ui_font_b, bg=BAR_BG, fg=FG,
+                 anchor="w").pack(side="left")
+        self._market_src = tk.Label(head, text="", font=self.ui_font_s,
+                                    bg=BAR_BG, fg=FG_DIM, anchor="e")
+        self._market_src.pack(side="right")
+        self._market_status = tk.Label(win, text="正在获取清单…",
+                                       font=self.ui_font_s, bg=BAR_BG,
+                                       fg=FG_DIM, anchor="w", justify="left",
+                                       wraplength=px(600))
+        self._market_status.pack(fill="x", padx=px(16), pady=(px(4), 0))
+
+        box = tk.Frame(win, bg=BAR_BG)
+        box.pack(fill="both", expand=True, padx=px(16), pady=(px(8), px(4)))
+        canvas = tk.Canvas(box, bg=BAR_BG, highlightthickness=0, bd=0,
+                           width=px(10))
+        bar = tk.Scrollbar(box, orient="vertical", command=canvas.yview)
+        canvas.configure(yscrollcommand=bar.set)
+        bar.pack(side="right", fill="y")
+        canvas.pack(side="left", fill="both", expand=True)
+        inner = tk.Frame(canvas, bg=BAR_BG)
+        win_item = canvas.create_window((0, 0), window=inner, anchor="nw")
+        # 让内容宽度跟着画布走，否则卡片只占左半边、右边留一大片空
+        canvas.bind("<Configure>",
+                    lambda e, i=win_item: canvas.itemconfigure(i, width=e.width))
+        inner.bind("<Configure>", lambda e: canvas.configure(
+            scrollregion=canvas.bbox("all")))
+        self._market_inner = inner
+        self._market_entries = []
+
+        bottom = tk.Frame(win, bg=BAR_BG)
+        bottom.pack(fill="x", padx=px(16), pady=(0, px(12)))
+        self._panel_btn(bottom, "刷新", self._market_load)
+        self._panel_btn(bottom, "从网址安装…", self.show_plugin_install)
+        self._panel_btn(bottom, "关闭", win.destroy)
+
+        self._market_load()
+
+    def _market_load(self):
+        """后台拉清单，主线程渲染。"""
+        win = getattr(self, "market_win", None)
+        if win is None or not win.winfo_exists():
+            return
+        self._market_status.configure(text=_tr("正在获取清单…"))
+        target = PLUGIN_CATALOG_URL
+
+        def done(result, err):
+            if err is None:
+                entries, url = result
+            else:
+                entries, url = [], target
+            self._market_loaded(entries, url, err)
+
+        self._async_call(lambda: fetch_plugin_catalog(target), done)
+
+    def _market_loaded(self, entries, url, err):
+        win = getattr(self, "market_win", None)
+        if win is None or not win.winfo_exists():
+            return
+        if err is not None:
+            cached = load_plugin_catalog_cache()
+            if cached:
+                entries = cached
+                self._market_status.configure(
+                    text=_tr("离线缓存（%s）") % str(err)[:70])
+            else:
+                entries = []
+                self._market_status.configure(
+                    text=_tr("获取清单失败：%s") % str(err)[:90])
+        else:
+            self._market_status.configure(
+                text=_tr("共 %d 个插件") % len(entries))
+        host = re.sub(r"^https?://([^/]+).*$", r"\1", str(url))
+        try:
+            self._market_src.configure(text=host)
+        except Exception:
+            pass
+        self._market_entries = entries
+        self._market_render()
+
+    def _market_render(self):
+        inner = getattr(self, "_market_inner", None)
+        if inner is None or not inner.winfo_exists():
+            return
+        for ch in inner.winfo_children():
+            ch.destroy()
+        entries = getattr(self, "_market_entries", [])
+        if not entries:
+            tk.Label(inner, text="没有可安装的插件", font=self.ui_font,
+                     bg=BAR_BG, fg=FG_DIM, anchor="w").pack(fill="x", pady=px(10))
+            return
+        installed = {str(p.get("id")): p for p in self.plugins}
+        for entry in entries:
+            cur = installed.get(entry["id"])
+            if cur is None:
+                state, color = _tr("未安装"), FG_DIM
+                action = _tr("安装")
+            elif catalog_is_newer(entry["version"], cur.get("ver", "")):
+                state = _tr("可更新 %s → %s") % (cur.get("ver") or "?",
+                                                 entry["version"])
+                color, action = "#e0a030", _tr("更新")
+            else:
+                state, color, action = _tr("已安装"), "#5faf6a", _tr("重新安装")
+            row = tk.Frame(inner, bg=BTN_BG)
+            row.pack(fill="x", pady=px(3))
+            left = tk.Frame(row, bg=BTN_BG)
+            left.pack(side="left", fill="both", expand=True, padx=px(10),
+                      pady=px(7))
+            name = _catalog_text(entry["name"])
+            ver = ("  " + entry["version"]) if entry["version"] else ""
+            tk.Label(left, text=name + ver, font=self.ui_font_b, bg=BTN_BG,
+                     fg=FG, anchor="w").pack(fill="x")
+            desc = _catalog_text(entry["description"])
+            if desc:
+                tk.Label(left, text=desc, font=self.ui_font_s, bg=BTN_BG,
+                         fg=FG_DIM, anchor="w", justify="left",
+                         wraplength=px(420)).pack(fill="x")
+            meta = _tr("作者：%s") % (entry["author"] or "-")
+            meta += " · " + _tr("联网 %s · 写文件 %s") % (
+                _tr("是") if entry["network"] else _tr("否"),
+                _tr("是") if entry["writes_files"] else _tr("否"))
+            tk.Label(left, text=meta, font=self.ui_font_s, bg=BTN_BG,
+                     fg=FG_DIM, anchor="w").pack(fill="x")
+            right = tk.Frame(row, bg=BTN_BG)
+            right.pack(side="right", padx=px(10), pady=px(7))
+            tk.Label(right, text=state, font=self.ui_font_s, bg=BTN_BG,
+                     fg=color, anchor="e").pack(fill="x")
+            self._panel_btn(right, action,
+                            lambda e=entry: self._market_install(e))
+
+    def _market_install(self, entry):
+        win = getattr(self, "market_win", None)
+        if win is None or not win.winfo_exists():
+            return
+        name = _catalog_text(entry["name"])
+        installed = {str(p.get("id")): p for p in self.plugins}
+        cur = installed.get(entry["id"])
+        caps = _tr("联网 %s · 写文件 %s") % (
+            _tr("是") if entry["network"] else _tr("否"),
+            _tr("是") if entry["writes_files"] else _tr("否"))
+        if cur is None:
+            question = _tr("确定安装「%s」吗？") % name
+            title = _tr("安装插件")
+        else:
+            question = _tr("确定把「%s」更新到 %s 吗？") % (
+                name, entry["version"])
+            title = _tr("更新插件")
+        detail = "%s %s\n%s\n%s\n\nSHA-256：%s…\n\n%s" % (
+            name, entry["version"], _catalog_text(entry["description"]),
+            caps, entry["sha256"][:16], question)
+        if not messagebox.askyesno(title, detail, parent=win):
+            return
+        self._market_status.configure(text=_tr("下载并校验中…"))
+
+        def work():
+            data = fetch_plugin_source(entry["url"])
+            meta = parse_plugin_source(data)
+            if meta["id"] != entry["id"]:
+                raise PluginSourceError(_tr("下载到的插件 id 与清单不一致"))
+            return install_plugin_bytes(
+                data, entry["sha256"], overwrite=True,
+                filename=(cur.get("file") if cur else None))
+
+        self._async_call(
+            work, lambda meta, err: self._market_done(meta, entry, err))
+
+    def _market_done(self, meta, entry, err):
+        win = getattr(self, "market_win", None)
+        if win is None or not win.winfo_exists():
+            return
+        name = _catalog_text(entry["name"])
+        if err is not None:
+            self._market_status.configure(
+                text=_tr("安装失败：%s") % str(err)[:90])
+            try:
+                messagebox.showerror(_tr("插件市场"), str(err), parent=win)
+            except Exception:
+                pass
+            return
+        was_installed = any(str(p.get("id")) == entry["id"] for p in self.plugins)
+        self._market_status.configure(
+            text=(_tr("已更新「%s」到 %s") % (name, entry["version"])
+                  if was_installed else _tr("已安装「%s」") % name))
+        try:
+            self._flash(_tr("已安装「%s」") % name, 2600)
+        except Exception:
+            pass
+        self._scan_plugins()
+        self._market_render()
+        # 插件窗口开着的话让它刷新列表（关闭重开，保持两处一致）
+        if getattr(self, "plug_win", None) is not None:
+            try:
+                self._rescan_plugins()
+            except Exception:
+                pass
 
     def show_plugin_install(self):
         """从网址安装插件：下载 → 解析（不执行）→ 校验 → 确认 → 写入。
@@ -10035,24 +10471,16 @@ class QPEApp(_BASE):
                 return
             status.configure(text=_tr("下载中…"))
 
-            def worker():
-                try:
-                    data = fetch_plugin_source(url)
-                except Exception as exc:
-                    self.after(0, lambda e=exc: fail(e))
-                    return
-                self.after(0, lambda d=data: fetched(d, url))
+            def got(data, err):
+                if err is not None:
+                    fail(err)
+                else:
+                    fetched(data, url)
 
-            threading.Thread(target=worker, daemon=True).start()
-
-        def use_demo():
-            url_var.set(DEMO_PLUGIN_URL)
-            sha_var.set(DEMO_PLUGIN_SHA256)
-            status.configure(text=_tr("已填入示例地址与 SHA-256，点「下载并安装」即可。"))
+            self._async_call(lambda: fetch_plugin_source(url), got)
 
         self._panel_btn(row, "下载并安装", do_install)
         self._panel_btn(row, "取消", win.destroy)
-        self._panel_btn(row, "示例：渐变减光", use_demo)
 
     PLUGIN_TEMPLATE = '''# -*- coding: utf-8 -*-
 # Prism 插件模板（api = 2）。另存为 myplugin.py 放进插件目录即可，约 1.5 秒热重载。

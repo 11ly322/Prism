@@ -66,6 +66,8 @@ def main():
     global _QpeRoundButton
     mod = importlib.machinery.SourceFileLoader("lc", APP).load_module()
     _QpeRoundButton = mod._QpeRoundButton
+    # 市场窗口会去拉清单：指向一个立即失败的地址，避免测试依赖外网/超时
+    mod.PLUGIN_CATALOG_URL = "http://127.0.0.1:1/plugin-catalog.json"
     print("=== 三语界面 v%s ===" % mod.APP_VERSION)
     tmp = os.path.join(tempfile.gettempdir(), "_prism_langcheck")
     shutil.rmtree(tmp, ignore_errors=True)
@@ -116,6 +118,7 @@ def main():
         ("设置", "show_settings", "Language", "言語"),
         ("插件", "show_plugins", "Installed plugins", "インストール済みプラグイン"),
         ("安装插件", "show_plugin_install", "Plugin URL (.py)", "プラグインの URL（.py）"),
+        ("插件市场", "show_plugin_market", "Plugin marketplace", "プラグインマーケット"),
         ("批量重命名", "batch_rename", "Start rename", "名前変更を開始"),
         ("批量导出", "batch_export", "Batch export", "一括書き出し"),
         ("图片信息", "show_info", "Current adjustments", "現在の調整"),

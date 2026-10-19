@@ -1,0 +1,58 @@
+{
+ "schema": 1,
+ "updated": "2026-10-19",
+ "homepage": "https://11ly322.github.io/Prism/",
+ "plugins": [
+  {
+   "id": "grad-nd",
+   "name": {"zh": "渐变减光", "en": "Grad ND", "ja": "グラデ ND"},
+   "version": "1.0",
+   "api": 2,
+   "author": "Prism",
+   "description": {
+    "zh": "从画面一侧平滑压暗，模拟中灰渐变镜；常用来压天空",
+    "en": "Smoothly darkens one side, like a graduated ND filter; handy for skies",
+    "ja": "画面の片側をなめらかに暗くし、ハーフ ND フィルターのように空を抑えます"
+   },
+   "network": false,
+   "writes_files": false,
+   "url": "https://11ly322.github.io/Prism/plugins/demo-grad-nd.py",
+   "sha256": "cf8552bd0a4393e5a798582c00970b2981d6a7f8e14182c682c2eabe666e54ee",
+   "source": "docs/plugins/demo-grad-nd.py"
+  },
+  {
+   "id": "soft-glow",
+   "name": {"zh": "柔光", "en": "Soft glow", "ja": "ソフトグロー"},
+   "version": "1.0",
+   "api": 2,
+   "author": "Prism",
+   "description": {
+    "zh": "高光溢出 + 轻微模糊叠加，人像与逆光更柔和",
+    "en": "Highlight bloom with a soft blur overlay; gentler portraits and backlight",
+    "ja": "ハイライトをにじませて柔らかく。人物や逆光がやさしくなります"
+   },
+   "network": false,
+   "writes_files": false,
+   "url": "https://11ly322.github.io/Prism/plugins/soft-glow.py",
+   "sha256": "a6935f32b59306e08583812a16e1815956eb2e27b2e2a89bbe46da34ec846483",
+   "source": "docs/plugins/soft-glow.py"
+  },
+  {
+   "id": "duotone",
+   "name": {"zh": "双色调", "en": "Duotone", "ja": "デュオトーン"},
+   "version": "1.0",
+   "api": 2,
+   "author": "Prism",
+   "description": {
+    "zh": "明度映射到暗部/亮部两种颜色，做海报与封面配色",
+    "en": "Maps luminance between two colors; good for posters and covers",
+    "ja": "明度を 2 色にマッピング。ポスターや表紙の配色に"
+   },
+   "network": false,
+   "writes_files": false,
+   "url": "https://11ly322.github.io/Prism/plugins/duotone.py",
+   "sha256": "d05950554b55f10d5419dfba9b82f471063a586144bf64808b3ca8a725294522",
+   "source": "docs/plugins/duotone.py"
+  }
+ ]
+}

@@ -19,6 +19,8 @@ site/
 Prism_settings.json
 src/Prism_settings.json
 Prism_presets.json
+plugin_catalog.json
+src/plugin_catalog.json
 *.log
 
 # 发布产物不再进仓库：构建后上传到 GitHub Releases

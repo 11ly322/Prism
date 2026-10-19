@@ -7,6 +7,7 @@
 import hashlib
 import http.server
 import importlib.machinery
+import json
 import os
 import shutil
 import socketserver
@@ -16,7 +17,7 @@ import threading
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 APP = os.path.join(ROOT, "src", "Prism.pyw")
-DEMO = os.path.join(ROOT, "docs", "plugins", "demo-grad-nd.py")
+CATALOG = os.path.join(ROOT, "plugins", "index.json")
 FAIL = []
 
 
@@ -29,13 +30,17 @@ def ok(name, cond, detail=""):
 def main():
     mod = importlib.machinery.SourceFileLoader("pinf", APP).load_module()
     print("=== 插件安装链路 v%s ===" % mod.APP_VERSION)
+    entries = json.load(open(CATALOG, encoding="utf-8"))["plugins"]
+    entry = entries[0]
+    DEMO = os.path.join(ROOT, entry["source"])
+    SHA = entry["sha256"]
     data = open(DEMO, "rb").read()
 
     meta = mod.parse_plugin_source(data)
-    ok("示例插件可解析", meta["id"] == "grad-nd" and meta["api"] == 2,
+    ok("清单第一个插件可解析", meta["id"] == entry["id"] and meta["api"] == 2,
        "%s / api %s" % (meta["id"], meta["api"]))
-    ok("固定 SHA-256 与文件一致",
-       hashlib.sha256(data).hexdigest() == mod.DEMO_PLUGIN_SHA256,
+    ok("清单 SHA-256 与文件一致",
+       hashlib.sha256(data).hexdigest() == SHA,
        hashlib.sha256(data).hexdigest()[:16])
 
     # 文件名清洗：路径穿越必须被吃掉
@@ -49,7 +54,7 @@ def main():
     shutil.rmtree(tmp, ignore_errors=True)
     os.makedirs(tmp)
     try:
-        got = mod.install_plugin_bytes(data, mod.DEMO_PLUGIN_SHA256, folder=tmp)
+        got = mod.install_plugin_bytes(data, SHA, folder=tmp)
         path = got["path"]
         ok("写入插件目录", os.path.exists(path) and open(path, "rb").read() == data,
            os.path.basename(path))

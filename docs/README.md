@@ -12,7 +12,7 @@
 
 <div align="center">
 
-![version](https://img.shields.io/badge/version-9.4.0-3d7dff?style=flat-square)
+![version](https://img.shields.io/badge/version-9.5.0-3d7dff?style=flat-square)
 ![platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-2b2f36?style=flat-square)
 ![python](https://img.shields.io/badge/python-3.9%2B-3776ab?style=flat-square&logo=python&logoColor=white)
 ![license](https://img.shields.io/badge/license-MIT-3ddc84?style=flat-square)
@@ -57,10 +57,10 @@ Prism 服务两种场景 ——
 
 | 平台 | 文件 | 说明 |
 | :--- | :--- | :--- |
-| Windows | `Prism-Setup-9.4.0.exe` | 安装包 · 含修图面板与插件 · 40.0 MB |
-| Windows | `Prism-Viewer-9.4.0.zip` | 纯看图版 · 便携免安装 · 30.0 MB |
-| macOS | `Prism-macOS-9.4.0.zip` | 源码运行 · 需 Python 3 + Pillow · 193 KB |
-| Linux | `Prism-Linux-9.4.0.zip` | 源码运行 · 带 `.desktop` · 193 KB |
+| Windows | `Prism-Setup-9.5.0.exe` | 安装包 · 含修图面板与插件 · 40.0 MB |
+| Windows | `Prism-Viewer-9.5.0.zip` | 纯看图版 · 便携免安装 · 30.0 MB |
+| macOS | `Prism-macOS-9.5.0.zip` | 源码运行 · 需 Python 3 + Pillow · 198 KB |
+| Linux | `Prism-Linux-9.5.0.zip` | 源码运行 · 带 `.desktop` · 198 KB |
 
 <div align="center">
 
@@ -221,11 +221,15 @@ api 必须是 2（旧的 1 仍能加载）。版本更高的插件会被跳过�
 参数默认值以源码为准，逐个说明见 [plugins/README.md](plugins/README.md)；
 模板见 [plugins/_template.py](plugins/_template.py)。
 
-### 从网址安装 / 参数记忆（9.4.0）
+### 插件市场 / 从网址安装 / 参数记忆（9.5.0）
 
-- 插件窗口 →「从网址安装…」：填 `.py` 的 http(s) 直链，可选填 SHA-256。
+- 插件窗口 →「插件市场」：读官方清单 `plugins/index.json`（发布到网页），
+  显示「未安装 / 已安装 / 可更新」，一键安装或更新；拉不到清单时用上次缓存，
+  窗口里标明「离线缓存」。目前清单有 3 个：渐变减光、柔光、双色调。
+- 也可以「从网址安装…」：填 `.py` 的 http(s) 直链，可选填 SHA-256。
   下载后**只解析 AST、不执行代码**，先确认再写盘；单文件上限 2 MB。
-  示例插件 `grad-nd`（渐变减光）在网页 `docs/plugins/demo-grad-nd.py`，按钮可一键填入。
+- 清单与 README 索引共用一份数据：`tools/make_plugin_index.py` 从
+  `plugins/index.json` + 插件源码生成两处表格，`--check` 接进发布门禁。
 - 每个插件的参数按 `PLUGIN.id` 自动记住，重启后仍在；「恢复默认」会清空记忆。
 
 ### 调试

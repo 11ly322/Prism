@@ -21,6 +21,27 @@ if ($LASTEXITCODE -ne 0) {
 if ($CheckOnly) {
     $pg = Join-Path $root 'docs\index.html'
     if (-not (Test-Path $pg)) { Write-Host '找不到 docs/index.html'; exit 1 }
+    # 页面图片存在性自检：语言页引用本地化截图时，文件必须真的生成过（曾经的 404）
+    $badImgs = @()
+    $imgCount = 0
+    foreach ($rel in @('docs\index.html', 'docs\en\index.html', 'docs\ja\index.html')) {
+        $p = Join-Path $root $rel
+        if (-not (Test-Path $p)) { continue }
+        $h = Get-Content $p -Raw -Encoding UTF8
+        foreach ($m in [regex]::Matches($h, '<img[^>]+src="([^"]+)"')) {
+            $src = $m.Groups[1].Value
+            if ($src -match '^(https?:|//|data:)') { continue }
+            $imgCount++
+            $full = [System.IO.Path]::GetFullPath((Join-Path (Split-Path $p) $src))
+            if (-not (Test-Path -LiteralPath $full)) { $badImgs += ($rel + ' -> ' + $src) }
+        }
+    }
+    if ($badImgs.Count -gt 0) {
+        Write-Host ('页面缺图 ' + $badImgs.Count + ' 张：') -ForegroundColor Red
+        $badImgs | ForEach-Object { Write-Host ('   ' + $_) }
+        exit 1
+    }
+    Write-Host ('页面图片自检通过：三份页面共 ' + $imgCount + ' 张，引用全部存在')
     $html = Get-Content $pg -Raw -Encoding UTF8
     $hrefs = [regex]::Matches($html, 'href="(https://github\.com/11ly322/Prism/releases/download/[^"]+)"') |
              ForEach-Object { $_.Groups[1].Value } | Sort-Object -Unique

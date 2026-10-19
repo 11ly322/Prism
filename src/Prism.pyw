@@ -44,7 +44,7 @@ IS_WIN = sys.platform.startswith("win")
 K = "Command" if IS_MAC else "Control"
 
 APP_NAME = "Prism"
-APP_VERSION = "9.1.0"
+APP_VERSION = "9.2.0"
 APP_BUILD = "2025-12.9"
 # ---------------------------------------------------------------- 运行模式
 # 同一份源码编出两个版本：
@@ -237,7 +237,7 @@ LANG_TABLE = {
         "帮助": "Help", "关于 / 帮助": "About / Help", "快捷键说明": "Shortcuts",
         "打开官网": "Website", "关闭": "Close",
         # 工具栏
-        "面板": "UI", "插件": "Plug", "设置": "Prefs",
+        "面板": "Panel", "插件": "Plugins", "设置": "Settings",
         "适应窗口": "Fit", "原始大小": "Actual size",
         # 面板分区
         "修图": "Edit", "基本": "Basic", "镜头": "Lens", "人像": "Portrait",
@@ -273,6 +273,30 @@ LANG_TABLE = {
         "快速预览（按 1:1 自动换全分辨率）": "Fast preview (1:1 loads full resolution)",
         "未打开图片": "No image", "就绪": "Ready",
         "暗": "Sh", "亮": "Hi", "均": "Avg",
+        "关闭": "Close",
+        "浏览": "Browse",
+        "预览": "Preview",
+        "开始导出": "Start export",
+        "开始重命名": "Start rename",
+        "停止": "Stop",
+        "批量导出": "Batch export",
+        "批量重命名": "Batch rename",
+        "重新应用": "Apply again",
+        "恢复默认": "Reset",
+        "保存为…": "Save as…",
+        "打开配置目录": "Open config folder",
+        "恢复默认设置": "Restore defaults",
+        "选择文件夹": "Choose folder",
+        "输出目录": "Output folder",
+        "格式": "Format",
+        "质量": "Quality",
+        "尺寸": "Size",
+        "命名": "Naming",
+        "原文件名": "Original name",
+        "序号": "Sequence",
+        "前缀": "Prefix",
+        "包含子文件夹": "Include subfolders",
+        "覆盖同名文件": "Overwrite existing",
         "人像美化：打开图片后自动识别": "Retouch: auto-detect after opening",
         "人像美化：等待图像": "Retouch: waiting for image",
         "人像美化：本图不适用（%s）": "Retouch: not applicable (%s)",
@@ -285,7 +309,7 @@ LANG_TABLE = {
         "文件": "ファイル", "编辑": "編集", "视图": "表示", "工具": "ツール",
         "帮助": "ヘルプ", "关于 / 帮助": "このアプリについて", "快捷键说明": "ショートカット",
         "打开官网": "ウェブサイト", "关闭": "閉じる",
-        "面板": "UI", "插件": "Plug", "设置": "設定",
+        "面板": "パネル", "插件": "プラグイン", "设置": "設定",
         "适应窗口": "フィット", "原始大小": "100%",
         "修图": "編集", "基本": "基本", "镜头": "レンズ", "人像": "人物",
         "人像 · 高级": "人物 · 詳細", "曲线": "カーブ", "HSL": "HSL",
@@ -318,6 +342,30 @@ LANG_TABLE = {
         "快速预览（按 1:1 自动换全分辨率）": "高速プレビュー（1:1 で全解像度）",
         "未打开图片": "画像なし", "就緒": "準備完了", "就绪": "準備完了",
         "暗": "暗", "亮": "明", "均": "平均",
+        "关闭": "閉じる",
+        "浏览": "参照",
+        "预览": "プレビュー",
+        "开始导出": "書き出し開始",
+        "开始重命名": "名前変更を開始",
+        "停止": "停止",
+        "批量导出": "一括書き出し",
+        "批量重命名": "一括名前変更",
+        "重新应用": "再適用",
+        "恢复默认": "初期値に戻す",
+        "保存为…": "別名で保存…",
+        "打开配置目录": "設定フォルダを開く",
+        "恢复默认设置": "初期設定に戻す",
+        "选择文件夹": "フォルダを選択",
+        "输出目录": "出力先",
+        "格式": "形式",
+        "质量": "品質",
+        "尺寸": "サイズ",
+        "命名": "命名",
+        "原文件名": "元の名前",
+        "序号": "連番",
+        "前缀": "接頭辞",
+        "包含子文件夹": "サブフォルダを含む",
+        "覆盖同名文件": "同名ファイルを上書き",
         "人像美化：打开图片后自动识别": "人物補正：画像を開くと自動認識",
         "人像美化：等待图像": "人物補正：画像を待機中",
         "人像美化：本图不适用（%s）": "人物補正：この画像には不適用（%s）",
@@ -3077,13 +3125,24 @@ class QPEApp(_BASE):
         groups = self.bar_groups
         if not groups:
             return
-        avail = (self.bar.winfo_width() - self.zoom_lbl.winfo_reqwidth()
-                 - px(24))
+        # 右侧常驻控件（缩放比例、插件、设置）也要占宽度。之前只减了缩放标签，
+        # 英文/日文变长后就会「以为放得下」，pack 于是把最后几组挤成半截。
+        right = px(24)
+        for _nm in ("zoom_lbl", "plug_btn", "settings_btn"):
+            _w = getattr(self, _nm, None)
+            if _w is not None:
+                try:
+                    right += _w.winfo_reqwidth()
+                except Exception:
+                    pass
+        avail = self.bar.winfo_width() - right
         if avail <= 1:
             return
         total = sum(f.winfo_reqwidth() for f, _p in groups)
         hidden = set()
-        for i in sorted(range(len(groups)), key=lambda k: -groups[k][1]):
+        order = [k for k in range(len(groups))
+                 if not getattr(groups[k][0], "_no_hide", False)]
+        for i in sorted(order, key=lambda k: -groups[k][1]):
             if total <= avail:
                 break
             hidden.add(i)
@@ -3106,7 +3165,20 @@ class QPEApp(_BASE):
                      height=px(20))
         f.pack(side="left", padx=px(SPACE_SM), pady=px(SPACE_MD))
 
-    def _build_ui(self):
+    def _build_bar(self):
+        """构建（或在切换语言后重建）工具条。
+
+        必须重建而不是只改文字：分组容器的宽度在首次布局时就定了，
+        换成长度不同的译文后 pack 不会重新分配那一格，英文会被裁掉半截。
+        """
+        try:
+            if getattr(self, "bar", None) is not None:
+                self.bar.destroy()
+        except Exception:
+            pass
+        self.bar_groups = []
+        self.bar_hidden = set()
+        self.bar_laid_out = False
         self.bar = tk.Frame(self, bg=BAR_BG, height=px(36))
         self.bar.pack(side="top", fill="x")
         self.bar.pack_propagate(False)
@@ -3141,29 +3213,33 @@ class QPEApp(_BASE):
 
         # 菜单栏（原来散在工具条上的按钮都收进这里）
         g = self._bar_group(1)
+        g._no_hide = True        # 菜单永不隐藏
         self._build_menubar(g)
 
         # 工具条按优先级分组：空间不够时整组隐藏，而不是把按钮裁掉
         g = self._bar_group(1)
+        g._no_hide = True        # 翻页常驻
         self._sep(g)
         self._icon_btn(g, "prev", lambda: self.step(-1))
         self._icon_btn(g, "next", lambda: self.step(1))
 
-        g = self._bar_group(2)
+        g = self._bar_group(1)
+        g._no_hide = True        # 缩放常驻
         self._sep(g)
         self._mkbtn(g, "-", lambda: self.zoom_by(1 / 1.25))
         self._icon_btn(g, "fit", self.fit_window)
         self._mkbtn(g, "1:1", self.actual_size)
         self._mkbtn(g, "+", lambda: self.zoom_by(1.25))
 
-        g = self._bar_group(4)
+        g = self._bar_group(4)     # 最先被隐藏：英文/日文变长时优先牺牲这组
         self._sep(g)
         self._icon_btn(g, "rotl", lambda: self.rotate(-90))
         self._icon_btn(g, "rotr", lambda: self.rotate(90))
 
         # 幻灯片已收进「视图」菜单，原来的右键秒数菜单不再需要
 
-        g = self._bar_group(3)
+        g = self._bar_group(1)
+        g._no_hide = True        # 面板开关常驻
         self._sep(g)
         if not VIEWER_ONLY:
             # 菜单里已经有「编辑」，这个按钮是开关侧栏，改名避免重名
@@ -3174,6 +3250,8 @@ class QPEApp(_BASE):
 
         self._layout_bar(force=True)
         self.bar.bind("<Configure>", self._on_bar_configure)
+    def _build_ui(self):
+        self._build_bar()
 
         # 布局顺序即分配顺序：先让状态栏占住底部，body 再吃剩下的空间，
         # 面板在 body 内部又先于画布，这样打开面板时绝不会被画布挤没。
@@ -7429,6 +7507,20 @@ class QPEApp(_BASE):
         self.pcan.yview_scroll(-n if units > 0 else n, "units")
         return "break"
 
+    def _save_setting(self, key, value):
+        """只更新单个设置项（语言这类小改动不必重写全部设置）。"""
+        try:
+            data = {}
+            path = self._settings_path()
+            if os.path.exists(path):
+                with open(path, "r", encoding="utf-8") as fh:
+                    data = json.load(fh) or {}
+            data[key] = value
+            with open(path, "w", encoding="utf-8") as fh:
+                json.dump(data, fh, ensure_ascii=False, indent=1)
+        except Exception:
+            pass
+
     def _apply_lang(self):
         """把界面文字切换成当前语言（保留原文，可来回切换）。"""
         if True:
@@ -7498,13 +7590,13 @@ class QPEApp(_BASE):
             # 文字变了按钮宽度也变了：先重新量一遍，再让父容器重新分配空间。
             # 只调 _layout_bar 不够 —— pack 会把组压到旧宽度（实测英文被裁成 40px）。
             try:
-                for g, _p in getattr(self, "bar_groups", []):
-                    g.pack_forget()
-                self.update_idletasks()
-                for g, _p in getattr(self, "bar_groups", []):
-                    g.pack(side="left")
-                self.update_idletasks()
-                self._layout_bar(force=True)
+                if not getattr(self, "_rebuilding_bar", False):
+                    self._rebuilding_bar = True
+                    try:
+                        self._build_bar()
+                        self._apply_lang()      # 新控件是中文，再翻一遍
+                    finally:
+                        self._rebuilding_bar = False
             except Exception:
                 pass
             try:
@@ -8258,6 +8350,7 @@ class QPEApp(_BASE):
         win.geometry("%dx%d" % (px(430), px(470)))
         win.after(60, lambda: _round_window(win))
         win.transient(self)
+        self.after(40, self._apply_lang)
         try:
             win.iconbitmap(os.path.join(_res_dir(), "Prism.ico"))
         except Exception:
@@ -8276,6 +8369,33 @@ class QPEApp(_BASE):
         tk.Label(head, text="改动立即生效，下次启动保留", font=self.ui_font_s,
                  bg=CARD_BG, fg=FG_DIM, anchor="w").pack(
                      fill="x", padx=px(SPACE_XL), pady=(0, px(SPACE_XL)))
+
+        # 语言（改了立即重排界面）
+        tk.Label(wrap, text=_tr("语言"), font=self.ui_font_b, bg=PANEL_BG,
+                 fg=FG, anchor="w").pack(fill="x", pady=(px(SPACE_XL), px(SPACE_XS)))
+        lrow = tk.Frame(wrap, bg=PANEL_BG)
+        lrow.pack(fill="x")
+        lvar = tk.StringVar(value=self.lang)
+
+        def _set_lang():
+            global APP_LANG
+            self.lang = lvar.get()
+            APP_LANG = self.lang
+            try:
+                self._save_setting("lang", self.lang)
+            except Exception:
+                pass
+            self._apply_lang()
+            self._update_title()
+            self._update_status()
+
+        for code, label in (("zh", "中文"), ("en", "English"), ("ja", "日本語")):
+            tk.Radiobutton(lrow, text=label, value=code, variable=lvar,
+                           command=_set_lang, font=self.ui_font,
+                           bg=PANEL_BG, fg=FG, selectcolor=BAR_BG,
+                           activebackground=PANEL_BG, anchor="w",
+                           highlightthickness=0, bd=0).pack(
+                               side="left", padx=(0, px(12)))
 
         # 与下面的选项行对齐：那几行没有额外左右内边距，这里也不加
         tk.Label(wrap, text="主题", font=self.ui_font_b, bg=PANEL_BG, fg=FG,
@@ -8498,6 +8618,7 @@ class QPEApp(_BASE):
         win.configure(bg=BAR_BG)
         win.geometry("%dx%d" % (px(560), px(460)))
         win.transient(self)
+        self.after(40, self._apply_lang)
         tk.Label(win, text="已安装插件", font=self.ui_font_b, bg=BAR_BG, fg=FG,
                  anchor="w").pack(fill="x", padx=px(16), pady=(px(14), px(2)))
         tk.Label(win, text=_plugin_dir(), font=self.ui_font_s, bg=BAR_BG,
@@ -9690,6 +9811,7 @@ def run(img, **params):
         win.title("批量重命名")
         win.configure(bg=BAR_BG)
         win.transient(self)
+        self.after(40, self._apply_lang)
         self.rename_win = win
         body = tk.Frame(win, bg=BAR_BG)
         body.pack(fill="both", expand=True, padx=px(16), pady=px(14))
@@ -9893,6 +10015,7 @@ def run(img, **params):
         win.configure(bg=BAR_BG)
         win.geometry("%dx%d" % (px(560), px(380)))
         win.transient(self)
+        self.after(40, self._apply_lang)
         wrap = tk.Frame(win, bg=BAR_BG)
         wrap.pack(fill="both", expand=True, padx=px(14), pady=px(12))
 
@@ -10495,6 +10618,7 @@ def run(img, **params):
         win.configure(bg=BAR_BG)
         win.geometry("%dx%d" % (px(560), px(640)))
         win.transient(self)
+        self.after(40, self._apply_lang)
         bar = tk.Frame(win, bg=BAR_BG)
         bar.pack(side="bottom", fill="x", padx=px(12), pady=px(8))
 
@@ -10631,6 +10755,7 @@ def run(img, **params):
         win.title("关于 %s" % APP_NAME)
         win.configure(bg=BAR_BG)
         win.transient(self)
+        self.after(40, self._apply_lang)
         win.resizable(False, False)
         self.about_win = win
         body = tk.Frame(win, bg=BAR_BG)
@@ -10700,6 +10825,7 @@ def run(img, **params):
         win.configure(bg=BAR_BG)
         win.geometry("%dx%d" % (px(460), px(560)))
         win.transient(self)
+        self.after(40, self._apply_lang)
         txt = tk.Text(win, bg=DEEP_BG, fg=FG, bd=0, highlightthickness=0,
                       wrap="word", font=self.mono_font, padx=px(18),
                       pady=px(16))

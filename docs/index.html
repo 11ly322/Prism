@@ -1,11 +1,25 @@
 ﻿<!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-ver="9.0.0">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Prism — 简约图片查看器</title>
+<meta name="description-x" content="i18n">
 <meta name="description" content="Prism 是一款极简的图片查看器，支持 JPEG、PNG、WebP、TIFF 与尼康 NEF，内置曲线、HSL、局部滤镜与插件系统。Windows 10/11 64 位，无需安装运行环境。">
 <meta name="theme-color" content="#0b0c0e">
+<link rel="canonical" href="https://11ly322.github.io/Prism/">
+<link rel="alternate" hreflang="zh-Hans" href="https://11ly322.github.io/Prism/?lang=zh">
+<link rel="alternate" hreflang="en" href="https://11ly322.github.io/Prism/?lang=en">
+<link rel="alternate" hreflang="ja" href="https://11ly322.github.io/Prism/?lang=ja">
+<meta name="color-scheme" content="dark">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://11ly322.github.io/Prism/">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:description" content="为看图而生的简约图片查看器：打开快、切图快、调色准，支持 NEF，内置曲线/HSL/局部滤镜与插件。">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Prism — 简约图片查看器">
+<meta name="twitter:description" content="为看图而生的简约图片查看器，4000 万像素首帧不到一秒。">
+
 <link rel="icon" href="Prism.ico" sizes="any">
 <link rel="shortcut icon" href="Prism.ico">
 <link rel="apple-touch-icon" href="Prism.png">
@@ -87,15 +101,47 @@
   .ui img{display:block;width:100%;height:auto}
   .ui figcaption{padding:11px 13px;font-size:12.5px;color:var(--dim);border-top:1px solid var(--line)}
   .ui figcaption b{color:var(--fg);font-weight:600;margin-right:6px}
+  /* ---------- 回到顶部 / 复制 ---------- */
+  .totop{position:fixed;right:22px;bottom:22px;z-index:60;width:42px;height:42px;border-radius:50%;
+    background:var(--accent);color:#fff;border:0;cursor:pointer;font-size:16px;display:none;
+    box-shadow:0 6px 18px rgba(0,0,0,.35)}
+  .totop.show{display:block}
+  .totop:hover{background:#558cff}
+  .copybtn{background:#15171b;border:1px solid var(--line);color:var(--dim);font:inherit;
+    font-size:12px;padding:3px 9px;border-radius:6px;cursor:pointer;margin-left:8px}
+  .copybtn:hover{color:var(--fg);border-color:#3a3f48}
+  /* ---------- 无障碍 ---------- */
+  .skip{position:absolute;left:-9999px;top:0;background:var(--accent);color:#fff;
+    padding:10px 16px;border-radius:0 0 8px 0;z-index:99;text-decoration:none}
+  .skip:focus{left:0}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto}
+    *{transition:none!important;animation:none!important}
+  }
+  @media print{
+    .top,.langs,.support,.ui,#demo,.blk>summary::after{display:none}
+    body{background:#fff;color:#000}
+    .blk{border:0}
+    a{color:#000}
+  }
+  nav.menu> .mi> a{white-space:nowrap}
+  .topin{gap:16px}
+  /* ---------- 语言切换 ---------- */
+  .langs{display:flex;gap:2px;margin-left:12px;border:1px solid var(--line);border-radius:20px;padding:2px}
+  .langs button{background:transparent;border:0;color:var(--dim);font:inherit;font-size:12.5px;
+    padding:3px 8px;border-radius:16px;cursor:pointer;white-space:nowrap}
+  .langs button:hover{color:var(--fg)}
+  .langs button.on{background:var(--accent);color:#fff}
   /* ---------- 大板块（原生 details 折叠） ---------- */
   .blk{border-top:1px solid var(--line)}
   .blk>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:12px;
     padding:26px 0;font-size:19px;font-weight:600;letter-spacing:.2px;color:var(--fg)}
   .blk>summary::-webkit-details-marker{display:none}
   .blk>summary::before{content:"";width:3px;height:18px;border-radius:2px;background:var(--accent)}
-  .blk>summary::after{content:"展开";margin-left:auto;font-size:12px;font-weight:400;
+  .blk>summary::after{content:var(--lbl-open,"展开");margin-left:auto;font-size:12px;font-weight:400;
     color:var(--dim);border:1px solid var(--line);border-radius:20px;padding:2px 10px}
-  .blk[open]>summary::after{content:"收起"}
+  .blk[open]>summary::after{content:var(--lbl-close,"收起")}
   .blk[open]>summary{padding-bottom:8px}
   .blk>summary:hover::after{color:var(--fg)}
   .blk>section:first-of-type{border-top:0}
@@ -183,11 +229,22 @@
   section.open .fold-head{color:var(--dim)}
   .fold-body>h3:first-child{margin-top:0}
 </style>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareApplication",
+ "name":"Prism","applicationCategory":"MultimediaApplication",
+ "operatingSystem":"Windows 10, Windows 11",
+ "softwareVersion":"9.0.0",
+ "offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"},
+ "url":"https://11ly322.github.io/Prism/",
+ "downloadUrl":"https://github.com/11ly322/Prism/releases",
+ "description":"极简图片查看器，支持 NEF、曲线、HSL、局部滤镜与插件。"}
+</script>
 </head>
 <body>
+<a class="skip" href="#ui">跳到主要内容</a>
 <div class="top"><div class="topin">
-  <a class="brand" href="./"><img src="Prism.png" alt=""><b>Prism</b><i>8.6.2</i></a>
-  <nav class="menu">
+  <a class="brand" href="./"><img src="Prism.png" alt=""><b>Prism</b><i>9.0.0</i></a>
+  <nav class="menu" aria-label="主导航">
     <div class="mi"><a href="#features">产品</a>
       <div class="sub">
         <span class="gh">了解</span>
@@ -220,17 +277,22 @@
     <div class="mi"><a href="#download">下载</a>
       <div class="sub">
         <span class="gh">Windows</span>
-        <a href="https://github.com/11ly322/Prism/releases/download/v8.6.2/Prism-Setup-8.6.2.exe" download><span style="display:inline-block;margin-left:6px;padding:1px 6px;border-radius:6px;font-size:11px;background:#2f7d32;color:#fff">完整支持</span>完整版 <i>39.9 MB</i></a>
-        <a href="https://github.com/11ly322/Prism/releases/download/v8.6.2/Prism-Viewer-Setup-8.6.2.exe" download>看图版（安装包） <i>39.9 MB</i></a>
+        <a href="https://github.com/11ly322/Prism/releases/download/v9.0.0/Prism-Setup-9.0.0.exe" download><span style="display:inline-block;margin-left:6px;padding:1px 6px;border-radius:6px;font-size:11px;background:#2f7d32;color:#fff">完整支持</span>完整版 <i>39.9 MB</i></a>
+        <a href="https://github.com/11ly322/Prism/releases/download/v9.0.0/Prism-Viewer-Setup-9.0.0.exe" download>看图版（安装包） <i>39.9 MB</i></a>
         <span class="gh">其它平台</span>
-        <a href="https://github.com/11ly322/Prism/releases/download/v8.6.2/Prism-macOS-8.6.2.zip" download><span style="display:inline-block;margin-left:6px;padding:1px 6px;border-radius:6px;font-size:11px;background:#8a6d1f;color:#fff">源码预览</span>macOS <i>源码运行</i></a>
-        <a href="https://github.com/11ly322/Prism/releases/download/v8.6.2/Prism-Linux-8.6.2.zip" download><span style="display:inline-block;margin-left:6px;padding:1px 6px;border-radius:6px;font-size:11px;background:#8a6d1f;color:#fff">源码预览</span>Linux <i>源码运行</i></a>
+        <a href="https://github.com/11ly322/Prism/releases/download/v9.0.0/Prism-macOS-9.0.0.zip" download><span style="display:inline-block;margin-left:6px;padding:1px 6px;border-radius:6px;font-size:11px;background:#8a6d1f;color:#fff">源码预览</span>macOS <i>源码运行</i></a>
+        <a href="https://github.com/11ly322/Prism/releases/download/v9.0.0/Prism-Linux-9.0.0.zip" download><span style="display:inline-block;margin-left:6px;padding:1px 6px;border-radius:6px;font-size:11px;background:#8a6d1f;color:#fff">源码预览</span>Linux <i>源码运行</i></a>
         <span class="sp"></span>
         <a href="#docs">说明文档</a>
         <a href="#verify">证书与校验</a>
       </div>
     </div>
   </nav>
+  <div class="langs" role="group" aria-label="语言">
+    <button data-lang-btn="zh" onclick="__prismSetLang('zh')">中文</button>
+    <button data-lang-btn="en" onclick="__prismSetLang('en')">EN</button>
+    <button data-lang-btn="ja" onclick="__prismSetLang('ja')">日本語</button>
+  </div>
 </div></div>
 
 <div class="wrap">
@@ -240,22 +302,22 @@
     <p class="lead">打开快、切图快、调色准。支持尼康 NEF 与常见格式，内置曲线、HSL 与局部滤镜，还可以用插件扩展。</p>
     <div class="cta">
       <div class="spl">
-        <a class="btn" href="https://github.com/11ly322/Prism/releases/download/v8.6.2/Prism-Setup-8.6.2.exe" download>下载完整版</a>
+        <a class="btn" href="https://github.com/11ly322/Prism/releases/download/v9.0.0/Prism-Setup-9.0.0.exe" download>下载完整版</a>
         <button class="caret" aria-label="更多版本">▾</button>
         <div class="opts">
-          <a href="https://github.com/11ly322/Prism/releases/download/v8.6.2/Prism-Setup-8.6.2.exe" download><i>40.0 MB</i><b>Windows 完整版</b><span>安装包 · 含修图与插件</span></a>
-          <a href="https://github.com/11ly322/Prism/releases/download/v8.6.2/Prism-Viewer-Setup-8.6.2.exe" download><i>39.9 MB</i><b>Windows 看图版</b><span>安装包 · 纯浏览，与完整版同样装法</span></a>
-          <a href="https://github.com/11ly322/Prism/releases/download/v8.6.2/Prism-macOS-8.6.2.zip" download><i>149 KB</i><b>macOS</b><span>源码运行 · 需 Python 3</span></a>
-          <a href="https://github.com/11ly322/Prism/releases/download/v8.6.2/Prism-Linux-8.6.2.zip" download><i>149 KB</i><b>Linux</b><span>源码运行 · 带桌面项</span></a>
+          <a href="https://github.com/11ly322/Prism/releases/download/v9.0.0/Prism-Setup-9.0.0.exe" download><i>40.0 MB</i><b>Windows 完整版</b><span>安装包 · 含修图与插件</span></a>
+          <a href="https://github.com/11ly322/Prism/releases/download/v9.0.0/Prism-Viewer-Setup-9.0.0.exe" download><i>39.9 MB</i><b>Windows 看图版</b><span>安装包 · 纯浏览，与完整版同样装法</span></a>
+          <a href="https://github.com/11ly322/Prism/releases/download/v9.0.0/Prism-macOS-9.0.0.zip" download><i>149 KB</i><b>macOS</b><span>源码运行 · 需 Python 3</span></a>
+          <a href="https://github.com/11ly322/Prism/releases/download/v9.0.0/Prism-Linux-9.0.0.zip" download><i>149 KB</i><b>Linux</b><span>源码运行 · 带桌面项</span></a>
         </div>
       </div>
-      <div class="meta">版本 8.6.2<br>40 MB · Windows 10/11 64 位</div>
+      <div class="meta">版本 9.0.0<br>40 MB · Windows 10/11 64 位</div>
     </div>
     <p class="plats"><b>全部下载</b>
-      <a href="https://github.com/11ly322/Prism/releases/download/v8.6.2/Prism-Setup-8.6.2.exe" download>Windows 完整版</a><em>39.8 MB</em>
-      <a href="https://github.com/11ly322/Prism/releases/download/v8.6.2/Prism-Viewer-Setup-8.6.2.exe" download>Windows 看图版</a><em>39.9 MB</em>
-      <a href="https://github.com/11ly322/Prism/releases/download/v8.6.2/Prism-macOS-8.6.2.zip" download>macOS</a><em>104 KB</em>
-      <a href="https://github.com/11ly322/Prism/releases/download/v8.6.2/Prism-Linux-8.6.2.zip" download>Linux</a><em>105 KB</em>
+      <a href="https://github.com/11ly322/Prism/releases/download/v9.0.0/Prism-Setup-9.0.0.exe" download>Windows 完整版</a><em>39.8 MB</em>
+      <a href="https://github.com/11ly322/Prism/releases/download/v9.0.0/Prism-Viewer-Setup-9.0.0.exe" download>Windows 看图版</a><em>39.9 MB</em>
+      <a href="https://github.com/11ly322/Prism/releases/download/v9.0.0/Prism-macOS-9.0.0.zip" download>macOS</a><em>104 KB</em>
+      <a href="https://github.com/11ly322/Prism/releases/download/v9.0.0/Prism-Linux-9.0.0.zip" download>Linux</a><em>105 KB</em>
     </p>
   </header>
 
@@ -275,19 +337,19 @@
     <h2>界面实拍</h2>
     <div class="ui">
       <figure>
-        <img src="shots/ui-viewer.webp" alt="纯看图模式" loading="lazy">
+        <img src="shots/ui-viewer.webp" alt="纯看图模式" decoding="async" width="1100" height="642" fetchpriority="high">
         <figcaption><b>纯看图</b>收起面板即是看图器：整幅照片居中，状态栏显示分辨率与体积。</figcaption>
       </figure>
       <figure>
-        <img src="shots/ui-main.webp" alt="主界面" loading="lazy">
+        <img src="shots/ui-main.webp" alt="主界面" loading="lazy" decoding="async" width="1100" height="642">
         <figcaption><b>修图面板</b>直方图、四组快捷入口、分区滑块，全部同一条竖线对齐。</figcaption>
       </figure>
       <figure>
-        <img src="shots/ui-plugins.webp" alt="插件窗口" loading="lazy">
+        <img src="shots/ui-plugins.webp" alt="插件窗口" loading="lazy" decoding="async" width="1100" height="642">
         <figcaption><b>插件</b>两列卡片，鼠标停留显示说明与「联网 / 写文件」能力。</figcaption>
       </figure>
       <figure>
-        <img src="shots/ui-settings.webp" alt="设置窗口" loading="lazy">
+        <img src="shots/ui-settings.webp" alt="设置窗口" loading="lazy" decoding="async" width="1100" height="642">
         <figcaption><b>设置</b>主题即时切换，窗口使用系统原生圆角。</figcaption>
       </figure>
     </div>
@@ -310,10 +372,10 @@
   <section id="gallery">
     <h2>效果展示</h2>
     <div class="gal">
-      <div class="card"><img src="shots/shot-original.webp" alt=""><div><b>原始</b><span>未做任何调整</span></div></div>
-      <div class="card"><img src="shots/shot-graded.webp" alt=""><div><b>调色后</b><span>曝光 / 对比 / 饱和度 / 暗角</span></div></div>
-      <div class="card"><img src="shots/shot-mono.webp" alt=""><div><b>黑白插件</b><span>示例插件，一个 .py 文件</span></div></div>
-      <div class="card"><img src="shots/shot-frame.webp" alt=""><div><b>白边框插件</b><span>示例插件，四周加白边</span></div></div>
+      <div class="card"><img src="shots/shot-original.webp" alt="" loading="lazy" decoding="async" width="1000" height="625"><div><b>原始</b><span>未做任何调整</span></div></div>
+      <div class="card"><img src="shots/shot-graded.webp" alt="" loading="lazy" decoding="async" width="1000" height="625"><div><b>调色后</b><span>曝光 / 对比 / 饱和度 / 暗角</span></div></div>
+      <div class="card"><img src="shots/shot-mono.webp" alt="" loading="lazy" decoding="async" width="1000" height="625"><div><b>黑白插件</b><span>示例插件，一个 .py 文件</span></div></div>
+      <div class="card"><img src="shots/shot-frame.webp" alt="" loading="lazy" decoding="async" width="1000" height="625"><div><b>白边框插件</b><span>示例插件，四周加白边</span></div></div>
     </div>
   </section>
 
@@ -387,7 +449,7 @@
     <h3>安装</h3>
     <table>
       <tr><td class="grp" colspan="2">Windows</td></tr>
-      <tr><td>1</td><td>下载 <code>Prism-Setup-8.6.2.exe</code> 并双击</td></tr>
+      <tr><td>1</td><td>下载 <code>Prism-Setup-9.0.0.exe</code> 并双击</td></tr>
       <tr><td>2</td><td>选择安装方式（本机安装 / 就地解压）与位置</td></tr>
       <tr><td>3</td><td>可选建开始菜单与桌面快捷方式，完成后直接启动</td></tr>
       <tr><td class="grp" colspan="2">macOS</td></tr>
@@ -454,16 +516,16 @@
     <h2>下载与安装</h2>
     <table>
       <tr><td class="grp" colspan="2">Windows</td></tr>
-      <tr><td><a href="https://github.com/11ly322/Prism/releases/download/v8.6.2/Prism-Setup-8.6.2.exe" download>完整版安装包</a></td>
+      <tr><td><a href="https://github.com/11ly322/Prism/releases/download/v9.0.0/Prism-Setup-9.0.0.exe" download>完整版安装包</a></td>
           <td>39.8 MB · 含修图面板与插件</td></tr>
-      <tr><td><a href="https://github.com/11ly322/Prism/releases/download/v8.6.2/Prism-Viewer-Setup-8.6.2.exe" download>纯看图版（安装包）</a></td>
+      <tr><td><a href="https://github.com/11ly322/Prism/releases/download/v9.0.0/Prism-Viewer-Setup-9.0.0.exe" download>纯看图版（安装包）</a></td>
           <td>39.9 MB · 与完整版同样装法，含开始菜单与桌面快捷方式</td></tr>
-      <tr><td><a href="https://github.com/11ly322/Prism/releases/download/v8.6.2/Prism-Viewer-8.6.2.zip" download>纯看图版（便携）</a></td>
+      <tr><td><a href="https://github.com/11ly322/Prism/releases/download/v9.0.0/Prism-Viewer-9.0.0.zip" download>纯看图版（便携）</a></td>
           <td>29.9 MB · 解压即用，不写注册表</td></tr>
       <tr><td class="grp" colspan="2">macOS / Linux</td></tr>
-      <tr><td><a href="https://github.com/11ly322/Prism/releases/download/v8.6.2/Prism-macOS-8.6.2.zip" download>macOS 运行包</a></td>
+      <tr><td><a href="https://github.com/11ly322/Prism/releases/download/v9.0.0/Prism-macOS-9.0.0.zip" download>macOS 运行包</a></td>
           <td>104 KB · 源码运行，需 Python 3 + Pillow</td></tr>
-      <tr><td><a href="https://github.com/11ly322/Prism/releases/download/v8.6.2/Prism-Linux-8.6.2.zip" download>Linux 运行包</a></td>
+      <tr><td><a href="https://github.com/11ly322/Prism/releases/download/v9.0.0/Prism-Linux-9.0.0.zip" download>Linux 运行包</a></td>
           <td>105 KB · 带 .desktop，需 python3-tk</td></tr>
       <tr><td class="grp" colspan="2">系统要求（Windows 版）</td></tr>
       <tr><td>操作系统</td><td>Windows 10 / 11（64 位）</td></tr>
@@ -480,11 +542,11 @@
       <p class="cap" style="margin:0">2. 全屏为兼容模式（无边框最大化 + Esc 退出），不是系统级全屏。</p>
       <p class="cap" style="margin:0">3. macOS 与 Linux 是源码预览包，没有编译好的 .app / AppImage。</p>
     </div>
-    <p class="cap" style="margin-top:10px"><strong>便携版</strong>：<a href="https://github.com/11ly322/Prism/releases/download/v8.6.2/Prism-Portable-8.6.2.zip">Prism-Portable-8.6.2.zip</a>（完整版解压即用，不写注册表、不装开始菜单）</p>
+    <p class="cap" style="margin-top:10px"><strong>便携版</strong>：<a href="https://github.com/11ly322/Prism/releases/download/v9.0.0/Prism-Portable-9.0.0.zip">Prism-Portable-9.0.0.zip</a>（完整版解压即用，不写注册表、不装开始菜单）</p>
     <h3>如何安全绕过 SmartScreen</h3>
     <p class="cap" style="margin-top:0">安装包未做代码签名，所以 Windows 会提示「已保护你的电脑」。先校验文件，再决定是否运行：</p>
     <ol class="cap" style="margin:0 0 10px 18px;padding:0">
-      <li>在 PowerShell 里校验 SHA-256：<br><code>Get-FileHash .\Prism-Setup-8.6.2.exe -Algorithm SHA256</code><br>与页面上的 SHA-256 逐位比对。</li>
+      <li>在 PowerShell 里校验 SHA-256：<br><code>Get-FileHash .\Prism-Setup-9.0.0.exe -Algorithm SHA256</code><br>与页面上的 SHA-256 逐位比对。</li>
       <li>一致 → 双击安装包，点弹窗里的「更多信息」。</li>
       <li>确认发布者是「未知发布者」且哈希已核对无误后，点「仍要运行」。</li>
       <li>校验不一致 → 立刻删除，重新下载。</li>
@@ -500,8 +562,8 @@
       <tr><td>签发机构</td><td>Let&#39;s Encrypt（由 GitHub Pages 自动签发与续期）</td></tr>
       <tr><td>有效期至</td><td>2026-12-30</td></tr>
       <tr><td class="grp" colspan="2">安装包校验</td></tr>
-      <tr><td>文件</td><td>Prism-Setup-8.6.2.exe</td></tr>
-      <tr><td>SHA-256</td><td><code>6DAE74ACA6B0E11933234EEF80832BF0651F91C2776D6B5651BB97A1BD14AA07</code></td></tr>
+      <tr><td>文件</td><td>Prism-Setup-9.0.0.exe</td></tr>
+      <tr><td>SHA-256</td><td><code>41334D5698AE0AF635164016617F2404282532F1534319293D1E70C35FB79397</code></td></tr>
     </table>
     <p class="cap">下载后可用 <code>certutil -hashfile 文件名 SHA256</code>（Windows）或 <code>shasum -a 256 文件名</code>（macOS/Linux）比对。</p>
   </section>
@@ -509,7 +571,7 @@
   </details>
 
   <footer>
-    <div>Prism 8.6.2 · 简约图片查看器 · <a href="https://github.com/11ly322/Prism/blob/main/CHANGELOG.md" style="color:inherit;text-decoration:underline">完整更新日志</a> · <a href="https://afdian.com/a/pis01" target="_blank" rel="noopener">爱发电</a></div>
+    <div>Prism 9.0.0 · 简约图片查看器 · <a href="https://github.com/11ly322/Prism/blob/main/CHANGELOG.md" style="color:inherit;text-decoration:underline">完整更新日志</a> · <a href="https://afdian.com/a/pis01" target="_blank" rel="noopener">爱发电</a></div>
     <div><a href="#docs">说明文档</a></div>
   </footer>
 </div>
@@ -564,6 +626,118 @@
     e.preventDefault();
   });
   box.tabIndex = 0;
+})();
+</script>
+<script src="i18n.js"></script>
+<script>
+(function(){
+  var D = window.PRISM_I18N || {};
+  var VER = document.documentElement.getAttribute('data-ver') || '';
+  var KEY = 'prism.lang';
+  function norm(t){ return t.replace(/\d+\.\d+\.\d+/g, '{v}'); }
+  function tr(text, lang){
+    var d = D[lang] || {}, m = d[text];
+    if (m === undefined) { m = d[norm(text)]; }
+    if (m === undefined) { return null; }
+    return m.replace(/\{v\}/g, VER);
+  }
+  var origText = new WeakMap(), origAttr = new WeakMap();
+  function walk(lang){
+    var tw = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null), n;
+    while ((n = tw.nextNode())) {
+      var p = n.parentNode;
+      if (!p || /^(SCRIPT|STYLE|NOSCRIPT|TEXTAREA)$/.test(p.nodeName)) { continue; }
+      if (!origText.has(n)) { origText.set(n, n.nodeValue); }
+      var base = origText.get(n), t = base.trim();
+      if (!t) { continue; }
+      var out = base;
+      if (lang !== 'zh') { var r = tr(t, lang); if (r !== null) { out = base.replace(t, r); } }
+      if (n.nodeValue !== out) { n.nodeValue = out; }
+    }
+    var els = document.querySelectorAll('[placeholder],[title],[alt],[aria-label]');
+    for (var i = 0; i < els.length; i++) {
+      var attrs = ['placeholder', 'title', 'alt', 'aria-label'];
+      var store = origAttr.get(els[i]);
+      if (!store) { store = {}; origAttr.set(els[i], store); }
+      for (var a = 0; a < attrs.length; a++) {
+        var v = els[i].getAttribute(attrs[a]);
+        if (v === null) { continue; }
+        if (store[attrs[a]] === undefined) { store[attrs[a]] = v; }
+        var base2 = store[attrs[a]], out2 = base2;
+        if (lang !== 'zh') { var r2 = tr(base2.trim(), lang); if (r2 !== null) { out2 = r2; } }
+        if (v !== out2) { els[i].setAttribute(attrs[a], out2); }
+      }
+    }
+  }
+  var TEXT = {
+    zh: { open: '展开', close: '收起',
+          title: 'Prism — 简约图片查看器',
+          desc: 'Prism 是一款极简的图片查看器，支持 JPEG、PNG、WebP、TIFF 与尼康 NEF，内置曲线、HSL、局部滤镜与插件系统。' },
+    en: { open: 'Expand', close: 'Collapse',
+          title: 'Prism — a minimalist image viewer',
+          desc: 'Prism is a minimalist image viewer with JPEG, PNG, WebP, TIFF and Nikon NEF support, built-in curves, HSL, local filters and a plugin system.' },
+    ja: { open: '開く', close: '閉じる',
+          title: 'Prism — ミニマルな画像ビューア',
+          desc: 'Prism は JPEG・PNG・WebP・TIFF・ニコン NEF に対応したミニマルな画像ビューア。カーブ、HSL、ローカルフィルタ、プラグインを内蔵。' }
+  };
+  window.__prismSetLang = function(lang){
+    document.documentElement.lang = lang === 'zh' ? 'zh-CN' : lang;
+    walk(lang);
+    var t = TEXT[lang] || TEXT.zh;
+    document.documentElement.style.setProperty('--lbl-open', '"' + t.open + '"');
+    document.documentElement.style.setProperty('--lbl-close', '"' + t.close + '"');
+    document.title = t.title;
+    var md = document.querySelector('meta[name="description"]');
+    if (md) { md.setAttribute('content', t.desc); }
+    var btns = document.querySelectorAll('[data-lang-btn]');
+    for (var i = 0; i < btns.length; i++) {
+      var on = btns[i].getAttribute('data-lang-btn') === lang;
+      btns[i].classList.toggle('on', on);
+    }
+    try { localStorage.setItem(KEY, lang); } catch (e) {}
+  };
+  var q = (location.search.match(/[?&]lang=(zh|en|ja)/) || [])[1];
+  var saved = null;
+  try { saved = localStorage.getItem(KEY); } catch (e) {}
+  var auto = 'zh';
+  try {
+    var nav = (navigator.language || 'zh').toLowerCase();
+    if (nav.indexOf('ja') === 0) { auto = 'ja'; }
+    else if (nav.indexOf('zh') !== 0) { auto = 'en'; }
+  } catch (e) {}
+  window.__prismSetLang(q || saved || auto);
+})();
+</script>
+<button class="totop" id="totop" aria-label="回到顶部" title="回到顶部">↑</button>
+<script>
+/* 回到顶部 + 导航高亮 + 首次访问按浏览器语言选择 */
+(function(){
+  var btn = document.getElementById('totop');
+  if (btn) {
+    window.addEventListener('scroll', function(){
+      btn.classList.toggle('show', window.scrollY > 700);
+    }, {passive: true});
+    btn.addEventListener('click', function(){ window.scrollTo({top:0, behavior:'smooth'}); });
+  }
+  var links = document.querySelectorAll('nav.menu a[href^="#"]');
+  if (!links.length || !('IntersectionObserver' in window)) { return; }
+  var map = {};
+  for (var i = 0; i < links.length; i++) {
+    var id = links[i].getAttribute('href').slice(1);
+    var sec = document.getElementById(id);
+    if (sec) { map[id] = links[i]; }
+  }
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      var a = map[e.target.id];
+      if (!a) { return; }
+      if (e.isIntersecting) {
+        for (var k in map) { map[k].style.color = ''; }
+        a.style.color = 'var(--fg)';
+      }
+    });
+  }, {rootMargin: '-45% 0px -50% 0px'});
+  for (var id in map) { io.observe(document.getElementById(id)); }
 })();
 </script>
 </body>

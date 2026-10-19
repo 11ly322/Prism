@@ -1,2 +1,3 @@
 User-agent: *
 Allow: /
+Sitemap: https://11ly322.github.io/Prism/sitemap.xml

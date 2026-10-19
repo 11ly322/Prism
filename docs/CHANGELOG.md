@@ -4,6 +4,42 @@
 > 已一并改为 Prism，功能与时间线不变。代码里的 QPEApp / _QpeSlider 等内部
 > 标识符与旧配置迁移路径保持原名，改动会破坏兼容。
 
+## v9.0.0  （网页三语切换 + 20 项优化）
+
+### 三语切换（中文 / English / 日本語）
+
+- 顶栏语言切换器，252 条词条，覆盖导航、首屏、支持卡片、实机截图、
+  调色演示、效果展示、功能与美颜、插件、安装步骤、快捷键、
+  下载校验、SmartScreen、FAQ 与页脚。
+- 词条以**中文原文为键**，运行时遍历文本节点与属性替换，
+  未命中的条目自动回退中文 —— 不会出现空白或报错。
+- 版本号通过 `{v}` 模板占位，随页面 `data-ver` 自动替换，不需要改词条。
+- 选择写入 `localStorage`；首次访问按浏览器语言自动判断（ja/其他->en/中文）。
+- 切换语言同时更新 `<html lang>`、`<title>`、`meta description` 与折叠胶囊文案。
+
+### 20 项网页优化
+
+1. `canonical` 链接
+2. `og:type` / `og:url` / `og:locale` / `og:description`
+3. `twitter:card` / `twitter:title` / `twitter:description`
+4. `hreflang`（zh / en / ja 三种语言替代链接）
+5. `color-scheme: dark`
+6. JSON-LD `SoftwareApplication` 结构化数据
+7. 无障碍跳转链接「跳到主要内容」
+8. `:focus-visible` 焦点描边
+9. `prefers-reduced-motion` 关闭动效
+10. 打印样式（隐藏导航/支持卡片/演示，转白底黑字）
+11. 图片 `loading="lazy"` + `decoding="async"`（8 处）
+12. 首屏截图 `fetchpriority="high"`
+13. 全部图片补 `width/height`，消除加载抖动
+14. 回到顶部浮动按钮（滚动 700px 后出现）
+15. 复制 SHA-256 按钮（一键校验）
+16. 导航滚动高亮（IntersectionObserver）
+17. 浏览器语言自动识别
+18. `robots.txt`
+19. `sitemap.xml`（含三语入口）
+20. 导航项 `nowrap` + 顶栏间距收敛（修多语言下的换行）
+
 ## v8.6.2  （拖动对比 + 版权声明 + 效果图自动重出）
 
 - **效果对比改成拖动**：原来是用 CSS 动画自动擦除，只能看不能比。

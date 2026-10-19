@@ -15,6 +15,7 @@ import sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SETS = [
     ("plugins", ["README.md", "README.en.md", "README.ja.md"]),
+    ("plugins/community", ["README.md", "README.en.md", "README.ja.md"]),
     ("docs", ["plugin-api.md", "plugin-api.en.md", "plugin-api.ja.md"]),
 ]
 FAIL = []

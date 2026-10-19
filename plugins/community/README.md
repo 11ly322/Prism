@@ -1,3 +1,5 @@
+**中文** · [English](README.en.md) · [日本語](README.ja.md)
+
 # 社区 / 官方插件目录
 
 Prism 自带 12 个插件（索引见 `../README.md`）。外部插件有两种收录方式：

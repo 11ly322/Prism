@@ -44,7 +44,7 @@ IS_WIN = sys.platform.startswith("win")
 K = "Command" if IS_MAC else "Control"
 
 APP_NAME = "Prism"
-APP_VERSION = "8.4.5"
+APP_VERSION = "8.5.0"
 APP_BUILD = "2025-12.9"
 # ---------------------------------------------------------------- 运行模式
 # 同一份源码编出两个版本：
@@ -225,6 +225,25 @@ HEAD_BG = "#242424"
 KNOB_BG = "#d0d0d0"
 RULE_BG = "#2e2e2e"
 ON_BG = "#101010"
+
+# ---------------------------------------------------------------- 设计令牌
+# 间距统一走 4 的倍数：以前 px(9)/px(11)/px(17) 这类奇数散落各处，收进这里。
+# 用法：pady=(SPACE_SM, SPACE_LG)
+SPACE_XXS = 1
+SPACE_XS = 2
+SPACE_SM = 4
+SPACE_MD = 6
+SPACE_LG = 8
+SPACE_XL = 12
+SPACE_2XL = 16
+SPACE_3XL = 24
+
+# 字号阶梯：11 / 12 / 13 / 15 / 18。以前只有 11 和 12，副标题和正文挤在同一档。
+FONT_XS = 11
+FONT_SM = 12
+FONT_MD = 13
+FONT_LG = 15
+FONT_XL = 18
 
 def _apply_palette(name):
     """把主题写进模块级颜色常量；之后新建的控件就用新色。"""
@@ -2449,10 +2468,12 @@ class QPEApp(_BASE):
 
         self.load_settings()          # 必须在建界面之前：水印输入框要预填
 
-        self.ui_font = self._pick_font(px(12))
-        self.ui_font_b = self._pick_font(px(12), True)
-        self.ui_font_s = self._pick_font(px(11))
-        self.mono_font = self._pick_font(px(12), mono=True)
+        self.ui_font = self._pick_font(px(FONT_SM))
+        self.ui_font_b = self._pick_font(px(FONT_SM), True)
+        self.ui_font_s = self._pick_font(px(FONT_XS))
+        self.ui_font_m = self._pick_font(px(FONT_MD))
+        self.ui_font_l = self._pick_font(px(FONT_LG))
+        self.mono_font = self._pick_font(px(FONT_SM), mono=True)
         self._mfont = tkfont.Font(font=self.ui_font)
 
         self._build_ui()
@@ -5458,8 +5479,10 @@ class QPEApp(_BASE):
                       activeforeground=FG_HI, relief="flat", bd=0,
                       highlightthickness=0, padx=px(10), pady=px(4),
                       cursor="hand2", takefocus=0)
+        if side == "grid":
+            return b
         if side == "left":
-            b.pack(side="left", padx=(0, px(6)))
+            b.pack(side="left", padx=(0, px(SPACE_MD)))
         else:
             b.pack(side=side, fill="x" if wide else None,
                    expand=1 if wide else 0)
@@ -5478,11 +5501,12 @@ class QPEApp(_BASE):
             sw = tk.Frame(row, width=px(9), height=px(9))
             sw.configure(bg=swatch_fn(value) if swatch_fn else swatch)
             sw.pack(side="left", padx=(0, px(5)))
-        lab = tk.Label(row, text=label, font=self.ui_font, bg=BAR_BG, fg=FG_DIM,
-                       anchor="w", cursor="hand2")
+        lab = tk.Label(row, text=label, font=self.ui_font_s, bg=BAR_BG,
+                       fg=FG_DIM, anchor="w", cursor="hand2")
         lab.pack(side="left")
-        val = tk.Label(row, text=fmt % value, font=self.ui_font, bg=BAR_BG,
-                       fg=FG, anchor="e", width=5, cursor="hand2")
+        # 数值固定 6 个字符宽、等宽字体：右边缘才能对齐成一列
+        val = tk.Label(row, text=fmt % value, font=self.ui_font_s, bg=BAR_BG,
+                       fg=FG, anchor="e", width=6, cursor="hand2")
         val.pack(side="right")
         sc = _QpeSlider(parent, from_=lo, to=hi, resolution=step,
                         height=px(20))
@@ -5569,7 +5593,7 @@ class QPEApp(_BASE):
                         font=self.ui_font_s, bg=BAR_BG,
                         fg=FG_DIM, width=1, cursor="hand2")
         mark.pack(side="left")
-        title_lbl = tk.Label(head, text=title, font=self.ui_font_s, bg=BAR_BG,
+        title_lbl = tk.Label(head, text=title, font=self.ui_font_m, bg=BAR_BG,
                              fg=FG if opened else FG_DIM, anchor="w",
                              cursor="hand2")
         title_lbl.pack(side="left", padx=(px(4), px(8)))
@@ -6075,12 +6099,20 @@ class QPEApp(_BASE):
         self.hist_info.pack(fill="x", pady=(px(1), 0))
 
         # 常驻入口：不依赖滚动位置，任何窗口高度都点得到
+        # 2x2 网格：四个按钮塞一行会被面板宽度裁掉（最后一个是半个字）
         quick = tk.Frame(inner, bg=BAR_BG)
-        quick.pack(fill="x", pady=(px(4), px(2)))
-        self._panel_btn(quick, "人像美化", lambda: self._focus_film("skin"))
-        self._panel_btn(quick, "胶片", lambda: self._focus_film("film"))
-        self._panel_btn(quick, "畸变", lambda: self._focus_film("lens"))
-        self._panel_btn(quick, "对比(B)", self.toggle_beauty_peek)
+        quick.pack(fill="x", pady=(px(SPACE_SM), px(SPACE_XS)))
+        quick.columnconfigure(0, weight=1, uniform="qb")
+        quick.columnconfigure(1, weight=1, uniform="qb")
+        for _i, (_txt, _cmd) in enumerate((
+                ("人像美化", lambda: self._focus_film("skin")),
+                ("胶片", lambda: self._focus_film("film")),
+                ("畸变", lambda: self._focus_film("lens")),
+                ("对比(B)", self.toggle_beauty_peek))):
+            _b = self._panel_btn(quick, _txt, _cmd, side="grid")
+            _b.grid(row=_i // 2, column=_i % 2, sticky="ew",
+                    padx=(0 if _i % 2 == 0 else px(SPACE_SM), 0),
+                    pady=(0 if _i < 2 else px(SPACE_SM), 0))
         self.ai_status_lbl = tk.Label(inner, text="", font=self.ui_font_s,
                                       bg=BAR_BG, fg=FG_DIM, anchor="w",
                                       justify="left", wraplength=px(200))
@@ -6107,7 +6139,7 @@ class QPEApp(_BASE):
         ])
 
         row = tk.Frame(inner, bg=BAR_BG)
-        row.pack(fill="x", pady=(px(10), 0))
+        row.pack(fill="x", pady=(px(SPACE_XL), 0))
         self._panel_btn(row, "裁剪", self.toggle_crop)
         # 重置全部 / 复制设置 / 关于 已经收进设置窗口
         row = tk.Frame(inner, bg=BAR_BG)

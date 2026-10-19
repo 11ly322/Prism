@@ -44,7 +44,7 @@ IS_WIN = sys.platform.startswith("win")
 K = "Command" if IS_MAC else "Control"
 
 APP_NAME = "Prism"
-APP_VERSION = "8.5.0"
+APP_VERSION = "8.5.1"
 APP_BUILD = "2025-12.9"
 # ---------------------------------------------------------------- 运行模式
 # 同一份源码编出两个版本：
@@ -4396,6 +4396,7 @@ class QPEApp(_BASE):
                 lbl = getattr(self, "ai_progress_lbl", None)
                 if lbl is not None:
                     lbl.configure(text=text)
+            self._sync_ai_extra(text)
             self.update_idletasks()
         except Exception:
             pass
@@ -4415,6 +4416,7 @@ class QPEApp(_BASE):
                 lbl.configure(text="")
             except Exception:
                 pass
+        self._sync_ai_extra("")
 
     def _apply_adjust(self, img, fast=False, detail=True):
         """完整管线（保存用，同步算完）。"""
@@ -5586,7 +5588,7 @@ class QPEApp(_BASE):
         # 分组标题只用「小箭头 + 小字 + 一条细线」，不画底色块、不加强调条。
         # 这样一列分组靠留白和细线区分层次，而不是靠仿 Lightroom 的重标题栏。
         wrap = tk.Frame(parent, bg=BAR_BG)
-        wrap.pack(fill="x", pady=(px(9), 0))
+        wrap.pack(fill="x", pady=(px(SPACE_LG), 0))
         head = tk.Frame(wrap, bg=BAR_BG, cursor="hand2")
         head.pack(fill="x")
         mark = tk.Label(head, text="▾" if opened else "▸",
@@ -5596,7 +5598,7 @@ class QPEApp(_BASE):
         title_lbl = tk.Label(head, text=title, font=self.ui_font_m, bg=BAR_BG,
                              fg=FG if opened else FG_DIM, anchor="w",
                              cursor="hand2")
-        title_lbl.pack(side="left", padx=(px(4), px(8)))
+        title_lbl.pack(side="left", padx=(px(1), px(SPACE_LG)))
         rule = tk.Frame(head, bg="#2e2e2e", height=max(1, px(1)))
         rule.pack(side="left", fill="x", expand=True, pady=(px(1), 0))
         body = tk.Frame(parent, bg=BAR_BG)
@@ -6117,12 +6119,13 @@ class QPEApp(_BASE):
                                       bg=BAR_BG, fg=FG_DIM, anchor="w",
                                       justify="left", wraplength=px(200))
         self.ai_status_lbl.pack(fill="x", pady=(0, px(1)))
+        # 进度条与进度文字默认**不占位**：之前它们一直 pack 着，
+        # 空的时候也吃掉约 50 逻辑像素，状态行到「基本」之间就留出一大块空白。
         self.ai_bar = tk.Canvas(inner, height=px(5), bg=BAR_BG,
                                 highlightthickness=0, bd=0)
-        self.ai_bar.pack(fill="x", pady=(0, px(1)))
         self.ai_progress_lbl = tk.Label(inner, text="", font=self.ui_font_s,
                                         bg=BAR_BG, fg=ACCENT, anchor="w")
-        self.ai_progress_lbl.pack(fill="x")
+        self._ai_extra_shown = False
         self._ai_job = self.after(120, self._refresh_ai_status)
 
         self._sec_basic(inner)
@@ -6609,6 +6612,22 @@ class QPEApp(_BASE):
                 round(a.get("skin_slim", 0), 0), round(a.get("skin_eyes", 0), 0),
                 round(a.get("skin_lip", 0), 0),
                 bool(getattr(self, "beauty_off", False)))
+
+    def _sync_ai_extra(self, text=""):
+        """有进度就插到状态行下面，没进度就彻底收起来。"""
+        try:
+            want = bool(text)
+            if want and not self._ai_extra_shown:
+                self.ai_bar.pack(fill="x", pady=(px(SPACE_XS), px(SPACE_XXS)),
+                                 after=self.ai_status_lbl)
+                self.ai_progress_lbl.pack(fill="x", after=self.ai_bar)
+                self._ai_extra_shown = True
+            elif not want and self._ai_extra_shown:
+                self.ai_bar.pack_forget()
+                self.ai_progress_lbl.pack_forget()
+                self._ai_extra_shown = False
+        except Exception:
+            pass
 
     def _refresh_ai_status(self):
         """状态行：这张图检测到几张脸、美颜是否生效、主要参数是多少。"""

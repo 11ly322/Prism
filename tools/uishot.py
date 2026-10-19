@@ -107,6 +107,18 @@ def main():
     shots = {}
     shots["main"] = grab(app, app)
 
+    # 纯看图模式（面板收起）也是一张有代表性的实机截图
+    try:
+        app.toggle_panel(False)
+        for _ in range(30):
+            app.update(); time.sleep(0.005)
+        shots["viewer"] = grab(app, app)
+        app.toggle_panel(True)
+        for _ in range(30):
+            app.update(); time.sleep(0.005)
+    except Exception as exc:
+        print("   看图模式截图失败：%s" % exc)
+
     try:
         app.show_plugins()
         for _ in range(40):

@@ -131,6 +131,9 @@ if ((Test-Path (Join-Path $root 'Prism.exe')) -and (Test-Path (Join-Path $root '
     Write-Host '   !! 未找到 onedir 构建，跳过便携版'
 }
 
+Write-Host '== 生成英文/日文静态页 =='
+& $py (Join-Path $root 'tools\make_langpages.py')
+
 Write-Host '== 重新生成网页效果图 =='
 $sample = Join-Path $root 'design\sample.jpg'
 if (Test-Path $sample) {

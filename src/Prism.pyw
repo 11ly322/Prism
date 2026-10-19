@@ -44,7 +44,7 @@ IS_WIN = sys.platform.startswith("win")
 K = "Command" if IS_MAC else "Control"
 
 APP_NAME = "Prism"
-APP_VERSION = "9.2.0"
+APP_VERSION = "9.3.0"
 APP_BUILD = "2025-12.9"
 # ---------------------------------------------------------------- 运行模式
 # 同一份源码编出两个版本：
@@ -257,7 +257,7 @@ LANG_TABLE = {
         "过曝警告": "Clipping warning", "锁定取色": "Lock picker",
         "粘贴设置": "Paste settings", "保存 / 另存为": "Save / Save as",
         "重置全部调整": "Reset all", "复制设置": "Copy settings",
-        "运行": "Run", "重新扫描": "Rescan", "新建插件": "New plugin",
+        "运行": "Run", "禁用": "Disable", "启用": "Enable", "重新扫描": "Rescan", "新建插件": "New plugin",
         "打开插件目录": "Open plugin folder", "重载插件": "Reload",
         "插件说明": "Plugin help",
         # 设置窗口
@@ -273,6 +273,69 @@ LANG_TABLE = {
         "快速预览（按 1:1 自动换全分辨率）": "Fast preview (1:1 loads full resolution)",
         "未打开图片": "No image", "就绪": "Ready",
         "暗": "Sh", "亮": "Hi", "均": "Avg",
+        "径向": "Radial",
+        "渐变": "Linear",
+        "调整": "Adjust",
+        "所有文件": "All files",
+        "灰度": "Grayscale",
+        "色相": "Hue",
+        "眼周": "Eye area",
+        "瘦脸": "Slim face",
+        "删除选中": "Delete selected",
+        "文件名": "File name",
+        "导入预设": "Import presets",
+        "柔和S": "Soft S",
+        "强对比": "Strong",
+        "褪色": "Faded",
+        "提亮": "Brighten",
+        "拉直": "Straighten",
+        "打开文件夹…": "Open folder…",
+        "批量导出…": "Batch export…",
+        "自动白平衡": "Auto white balance",
+        "重置全部": "Reset all",
+        "预设": "Presets",
+        "快照": "Snapshots",
+        "另存为…": "Save as…",
+        "打开图片": "Open image",
+        "打开文件夹": "Open folder",
+        "保存": "Save",
+        "取消": "Cancel",
+        "确定": "OK",
+        "应用": "Apply",
+        "重置": "Reset",
+        "复制": "Copy",
+        "粘贴": "Paste",
+        "删除": "Delete",
+        "新建": "New",
+        "名称": "Name",
+        "作者": "Author",
+        "描述": "Description",
+        "参数": "Parameters",
+        "强度": "Strength",
+        "半径": "Radius",
+        "角度": "Angle",
+        "数量": "Amount",
+        "方向": "Direction",
+        "位置": "Position",
+        "大小": "Size",
+        "颜色": "Color",
+        "宽度": "Width",
+        "高度": "Height",
+        "水平": "Horizontal",
+        "垂直": "Vertical",
+        "左": "Left",
+        "右": "Right",
+        "上": "Top",
+        "下": "Bottom",
+        "原图": "Original",
+        "预览图": "Preview",
+        "导出": "Export",
+        "上一张": "Previous",
+        "下一张": "Next",
+        "幻灯片": "Slideshow",
+        "适应": "Fit",
+        "放大": "Zoom in",
+        "缩小": "Zoom out",
         "关闭": "Close",
         "浏览": "Browse",
         "预览": "Preview",
@@ -328,7 +391,7 @@ LANG_TABLE = {
         "过曝警告": "白飛び警告", "锁定取色": "スポイト固定",
         "粘贴设置": "設定を貼り付け", "保存 / 另存为": "保存 / 別名保存",
         "重置全部调整": "全調整をリセット", "复制设置": "設定をコピー",
-        "运行": "実行", "重新扫描": "再スキャン", "新建插件": "新規プラグイン",
+        "运行": "実行", "禁用": "無効化", "启用": "有効化", "重新扫描": "再スキャン", "新建插件": "新規プラグイン",
         "打开插件目录": "プラグインフォルダ", "重载插件": "再読み込み",
         "插件说明": "プラグインの説明",
         "改动立即生效，下次启动保留": "変更は即時反映・次回も保持",
@@ -342,6 +405,70 @@ LANG_TABLE = {
         "快速预览（按 1:1 自动换全分辨率）": "高速プレビュー（1:1 で全解像度）",
         "未打开图片": "画像なし", "就緒": "準備完了", "就绪": "準備完了",
         "暗": "暗", "亮": "明", "均": "平均",
+        "径向": "円形",
+        "渐变": "グラデーション",
+        "调整": "調整",
+        "所有文件": "すべてのファイル",
+        "灰度": "グレースケール",
+        "色相": "色相",
+        "眼周": "目元",
+        "瘦脸": "小顔",
+        "删除选中": "選択を削除",
+        "文件名": "ファイル名",
+        "导入预设": "プリセットを読み込み",
+        "柔和S": "ソフト S",
+        "强对比": "強コントラスト",
+        "褪色": "退色",
+        "提亮": "明るく",
+        "拉直": "傾き補正",
+        "打开文件夹…": "フォルダを開く…",
+        "批量导出…": "一括書き出し…",
+        "自动白平衡": "自動ホワイトバランス",
+        "重置全部": "すべてリセット",
+        "预设": "プリセット",
+        "快照": "スナップショット",
+        "另存为…": "別名で保存…",
+        "打开图片": "画像を開く",
+        "打开文件夹": "フォルダを開く",
+        "保存": "保存",
+        "取消": "キャンセル",
+        "确定": "OK",
+        "应用": "適用",
+        "重置": "リセット",
+        "复制": "コピー",
+        "粘贴": "貼り付け",
+        "删除": "削除",
+        "新建": "新規",
+        "名称": "名前",
+        "作者": "作者",
+        "描述": "説明",
+        "参数": "パラメータ",
+        "强度": "強さ",
+        "半径": "半径",
+        "角度": "角度",
+        "数量": "量",
+        "方向": "方向",
+        "位置": "位置",
+        "大小": "サイズ",
+        "颜色": "色",
+        "宽度": "幅",
+        "高度": "高さ",
+        "水平": "水平",
+        "垂直": "垂直",
+        "左": "左",
+        "右": "右",
+        "上": "上",
+        "下": "下",
+        "原图": "元画像",
+        "预览图": "プレビュー",
+        "导出": "書き出し",
+        "上一张": "前へ",
+        "下一张": "次へ",
+        "幻灯片": "スライドショー",
+        "适应": "フィット",
+        "放大": "拡大",
+        "縮小": "縮小",
+        "缩小": "縮小",
         "关闭": "閉じる",
         "浏览": "参照",
         "预览": "プレビュー",
@@ -8676,7 +8803,11 @@ class QPEApp(_BASE):
             for _w in (row, txt, name_lbl):
                 self._hover_tip(_w, text_tip, caps=caps)
             self._panel_btn(row, "运行", lambda it=item: self.run_plugin(it))
+            self._panel_btn(row, _tr("禁用"),
+                            lambda it=item: self._set_plugin_enabled(it, False))
         for fn in getattr(self, "plugins_disabled", []):
+            self._panel_btn(inner, _tr("启用") + " " + fn[:-len(".py")],
+                            lambda f=fn: self._set_plugin_enabled({"file": f}, True))
             tk.Label(inner, text="已禁用 %s（改回 .py 即可启用）" % fn,
                      font=self.ui_font_s, bg=BAR_BG, fg=FG_DIM, anchor="w",
                      justify="left", wraplength=px(460)).pack(
@@ -8789,6 +8920,35 @@ def run(img, **params):
             self._snap = snap
             self._reload_plugins(auto=True)
         self._watch_job = self.after(1500, self._watch_plugins)
+
+    def _set_plugin_enabled(self, item, enabled=True):
+        """启用/禁用插件：就是把文件在 .py 与 .py.disabled 之间改名。"""
+        folder = _plugin_dir()
+        fn = item.get("file") or ""
+        try:
+            if enabled:
+                src = os.path.join(folder, fn)
+                dst = os.path.join(folder, fn[:-len(".disabled")])
+            else:
+                base = fn
+                src = os.path.join(folder, base)
+                dst = src + ".disabled"
+            if os.path.exists(src):
+                os.replace(src, dst)
+                _plugin_log("plugin=%s %s" % (fn, "enabled" if enabled else "disabled"),
+                            plugin_id=os.path.splitext(fn)[0], stage="toggle")
+        except Exception as exc:
+            self._flash("插件切换失败：%s" % exc, 3200)
+            return
+        self._reload_plugins(auto=False)
+        try:
+            if getattr(self, "plug_win", None) is not None:
+                self.plug_win.destroy()
+                self.plug_win = None
+                self.show_plugins()
+        except Exception:
+            pass
+        self._flash(("已启用 " if enabled else "已禁用 ") + fn, 2200)
 
     def _reload_plugins(self, auto=False):
         """重新加载插件目录并刷新界面（热重载与手动重载共用）。"""

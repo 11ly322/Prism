@@ -1,5 +1,6 @@
-<!DOCTYPE html>
-<html lang="en" data-ver="9.0.0" style="--lbl-open: &quot;Expand&quot;; --lbl-close: &quot;Collapse&quot;;"><head>
+﻿<!DOCTYPE html>
+<html lang="en" data-ver="9.3.0">
+<head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Prism — a minimalist image viewer</title>
@@ -16,8 +17,8 @@
 <meta property="og:locale" content="en_US">
 <meta property="og:description" content="Prism is a minimalist image viewer with JPEG, PNG, WebP, TIFF and Nikon NEF support, built-in curves, HSL, local filters and a plugin system.">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Prism — 简约图片查看器">
-<meta name="twitter:description" content="为看图而生的简约图片查看器，4000 万像素首帧不到一秒。">
+<meta name="twitter:title" content="Prism — a minimalist image viewer">
+<meta name="twitter:description" content="Prism is a minimalist image viewer with JPEG, PNG, WebP, TIFF and Nikon NEF support, built-in curves, HSL, local filters and a plugin system.">
 
 <link rel="icon" href="../Prism.ico" sizes="any">
 <link rel="shortcut icon" href="../Prism.ico">
@@ -232,7 +233,7 @@
 {"@context":"https://schema.org","@type":"SoftwareApplication",
  "name":"Prism","applicationCategory":"MultimediaApplication",
  "operatingSystem":"Windows 10, Windows 11",
- "softwareVersion":"9.0.0",
+ "softwareVersion":"9.3.0",
  "offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"},
  "url":"https://11ly322.github.io/Prism/",
  "downloadUrl":"https://github.com/11ly322/Prism/releases",
@@ -240,9 +241,9 @@
 </script>
 </head>
 <body>
-<a class="skip" href="#ui">跳到主要内容</a>
+<a class="skip" href="#ui">Skip to content</a>
 <div class="top"><div class="topin">
-  <a class="brand" href=".././"><img src="../Prism.png" alt=""><b>Prism</b><i>9.0.0</i></a>
+  <a class="brand" href=".././"><img src="../Prism.png" alt=""><b>Prism</b><i>9.3.0</i></a>
   <nav class="menu" aria-label="主导航">
     <div class="mi"><a href="#features">Product</a>
       <div class="sub">
@@ -276,20 +277,20 @@
     <div class="mi"><a href="#download">Download</a>
       <div class="sub">
         <span class="gh">Windows</span>
-        <a href="https://github.com/11ly322/Prism/releases/download/v9.0.0/Prism-Setup-9.0.0.exe" download=""><span style="display:inline-block;margin-left:6px;padding:1px 6px;border-radius:6px;font-size:11px;background:#2f7d32;color:#fff">Full</span>Full version <i>39.9 MB</i></a>
-        <a href="https://github.com/11ly322/Prism/releases/download/v9.0.0/Prism-Viewer-Setup-9.0.0.exe" download="">Viewer (installer) <i>39.9 MB</i></a>
+        <a href="https://github.com/11ly322/Prism/releases/download/v9.2.0/Prism-Setup-9.3.0.exe" download><span style="display:inline-block;margin-left:6px;padding:1px 6px;border-radius:6px;font-size:11px;background:#2f7d32;color:#fff">Full</span>Full version <i>39.9 MB</i></a>
+        <a href="https://github.com/11ly322/Prism/releases/download/v9.2.0/Prism-Viewer-Setup-9.3.0.exe" download>Viewer (installer) <i>39.9 MB</i></a>
         <span class="gh">Other platforms</span>
-        <a href="https://github.com/11ly322/Prism/releases/download/v9.0.0/Prism-macOS-9.0.0.zip" download=""><span style="display:inline-block;margin-left:6px;padding:1px 6px;border-radius:6px;font-size:11px;background:#8a6d1f;color:#fff">Source preview</span>macOS <i>Run from source</i></a>
-        <a href="https://github.com/11ly322/Prism/releases/download/v9.0.0/Prism-Linux-9.0.0.zip" download=""><span style="display:inline-block;margin-left:6px;padding:1px 6px;border-radius:6px;font-size:11px;background:#8a6d1f;color:#fff">Source preview</span>Linux <i>Run from source</i></a>
+        <a href="https://github.com/11ly322/Prism/releases/download/v9.2.0/Prism-macOS-9.3.0.zip" download><span style="display:inline-block;margin-left:6px;padding:1px 6px;border-radius:6px;font-size:11px;background:#8a6d1f;color:#fff">Source preview</span>macOS <i>Run from source</i></a>
+        <a href="https://github.com/11ly322/Prism/releases/download/v9.2.0/Prism-Linux-9.3.0.zip" download><span style="display:inline-block;margin-left:6px;padding:1px 6px;border-radius:6px;font-size:11px;background:#8a6d1f;color:#fff">Source preview</span>Linux <i>Run from source</i></a>
         <span class="sp"></span>
         <a href="#docs">Documentation</a>
-        <a href="#verify">Certificate &amp; checksum</a>
+        <a href="#verify">Certificate & checksum</a>
       </div>
     </div>
   </nav>
   <div class="langs" role="group" aria-label="语言">
-    <button data-lang-btn="zh" onclick="location.href='../index.html?lang=zh'">中文</button>
-    <button data-lang-btn="en" onclick="location.href='../en/index.html'" class="on">EN</button>
+    <button data-lang-btn="zh" onclick="location.href='../index.html'">中文</button>
+    <button data-lang-btn="en" class="on" onclick="location.href='../en/index.html'">EN</button>
     <button data-lang-btn="ja" onclick="location.href='../ja/index.html'">日本語</button>
   </div>
 </div></div>
@@ -301,22 +302,22 @@
     <p class="lead">Opens fast, switches fast, grades accurately. Supports Nikon NEF and common formats, with curves, HSL and local filters built in — extensible with plugins.</p>
     <div class="cta">
       <div class="spl">
-        <a class="btn" href="https://github.com/11ly322/Prism/releases/download/v9.0.0/Prism-Setup-9.0.0.exe" download="">Download full version</a>
+        <a class="btn" href="https://github.com/11ly322/Prism/releases/download/v9.2.0/Prism-Setup-9.3.0.exe" download>Download full version</a>
         <button class="caret" aria-label="更多版本">▾</button>
         <div class="opts">
-          <a href="https://github.com/11ly322/Prism/releases/download/v9.0.0/Prism-Setup-9.0.0.exe" download=""><i>40.0 MB</i><b>Windows full</b><span>Installer · with editing and plugins</span></a>
-          <a href="https://github.com/11ly322/Prism/releases/download/v9.0.0/Prism-Viewer-Setup-9.0.0.exe" download=""><i>39.9 MB</i><b>Windows viewer</b><span>Installer · viewing only, same setup</span></a>
-          <a href="https://github.com/11ly322/Prism/releases/download/v9.0.0/Prism-macOS-9.0.0.zip" download=""><i>149 KB</i><b>macOS</b><span>Run from source · Python 3</span></a>
-          <a href="https://github.com/11ly322/Prism/releases/download/v9.0.0/Prism-Linux-9.0.0.zip" download=""><i>149 KB</i><b>Linux</b><span>Run from source · with desktop entry</span></a>
+          <a href="https://github.com/11ly322/Prism/releases/download/v9.2.0/Prism-Setup-9.3.0.exe" download><i>40.0 MB</i><b>Windows full</b><span>Installer · with editing and plugins</span></a>
+          <a href="https://github.com/11ly322/Prism/releases/download/v9.2.0/Prism-Viewer-Setup-9.3.0.exe" download><i>39.9 MB</i><b>Windows viewer</b><span>Installer · viewing only, same setup</span></a>
+          <a href="https://github.com/11ly322/Prism/releases/download/v9.2.0/Prism-macOS-9.3.0.zip" download><i>149 KB</i><b>macOS</b><span>Run from source · Python 3</span></a>
+          <a href="https://github.com/11ly322/Prism/releases/download/v9.2.0/Prism-Linux-9.3.0.zip" download><i>149 KB</i><b>Linux</b><span>Run from source · with desktop entry</span></a>
         </div>
       </div>
-      <div class="meta">Version 9.0.0<br>40 MB · Windows 10/11 64-bit</div>
+      <div class="meta">Version 9.3.0<br>40 MB · Windows 10/11 64-bit</div>
     </div>
     <p class="plats"><b>All downloads</b>
-      <a href="https://github.com/11ly322/Prism/releases/download/v9.0.0/Prism-Setup-9.0.0.exe" download="">Windows full</a><em>39.8 MB</em>
-      <a href="https://github.com/11ly322/Prism/releases/download/v9.0.0/Prism-Viewer-Setup-9.0.0.exe" download="">Windows viewer</a><em>39.9 MB</em>
-      <a href="https://github.com/11ly322/Prism/releases/download/v9.0.0/Prism-macOS-9.0.0.zip" download="">macOS</a><em>104 KB</em>
-      <a href="https://github.com/11ly322/Prism/releases/download/v9.0.0/Prism-Linux-9.0.0.zip" download="">Linux</a><em>105 KB</em>
+      <a href="https://github.com/11ly322/Prism/releases/download/v9.2.0/Prism-Setup-9.3.0.exe" download>Windows full</a><em>39.8 MB</em>
+      <a href="https://github.com/11ly322/Prism/releases/download/v9.2.0/Prism-Viewer-Setup-9.3.0.exe" download>Windows viewer</a><em>39.9 MB</em>
+      <a href="https://github.com/11ly322/Prism/releases/download/v9.2.0/Prism-macOS-9.3.0.zip" download>macOS</a><em>104 KB</em>
+      <a href="https://github.com/11ly322/Prism/releases/download/v9.2.0/Prism-Linux-9.3.0.zip" download>Linux</a><em>105 KB</em>
     </p>
   </header>
 
@@ -330,13 +331,13 @@
     </div>
   </section>
 
-  <details class="blk" open="">
-    <summary>Interface &amp; demo</summary>
+  <details class="blk" open>
+    <summary>Interface & demo</summary>
   <section id="ui">
     <h2>Real screenshots</h2>
     <div class="ui">
       <figure>
-        <img src="../shots/ui-main-en.webp" alt="纯看图模式" decoding="async" width="1100" height="642" fetchpriority="high">
+        <img src="../shots/ui-viewer-en.webp" alt="纯看图模式" decoding="async" width="1100" height="642" fetchpriority="high">
         <figcaption><b>Viewer only</b>Hide the panel and it becomes a viewer: the photo centered, resolution and size in the status bar.</figcaption>
       </figure>
       <figure>
@@ -357,7 +358,7 @@
 
   <section id="demo">
     <h2>Color demo</h2>
-    <div class="demo" tabindex="0">
+    <div class="demo">
       <img src="../shots/shot-original.webp" alt="Original" width="1000" height="625" decoding="async">
       <img class="after" src="../shots/shot-graded.webp" alt="Graded" width="1000" height="625" decoding="async">
       <div class="bar"></div>
@@ -380,17 +381,17 @@
 
   </details>
 
-  <details class="blk" open="">
-    <summary>Features &amp; portrait</summary>
+  <details class="blk" open>
+    <summary>Features & portrait</summary>
   <section id="features">
     <h2>Highlights</h2>
     <table>
-      <tbody><tr><td>Instant open</td><td>Renders only the visible area: a 40 MP photo appears in under a second</td></tr>
+      <tr><td>Instant open</td><td>Renders only the visible area: a 40 MP photo appears in under a second</td></tr>
       <tr><td>Pro grading</td><td>Tone curves, 8-band HSL, color grading — preview and export match pixel for pixel</td></tr>
       <tr><td>Lens / film / portrait</td><td>Lens distortion correction · film looks · portrait retouching (pure algorithms, no models)</td></tr>
       <tr><td>Local adjustments</td><td>Radial and gradient filters, plus automatic subject and high-contrast selections</td></tr>
       <tr><td>Plugin extension</td><td>One .py file is a plugin; 12 ship built in with adjustable parameters — drop it into plugins/</td></tr>
-    </tbody></table>
+    </table>
   </section>
 
   <section id="beauty">
@@ -398,72 +399,72 @@
     <p class="cap" style="margin-top:0">Pure algorithms: no model files, no network, no uploads.</p>
     <h3>Nine effects</h3>
     <table>
-      <tbody><tr><td>Skin smoothing</td><td>Frequency separation: removes low-frequency blotches, keeps pores</td></tr>
+      <tr><td>Skin smoothing</td><td>Frequency separation: removes low-frequency blotches, keeps pores</td></tr>
       <tr><td>Brighten / even skin</td><td>Brightens skin areas; median filter removes small spots</td></tr>
       <tr><td>Blemish removal</td><td>Background subtraction finds dark spots and fills them; spot size adjustable</td></tr>
       <tr><td>Dark circles</td><td>Lifts only shadows under the eyes and cuts blue to neutralise purple</td></tr>
       <tr><td>Teeth / lips</td><td>Separates teeth and lips by brightness and red-green difference</td></tr>
       <tr><td>Slim face / enlarge eyes</td><td>Inverse-mapping resampling with automatic eye detection</td></tr>
-    </tbody></table>
+    </table>
     <h3>One-click presets</h3>
     <table>
-      <tbody><tr><td>Natural look</td><td>All zero</td></tr>
+      <tr><td>Natural look</td><td>All zero</td></tr>
       <tr><td>Natural</td><td>Smooth 35 · blemish 25 · teeth 20</td></tr>
       <tr><td>Portrait</td><td>Smooth 60 · blemish 50 · eyes 35 · slim 15</td></tr>
       <tr><td>Influencer</td><td>Smooth 85 · blemish 70 · eyes 60 · slim 45</td></tr>
-    </tbody></table>
+    </table>
     <h3>Usage</h3>
     <table>
-      <tbody><tr><td>Where</td><td>Tools → Portrait retouching…</td></tr>
+      <tr><td>Where</td><td>Tools → Portrait retouching…</td></tr>
       <tr><td>Before/after</td><td>Hold B to temporarily disable</td></tr>
       <tr><td>Status line</td><td>The panel header shows faces found, current values and whether it is skipped</td></tr>
       <tr><td>Guards</td><td>Skips tiny, flat, monochrome or extreme-ratio images</td></tr>
-    </tbody></table>
+    </table>
     <p class="cap">Full parameter table and implementation notes in <a href="../README.md">README</a>  under “Portrait retouching”.</p>
   </section>
 
   </details>
 
-  <details class="blk" open="">
+  <details class="blk" open>
     <summary>Plugin extension</summary>
   <section id="plugins">
     <h2>Plugins</h2>
     <p class="cap" style="margin-top:0;margin-bottom:16px">A plugin is just a Python file. Drop it into plugins/ next to the program and hit Rescan — no registration, no restart.</p>
     <table>
-      <tbody><tr><td>Write a plugin</td><td>Add a .py that defines run(img)</td></tr>
+      <tr><td>Write a plugin</td><td>Add a .py that defines run(img)</td></tr>
       <tr><td>Input</td><td>img is a PIL.Image (RGB) with all adjustments applied</td></tr>
       <tr><td>Output</td><td>Return a new PIL.Image, or None to skip</td></tr>
       <tr><td>Metadata</td><td>PLUGIN_NAME / PLUGIN_DESC / PLUGIN_VERSION / PLUGIN_AUTHOR</td></tr>
       <tr><td>Getting started</td><td>Use Plugins → New plugin to generate an annotated template</td></tr>
-    </tbody></table>
+    </table>
   </section>
 
   </details>
 
-  <details class="blk" open="">
+  <details class="blk" open>
     <summary>Documentation</summary>
   <section id="docs">
     <h2>Documentation</h2>
 
     <h3>Install</h3>
     <table>
-      <tbody><tr><td class="grp" colspan="2">Windows</td></tr>
-      <tr><td>1</td><td>Download <code>Prism-Setup-9.0.0.exe</code> and double-click it</td></tr>
+      <tr><td class="grp" colspan="2">Windows</td></tr>
+      <tr><td>1</td><td>Download <code>Prism-Setup-9.3.0.exe</code> and double-click it</td></tr>
       <tr><td>2</td><td>Choose install mode (per-user / extract in place) and location</td></tr>
       <tr><td>3</td><td>Optionally create Start-menu and desktop shortcuts; it launches when done</td></tr>
       <tr><td class="grp" colspan="2">macOS</td></tr>
       <tr><td>1</td><td>Install Python 3:<a href="https://www.python.org/downloads/">python.org</a></td></tr>
       <tr><td>2</td><td>Unzip, then double-click “启动 Prism.command”</td></tr>
-      <tr><td>3</td><td>If macOS cannot verify the developer: right-click → Open, or allow it under Privacy &amp; Security</td></tr>
+      <tr><td>3</td><td>If macOS cannot verify the developer: right-click → Open, or allow it under Privacy & Security</td></tr>
       <tr><td class="grp" colspan="2">Linux</td></tr>
       <tr><td>1</td><td>Install dependencies:<code>sudo apt install python3-tk python3-pil</code></td></tr>
       <tr><td>2</td><td><code>chmod +x prism.sh &amp;&amp; ./prism.sh</code></td></tr>
       <tr><td>3</td><td>Add to the app menu: put the folder in <code>/opt/Prism</code>, then copy <code>Prism.desktop</code> to <code>/usr/share/applications/</code></td></tr>
-    </tbody></table>
+    </table>
 
     <h3>Shortcuts</h3>
     <table>
-      <tbody><tr><td>← / →</td><td>Previous / next</td></tr>
+      <tr><td>← / →</td><td>Previous / next</td></tr>
       <tr><td>+ / − / 1</td><td>Zoom in / out / 100%</td></tr>
       <tr><td>F</td><td>Fit to window</td></tr>
       <tr><td>R / Shift+R</td><td>Rotate clockwise / counter-clockwise</td></tr>
@@ -472,15 +473,15 @@
       <tr><td>G</td><td>Grid view</td></tr>
       <tr><td>Ctrl+Z / Ctrl+Y</td><td>Undo / redo</td></tr>
       <tr><td>Esc</td><td>Leave the current mode (does not quit)</td></tr>
-    </tbody></table>
+    </table>
 
     <h3>Plugins</h3>
     <table>
-      <tbody><tr><td>Where</td><td>In the program folder: <code>plugins/</code> (created on first run)</td></tr>
+      <tr><td>Where</td><td>In the program folder: <code>plugins/</code> (created on first run)</td></tr>
       <tr><td>How to write</td><td>A single <code>.py</code> file defining <code>run(img)</code>; optionally declare <code>PARAMS</code> to get sliders automatically</td></tr>
       <tr><td>How it works</td><td>Toolbar Plugins → Run; tweak parameters in the result window and save as</td></tr>
       <tr><td>How many built in</td><td>12: Pixelate, Vintage film, Round avatar, White frame, Sharpen, Mono, Auto levels, Text, 16:9 crop, Tilt-shift, God rays, Glitch</td></tr>
-    </tbody></table>
+    </table>
 
     <h3>FAQ</h3>
     <details>
@@ -500,8 +501,8 @@
       <p>The viewer has no editing panel — only browsing, zoom, rotation, slideshow, filmstrip and grid, in a smaller package. Format support and rendering speed are identical.</p>
     </details>
     <details>
-      <summary>为什么没有全屏</summary>
-      <p>F11 全屏在部分机器上显示不全，权衡后已在早前版本移除，而不是留一个半坏的功能。</p>
+      <summary>Why not system fullscreen</summary>
+      <p>F11 fullscreen renders incorrectly on some machines, so Prism uses a compatible mode: borderless maximise with Esc to leave.</p>
     </details>
 
     <p class="cap">Full Markdown docs: <a href="../README.md">README.md</a>。</p>
@@ -509,22 +510,22 @@
 
   </details>
 
-  <details class="blk" open="">
-    <summary>Download, verification &amp; FAQ</summary>
+  <details class="blk" open>
+    <summary>Download, verification & FAQ</summary>
   <section id="download">
-    <h2>Download &amp; install</h2>
+    <h2>Download & install</h2>
     <table>
-      <tbody><tr><td class="grp" colspan="2">Windows</td></tr>
-      <tr><td><a href="https://github.com/11ly322/Prism/releases/download/v9.0.0/Prism-Setup-9.0.0.exe" download="">Full installer</a></td>
+      <tr><td class="grp" colspan="2">Windows</td></tr>
+      <tr><td><a href="https://github.com/11ly322/Prism/releases/download/v9.2.0/Prism-Setup-9.3.0.exe" download>Full installer</a></td>
           <td>39.8 MB · with editing panel and plugins</td></tr>
-      <tr><td><a href="https://github.com/11ly322/Prism/releases/download/v9.0.0/Prism-Viewer-Setup-9.0.0.exe" download="">Viewer only (installer)</a></td>
+      <tr><td><a href="https://github.com/11ly322/Prism/releases/download/v9.2.0/Prism-Viewer-Setup-9.3.0.exe" download>Viewer only (installer)</a></td>
           <td>39.9 MB · same setup as full, includes Start-menu and desktop shortcuts</td></tr>
-      <tr><td><a href="https://github.com/11ly322/Prism/releases/download/v9.0.0/Prism-Viewer-9.0.0.zip" download="">Viewer only (portable)</a></td>
+      <tr><td><a href="https://github.com/11ly322/Prism/releases/download/v9.2.0/Prism-Viewer-9.3.0.zip" download>Viewer only (portable)</a></td>
           <td>29.9 MB · unzip and run, no registry writes</td></tr>
       <tr><td class="grp" colspan="2">macOS / Linux</td></tr>
-      <tr><td><a href="https://github.com/11ly322/Prism/releases/download/v9.0.0/Prism-macOS-9.0.0.zip" download="">macOS package</a></td>
+      <tr><td><a href="https://github.com/11ly322/Prism/releases/download/v9.2.0/Prism-macOS-9.3.0.zip" download>macOS package</a></td>
           <td>104 KB · run from source, needs Python 3 + Pillow</td></tr>
-      <tr><td><a href="https://github.com/11ly322/Prism/releases/download/v9.0.0/Prism-Linux-9.0.0.zip" download="">Linux package</a></td>
+      <tr><td><a href="https://github.com/11ly322/Prism/releases/download/v9.2.0/Prism-Linux-9.3.0.zip" download>Linux package</a></td>
           <td>105 KB · includes .desktop, needs python3-tk</td></tr>
       <tr><td class="grp" colspan="2">Requirements (Windows)</td></tr>
       <tr><td>OS</td><td>Windows 10 / 11 (64-bit)</td></tr>
@@ -532,7 +533,7 @@
       <tr><td>Disk usage</td><td>About 75 MB</td></tr>
       <tr><td>Privileges</td><td>Standard user, no admin</td></tr>
       <tr><td>Install steps</td><td>Double-click → choose mode and location → launch</td></tr>
-    </tbody></table>
+    </table>
   </section>
 
     <div id="known" style="margin:14px 0 4px;padding:12px 14px;border-left:3px solid #d9a441;background:rgba(217,164,65,.08);border-radius:6px">
@@ -541,11 +542,11 @@
       <p class="cap" style="margin:0">2. Fullscreen is a compatible mode (borderless maximise, Esc to exit), not system fullscreen.</p>
       <p class="cap" style="margin:0">3. macOS and Linux are source packages — no prebuilt .app or AppImage.</p>
     </div>
-    <p class="cap" style="margin-top:10px"><strong>Portable</strong>：<a href="https://github.com/11ly322/Prism/releases/download/v9.0.0/Prism-Portable-9.0.0.zip">Prism-Portable-9.0.0.zip</a> (full version, unzip and run — no registry, no Start-menu entry)</p>
+    <p class="cap" style="margin-top:10px"><strong>Portable</strong>：<a href="https://github.com/11ly322/Prism/releases/download/v9.2.0/Prism-Portable-9.3.0.zip">Prism-Portable-9.3.0.zip</a> (full version, unzip and run — no registry, no Start-menu entry)</p>
     <h3>How to bypass SmartScreen safely</h3>
     <p class="cap" style="margin-top:0">The installer is unsigned, so Windows shows “Windows protected your PC”. Verify the file first, then decide:</p>
     <ol class="cap" style="margin:0 0 10px 18px;padding:0">
-      <li>Check SHA-256 in PowerShell:<br><code>Get-FileHash .\Prism-Setup-9.0.0.exe -Algorithm SHA256</code><br>Compare it digit by digit with the SHA-256 above.</li>
+      <li>Check SHA-256 in PowerShell:<br><code>Get-FileHash .\Prism-Setup-9.3.0.exe -Algorithm SHA256</code><br>Compare it digit by digit with the SHA-256 above.</li>
       <li>Match → double-click the installer and click More info.</li>
       <li>Once the publisher shows “Unknown publisher” and the hash matches, click Run anyway.</li>
       <li>Mismatch → delete it and download again.</li>
@@ -553,24 +554,24 @@
     <p class="cap" style="margin-top:0">If you prefer not to run unsigned binaries, use the portable zip above or run from source:
     <code>python src/Prism.pyw</code>。</p>
   <section id="verify">
-    <h2>Certificate &amp; checksum</h2>
+    <h2>Certificate & checksum</h2>
     <table>
-      <tbody><tr><td class="grp" colspan="2">Site certificate</td></tr>
+      <tr><td class="grp" colspan="2">Site certificate</td></tr>
       <tr><td>Protocol</td><td>HTTPS (redirect enforced, no plaintext)</td></tr>
       <tr><td>Subject</td><td><code>*.github.io</code></td></tr>
-      <tr><td>Issuer</td><td>Let's Encrypt（由 GitHub Pages 自动签发与续期）</td></tr>
+      <tr><td>Issuer</td><td>Let&#39;s Encrypt (issued and renewed automatically by GitHub Pages)</td></tr>
       <tr><td>Valid until</td><td>2026-12-30</td></tr>
       <tr><td class="grp" colspan="2">Installer checksum</td></tr>
-      <tr><td>File</td><td>Prism-Setup-9.0.0.exe</td></tr>
-      <tr><td>SHA-256</td><td><code>41334D5698AE0AF635164016617F2404282532F1534319293D1E70C35FB79397</code></td></tr>
-    </tbody></table>
-    <p class="cap">After downloading, compare with <code>certutil -hashfile &lt;file&gt; SHA256</code> (Windows) or <code>shasum -a 256 &lt;file&gt;</code> (macOS/Linux).</p>
+      <tr><td>File</td><td>Prism-Setup-9.3.0.exe</td></tr>
+      <tr><td>SHA-256</td><td><code>8D2D45D27910D1423B8686E1FEA328DDB60B71445D09BC5F9C2F0E00560739AA</code></td></tr>
+    </table>
+    <p class="cap">After downloading, compare with <code>certutil -hashfile <file> SHA256</code> (Windows) or <code>shasum -a 256 <file></code> (macOS/Linux).</p>
   </section>
 
   </details>
 
   <footer>
-    <div>Prism 9.0.0 · minimalist image viewer · <a href="https://github.com/11ly322/Prism/blob/main/CHANGELOG.md" style="color:inherit;text-decoration:underline">Full changelog</a> · <a href="https://afdian.com/a/pis01" target="_blank" rel="noopener">Afdian</a></div>
+    <div>Prism 9.3.0 · minimalist image viewer · <a href="https://github.com/11ly322/Prism/blob/main/CHANGELOG.md" style="color:inherit;text-decoration:underline">Full changelog</a> · <a href="https://afdian.com/a/pis01" target="_blank" rel="noopener">Afdian</a></div>
     <div><a href="#docs">Documentation</a></div>
   </footer>
 </div>
@@ -628,85 +629,7 @@
 })();
 </script>
 <script src="../i18n.js"></script>
-<script>
-(function(){
-  var D = window.PRISM_I18N || {};
-  var VER = document.documentElement.getAttribute('data-ver') || '';
-  var KEY = 'prism.lang';
-  function norm(t){ return t.replace(/\d+\.\d+\.\d+/g, '{v}'); }
-  function tr(text, lang){
-    var d = D[lang] || {}, m = d[text];
-    if (m === undefined) { m = d[norm(text)]; }
-    if (m === undefined) { return null; }
-    return m.replace(/\{v\}/g, VER);
-  }
-  var origText = new WeakMap(), origAttr = new WeakMap();
-  function walk(lang){
-    var tw = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null), n;
-    while ((n = tw.nextNode())) {
-      var p = n.parentNode;
-      if (!p || /^(SCRIPT|STYLE|NOSCRIPT|TEXTAREA)$/.test(p.nodeName)) { continue; }
-      if (!origText.has(n)) { origText.set(n, n.nodeValue); }
-      var base = origText.get(n), t = base.trim();
-      if (!t) { continue; }
-      var out = base;
-      if (lang !== 'zh') { var r = tr(t, lang); if (r !== null) { out = base.replace(t, r); } }
-      if (n.nodeValue !== out) { n.nodeValue = out; }
-    }
-    var els = document.querySelectorAll('[placeholder],[title],[alt],[aria-label]');
-    for (var i = 0; i < els.length; i++) {
-      var attrs = ['placeholder', 'title', 'alt', 'aria-label'];
-      var store = origAttr.get(els[i]);
-      if (!store) { store = {}; origAttr.set(els[i], store); }
-      for (var a = 0; a < attrs.length; a++) {
-        var v = els[i].getAttribute(attrs[a]);
-        if (v === null) { continue; }
-        if (store[attrs[a]] === undefined) { store[attrs[a]] = v; }
-        var base2 = store[attrs[a]], out2 = base2;
-        if (lang !== 'zh') { var r2 = tr(base2.trim(), lang); if (r2 !== null) { out2 = r2; } }
-        if (v !== out2) { els[i].setAttribute(attrs[a], out2); }
-      }
-    }
-  }
-  var TEXT = {
-    zh: { open: '展开', close: '收起',
-          title: 'Prism — 简约图片查看器',
-          desc: 'Prism 是一款极简的图片查看器，支持 JPEG、PNG、WebP、TIFF 与尼康 NEF，内置曲线、HSL、局部滤镜与插件系统。' },
-    en: { open: 'Expand', close: 'Collapse',
-          title: 'Prism — a minimalist image viewer',
-          desc: 'Prism is a minimalist image viewer with JPEG, PNG, WebP, TIFF and Nikon NEF support, built-in curves, HSL, local filters and a plugin system.' },
-    ja: { open: '開く', close: '閉じる',
-          title: 'Prism — ミニマルな画像ビューア',
-          desc: 'Prism は JPEG・PNG・WebP・TIFF・ニコン NEF に対応したミニマルな画像ビューア。カーブ、HSL、ローカルフィルタ、プラグインを内蔵。' }
-  };
-  window.__prismSetLang = function(lang){
-    document.documentElement.lang = lang === 'zh' ? 'zh-CN' : lang;
-    walk(lang);
-    var t = TEXT[lang] || TEXT.zh;
-    document.documentElement.style.setProperty('--lbl-open', '"' + t.open + '"');
-    document.documentElement.style.setProperty('--lbl-close', '"' + t.close + '"');
-    document.title = t.title;
-    var md = document.querySelector('meta[name="description"]');
-    if (md) { md.setAttribute('content', t.desc); }
-    var btns = document.querySelectorAll('[data-lang-btn]');
-    for (var i = 0; i < btns.length; i++) {
-      var on = btns[i].getAttribute('data-lang-btn') === lang;
-      btns[i].classList.toggle('on', on);
-    }
-    try { localStorage.setItem(KEY, lang); } catch (e) {}
-  };
-  var q = (location.search.match(/[?&]lang=(zh|en|ja)/) || [])[1];
-  var saved = null;
-  try { saved = localStorage.getItem(KEY); } catch (e) {}
-  var auto = 'zh';
-  try {
-    var nav = (navigator.language || 'zh').toLowerCase();
-    if (nav.indexOf('ja') === 0) { auto = 'ja'; }
-    else if (nav.indexOf('zh') !== 0) { auto = 'en'; }
-  } catch (e) {}
-  window.__prismSetLang(q || saved || auto);
-})();
-</script>
+
 <button class="totop" id="totop" aria-label="回到顶部" title="回到顶部">↑</button>
 <script>
 /* 回到顶部 + 导航高亮 + 首次访问按浏览器语言选择 */
@@ -739,6 +662,5 @@
   for (var id in map) { io.observe(document.getElementById(id)); }
 })();
 </script>
-
-
-</body></html>
+</body>
+</html>

@@ -65,6 +65,19 @@ def main():
     ok("控件类型解析", [p["type"] for p in spec] == ["range"],
        str([p["type"] for p in spec]))
 
+    # 三语标签：label/name/description 可以是 {zh,en,ja}
+    class _FakeMod:
+        PARAMS = [{"key": "x", "type": "slider", "min": 0, "max": 1,
+                   "default": 0,
+                   "label": {"zh": "强度", "en": "Strength", "ja": "強さ"}}]
+    fake_item = {"module": _FakeMod, "id": "fake"}
+    old_lang = mod.APP_LANG
+    for lang, want in (("en", "Strength"), ("ja", "強さ"), ("zh", "强度")):
+        mod.APP_LANG = lang
+        got = app._plugin_params_spec(fake_item)[0]["label"]
+        ok("参数标签本地化 " + lang, got == want, got)
+    mod.APP_LANG = old_lang
+
     before = [w for w in app.winfo_children() if isinstance(w, tk.Toplevel)]
     t0 = time.perf_counter()
     app.run_plugin(item)
@@ -128,6 +141,20 @@ def main():
     app._set_plugin_enabled({"file": "gray.py.disabled"}, True)
     ok("传 .disabled 全名也能启用",
        os.path.exists(os.path.join(tmp, "gray.py")))
+
+    # 重复 id：第二个同名插件的文件要被跳过，并出现在错误列表里
+    dup = os.path.join(tmp, "gray_dup.py")
+    open(dup, "w", encoding="utf-8").write(
+        'PLUGIN = {"id": "gray", "name": "重复", "version": "1", "api": 2}\n'
+        'def run(img, **params):\n    return img\n')
+    app._scan_plugins()
+    ok("重复 id 只保留一个",
+       sum(1 for p in app.plugins if p["id"] == "gray") == 1,
+       "%d 个" % sum(1 for p in app.plugins if p["id"] == "gray"))
+    ok("重复 id 记入错误列表",
+       any("重复" in str(e) for _f, e in app.plugin_errors),
+       str(app.plugin_errors[-1:]))
+    os.remove(dup)
 
     # 安装窗口能打开（只建界面，不发网络请求）
     tops_before = [w for w in app.winfo_children() if isinstance(w, tk.Toplevel)]

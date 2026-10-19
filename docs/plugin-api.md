@@ -58,7 +58,7 @@ def run(img, **params) -> PIL.Image
 | 字段 | 必填 | 说明 |
 | :--- | :--- | :--- |
 | key | 是 | 参数名，也是 run 里 kwargs 的键 |
-| label | 是 | 界面标签 |
+| label | 是 | 界面标签；可写字符串或 {zh,en,ja}（9.6.0） |
 | type | 否 | slider（默认）/ select / checkbox / text |
 | min / max | slider 必填 | 取值范围 |
 | step | 否 | 步长，默认 1 |
@@ -86,14 +86,22 @@ type=bool 等于 checkbox。老插件不用改。text 是 8.3.0 新增，值为�
 
 | 字段 | 必填 | 说明 |
 | :--- | :--- | :--- |
-| id | 是 | 唯一标识，小写字母/数字/下划线，用于日志与禁用 |
-| name | 是 | 显示名 |
+| id | 是 | 唯一标识：小写字母/数字/`-`/`_`，不能以 `_` 开头（安装文件名也用它） |
+| name | 是 | 显示名；可写字符串或 {zh,en,ja} |
 | version | 是 | 插件自身版本 |
 | api | 是 | 接口版本，当前必须是 2 |
 | author | 是 | 作者 |
-| description | 建议 | 插件窗口里的一行说明 |
+| description | 建议 | 插件窗口里的一行说明；可写字符串或 {zh,en,ja} |
 | network | 可选 | 能力声明：是否联网（默认 False）|
 | writes_files | 可选 | 能力声明：是否写文件（默认 False）|
+
+### 三语文本（9.6.0）
+
+`name` / `description` / `PARAMS.label` 都可以写字符串，或写
+`{"zh": "...", "en": "...", "ja": "..."}`；缺当前语言会回落中文。
+只写字符串的第三方插件保持原样。`options` 的选项值仍是 `run()` 收到的值，
+不参与翻译（显示的就是值本身）。
+
 
 network / writes_files 会在插件窗口显示出来，只用于提高透明度，
 **不是强制约束** —— 插件仍然以完整权限运行。

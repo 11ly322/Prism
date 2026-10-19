@@ -10,17 +10,17 @@ from PIL import Image, ImageChops, ImageEnhance, ImageFilter
 
 PLUGIN = {"id": "god_rays", "name": PLUGIN_NAME, "version": PLUGIN_VERSION,
           "api": 2, "author": PLUGIN_AUTHOR,
-          "description": "把高光沿一个方向拖成光束，模拟逆光丁达尔效应",
+          "description": {"zh": "把高光沿一个方向拖成光束，模拟逆光丁达尔效应", "en": "Drags highlights into light rays along one direction, mimicking backlit god rays", "ja": "ハイライトを一方向に伸ばして光芒を再現（逆光のゴッドレイ）"},
           "network": False, "writes_files": False}
 
 PARAMS = [
-    {"key": "threshold", "label": "取光门槛", "type": "slider",
+    {"key": "threshold", "label": {"zh": "取光门槛", "en": "Light threshold", "ja": "光のしきい値"}, "type": "slider",
      "min": 50, "max": 98, "default": 86, "step": 2},
-    {"key": "length", "label": "光束长度", "type": "slider",
+    {"key": "length", "label": {"zh": "光束长度", "en": "Ray length", "ja": "光線の長さ"}, "type": "slider",
      "min": 20, "max": 220, "default": 110, "step": 10},
-    {"key": "angle", "label": "角度", "type": "slider",
+    {"key": "angle", "label": {"zh": "角度", "en": "Angle", "ja": "角度"}, "type": "slider",
      "min": -60, "max": 60, "default": 14, "step": 2},
-    {"key": "power", "label": "强度", "type": "slider",
+    {"key": "power", "label": {"zh": "强度", "en": "Strength", "ja": "強さ"}, "type": "slider",
      "min": 10, "max": 100, "default": 55, "step": 5},
 ]
 

@@ -10,17 +10,17 @@ from PIL import Image, ImageChops, ImageDraw
 
 PLUGIN = {"id": "glitch", "name": PLUGIN_NAME, "version": PLUGIN_VERSION,
           "api": 2, "author": PLUGIN_AUTHOR,
-          "description": "RGB 通道错位与横向切片位移，做数字故障效果",
+          "description": {"zh": "RGB 通道错位与横向切片位移，做数字故障效果", "en": "RGB channel shift and horizontal slice displacement for a digital glitch look", "ja": "RGB チャンネルのずれと横方向のスライスでデジタルグリッチ表現"},
           "network": False, "writes_files": False}
 
 PARAMS = [
-    {"key": "shift", "label": "通道错位", "type": "slider",
+    {"key": "shift", "label": {"zh": "通道错位", "en": "Channel shift", "ja": "チャンネルずれ"}, "type": "slider",
      "min": 0, "max": 30, "default": 8, "step": 1},
-    {"key": "slices", "label": "切片数量", "type": "slider",
+    {"key": "slices", "label": {"zh": "切片数量", "en": "Slices", "ja": "スライス数"}, "type": "slider",
      "min": 0, "max": 40, "default": 12, "step": 1},
-    {"key": "seed", "label": "随机种子", "type": "slider",
+    {"key": "seed", "label": {"zh": "随机种子", "en": "Seed", "ja": "シード"}, "type": "slider",
      "min": 0, "max": 99, "default": 7, "step": 1},
-    {"key": "scan", "label": "扫描线", "type": "checkbox", "default": True},
+    {"key": "scan", "label": {"zh": "扫描线", "en": "Scanlines", "ja": "走査線"}, "type": "checkbox", "default": True},
 ]
 
 

@@ -16,6 +16,7 @@ import importlib.util
 import io
 import json
 import os
+import re
 import shutil
 import sys
 
@@ -70,11 +71,22 @@ def fmt_num(v):
     return str(v)
 
 
-def fmt_params(params):
+def loc(value, lang):
+    """插件文本允许是字符串或 {zh,en,ja}。"""
+    if isinstance(value, dict):
+        for key in (lang, "zh", "en", "ja"):
+            text = str(value.get(key) or "").strip()
+            if text:
+                return text
+        return ""
+    return str(value or "")
+
+
+def fmt_params(params, lang="zh"):
     parts = []
     for p in params or []:
         kind = str(p.get("type", "slider")).lower()
-        label = p.get("label", p.get("key", "?"))
+        label = loc(p.get("label", p.get("key", "?")), lang)
         if kind in ("select", "choice", "dropdown"):
             opts = p.get("options") or p.get("choices") or []
             parts.append("select %s（%s）" % (label, " / ".join(map(str, opts))))
@@ -109,10 +121,10 @@ def scan_builtin(lang, names):
         if lang != "zh":
             name = names.get(lang, {}).get(name, name)
         ver = str(meta.get("version") or "")
-        desc = str(meta.get("description")
-                   or getattr(mod, "PLUGIN_DESC", "") or "—")
+        desc = loc(meta.get("description")
+                   or getattr(mod, "PLUGIN_DESC", "") or "—", lang)
         rows.append("| %s | %s %s | %s | %s | %s | %s | `%s` |" % (
-            pid, name, ver, fmt_params(getattr(mod, "PARAMS", [])), desc,
+            pid, name, ver, fmt_params(getattr(mod, "PARAMS", []), lang), desc,
             yes_no(meta.get("network"), lang),
             yes_no(meta.get("writes_files"), lang), fn))
     return rows
@@ -133,6 +145,8 @@ def validate_catalog(data):
         pid = str(e.get("id") or "").strip()
         if not pid or pid in seen:
             raise SystemExit("插件 id 缺失或重复：%r" % pid)
+        if not re.match(r"^[a-z0-9][a-z0-9_-]{0,39}$", pid):
+            raise SystemExit("%s 的 id 不合法（只允许小写字母数字 -_，不能以 _ 开头）" % pid)
         seen.add(pid)
         try:
             api = int(e.get("api", 1))
@@ -169,6 +183,17 @@ def validate_catalog(data):
     return entries
 
 
+def builtin_ids():
+    ids = set()
+    for fn in os.listdir(PLUGIN_DIR):
+        if not fn.endswith(".py") or fn.startswith("_"):
+            continue
+        mod = load_plugin(os.path.join(PLUGIN_DIR, fn))
+        meta = getattr(mod, "PLUGIN", None) or {}
+        ids.add(str(meta.get("id") or os.path.splitext(fn)[0]))
+    return ids
+
+
 def scan_catalog(entries, lang):
     rows = []
     for e in entries:
@@ -176,7 +201,7 @@ def scan_catalog(entries, lang):
         name = str(e["name"].get(lang) or e["name"].get("zh") or e["id"])
         ver = str(e.get("version") or "")
         rows.append("| %s | %s %s | %s | %s | `%s…` | `%s` |" % (
-            e["id"], name, ver, fmt_params(getattr(mod, "PARAMS", [])),
+            e["id"], name, ver, fmt_params(getattr(mod, "PARAMS", []), lang),
             str(e["description"].get(lang) or e["description"].get("zh") or "—"),
             e["sha256"][:12], os.path.basename(e["url"])))
     return rows
@@ -197,6 +222,9 @@ def main():
     data = json.load(io.open(INDEX, encoding="utf-8"))
     entries = validate_catalog(data)
     names = app_lang_table()
+    clash = builtin_ids() & {e["id"] for e in entries}
+    if clash:
+        raise SystemExit("清单 id 与内置插件冲突：%s" % ", ".join(sorted(clash)))
 
     changed, out = [], {}
     for lang in LANGS:

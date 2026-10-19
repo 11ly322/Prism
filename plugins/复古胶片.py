@@ -1,5 +1,5 @@
 PLUGIN_NAME = "复古胶片"
-PLUGIN_DESC = "暖褐色调。可调强度、对比与暗角"
+PLUGIN_DESC = {"zh": "暖褐色调。可调强度、对比与暗角", "en": "Warm sepia. Adjustable strength, contrast and vignette", "ja": "暖かいセピア調。強さ・コントラスト・周辺減光を調整"}
 PLUGIN_VERSION = "2.0"
 PLUGIN_AUTHOR = "Prism"
 
@@ -10,11 +10,11 @@ PLUGIN = {"id": "sepia", "name": PLUGIN_NAME, "version": PLUGIN_VERSION,
 from PIL import Image, ImageEnhance
 
 PARAMS = [
-    {"key": "strength", "label": "褐色强度", "min": 0, "max": 100,
+    {"key": "strength", "label": {"zh": "褐色强度", "en": "Sepia strength", "ja": "セピア強度"}, "min": 0, "max": 100,
      "default": 70, "step": 5},
-    {"key": "contrast", "label": "对比度", "min": 50, "max": 150,
+    {"key": "contrast", "label": {"zh": "对比度", "en": "Contrast", "ja": "コントラスト"}, "min": 50, "max": 150,
      "default": 96, "step": 2},
-    {"key": "vignette", "label": "暗角", "min": 0, "max": 100,
+    {"key": "vignette", "label": {"zh": "暗角", "en": "Vignette", "ja": "周辺減光"}, "min": 0, "max": 100,
      "default": 35, "step": 5},
 ]
 

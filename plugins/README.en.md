@@ -12,23 +12,23 @@
 <!-- BEGIN GENERATED builtin -->
 | id | Name / version | Parameters (control · range · default) | Description | Network | Writes files | Source |
 | --- | --- | --- | --- | --- | --- | --- |
-| crop169 | 16:9 crop 2.0 | select 目标比例（16:9 / 9:16 / 4:3 / 1:1） · select 对齐（居中 / 偏上 / 偏下） | 按目标比例居中裁剪，做视频封面和 PPT 配图 | No | No | `16比9裁剪.py` |
-| god_rays | God rays 1.0 | slider 取光门槛 50–98（86） · slider 光束长度 20–220（110） · slider 角度 -60–60（14） · slider 强度 10–100（55） | 把高光沿一个方向拖成光束，模拟逆光丁达尔效应 | No | No | `丁达尔光.py` |
-| pixelate | Pixelate 2.0 | slider 方块大小 4–160（24） · select 取样方式（平均 / 放大镜） · checkbox 画方块边 | 马赛克。可调方块大小、取样方式与描边 | No | No | `像素化.py` |
-| watermark | Text 2.1 | text 署名文字 · slider 字号占比 1–8（3.2） · slider 边距占比 0–8（2） · checkbox 描边 | 右下角加一行署名，文字内容可自定义 | No | No | `加文字.py` |
-| avatar | Round avatar 2.0 | slider 输出边长 128–1024（512） · slider 留白比例 0–30（0） · select 背景（透明 / 白色 / 黑色） | 圆形蒙版头像。可调留白、背景色与输出尺寸 | No | No | `圆形头像.py` |
-| sepia | Vintage film 2.0 | slider 褐色强度 0–100（70） · slider 对比度 50–150（96） · slider 暗角 0–100（35） | 暖褐色调。可调强度、对比与暗角 | No | No | `复古胶片.py` |
-| glitch | Glitch 1.0 | slider 通道错位 0–30（8） · slider 切片数量 0–40（12） · slider 随机种子 0–99（7） · checkbox 扫描线 | RGB 通道错位与横向切片位移，做数字故障效果 | No | No | `故障艺术.py` |
-| border | White frame 2.0 | slider 边框宽度 1–20（4） · select 颜色（白色 / 黑色 / 米白） · checkbox 内侧细线 | 四周加边框。可调宽度、颜色与内侧细线 | No | No | `白边框.py` |
-| tilt_shift | Tilt-shift 1.0 | slider 清晰带 4–80（26） · slider 虚化强度 1–30（12） · slider 饱和提升 0–100（45） · select 清晰带位置（居中 / 偏上 / 偏下） | 横向清晰带 + 上下渐进虚化，做微缩模型效果 | No | No | `移轴微缩.py` |
-| autolevel | Auto levels 2.0 | slider 裁切比例 0–5（0.4） · slider 强度 0–100（100） | 把直方图拉满，去掉灰蒙蒙的感觉 | No | No | `自动色阶.py` |
-| sharpen | Sharpen 2.0 | slider 半径 0.5–5（1.4） · slider 强度 % 10–300（90） · slider 阈值 0–20（3） | USM 锐化。可调半径、强度与阈值 | No | No | `锐化.py` |
-| bw | Mono 2.0 | slider 对比增强 0–100（20） | 最简示例：一个插件最小可以多短。可调对比增强 | No | No | `黑白.py` |
+| crop169 | 16:9 crop 2.0 | select Aspect ratio（16:9 / 9:16 / 4:3 / 1:1） · select Align（居中 / 偏上 / 偏下） | Center-crops to a preset aspect ratio; useful for video covers and slide images | No | No | `16比9裁剪.py` |
+| god_rays | God rays 1.0 | slider Light threshold 50–98（86） · slider Ray length 20–220（110） · slider Angle -60–60（14） · slider Strength 10–100（55） | Drags highlights into light rays along one direction, mimicking backlit god rays | No | No | `丁达尔光.py` |
+| pixelate | Pixelate 2.0 | slider Block size 4–160（24） · select Sampling（平均 / 放大镜） · checkbox Draw edges | Mosaic. Adjustable block size, sampling and edge drawing | No | No | `像素化.py` |
+| watermark | Text 2.1 | text Signature text · slider Font size 1–8（3.2） · slider Margin 0–8（2） · checkbox Outline | Adds a signature line in the bottom-right; text is customizable | No | No | `加文字.py` |
+| avatar | Round avatar 2.0 | slider Output size 128–1024（512） · slider Padding 0–30（0） · select Background（透明 / 白色 / 黑色） | Round-mask avatar. Adjustable padding, background color and output size | No | No | `圆形头像.py` |
+| sepia | Vintage film 2.0 | slider Sepia strength 0–100（70） · slider Contrast 50–150（96） · slider Vignette 0–100（35） | Warm sepia. Adjustable strength, contrast and vignette | No | No | `复古胶片.py` |
+| glitch | Glitch 1.0 | slider Channel shift 0–30（8） · slider Slices 0–40（12） · slider Seed 0–99（7） · checkbox Scanlines | RGB channel shift and horizontal slice displacement for a digital glitch look | No | No | `故障艺术.py` |
+| border | White frame 2.0 | slider Border width 1–20（4） · select Color（白色 / 黑色 / 米白） · checkbox Inner line | Adds a border around the image; adjustable width, color and inner hairline | No | No | `白边框.py` |
+| tilt_shift | Tilt-shift 1.0 | slider Focus band 4–80（26） · slider Blur 1–30（12） · slider Saturation 0–100（45） · select Band position（居中 / 偏上 / 偏下） | Horizontal focus band with progressive blur above and below, for a miniature look | No | No | `移轴微缩.py` |
+| autolevel | Auto levels 2.0 | slider Cutoff 0–5（0.4） · slider Strength 0–100（100） | Stretches the histogram to remove a washed-out look | No | No | `自动色阶.py` |
+| sharpen | Sharpen 2.0 | slider Radius 0.5–5（1.4） · slider Strength % 10–300（90） · slider Threshold 0–20（3） | USM sharpening with adjustable radius, strength and threshold | No | No | `锐化.py` |
+| bw | Mono 2.0 | slider Contrast boost 0–100（20） | Minimal example: the shortest possible plugin. Adjustable contrast boost | No | No | `黑白.py` |
 <!-- END GENERATED builtin -->
 
-Plugin display names are localized from Prism's UI dictionary; parameter labels and
-descriptions come from each plugin's own `PARAMS` / `PLUGIN` data and stay in the
-language the author wrote them in.
+Built-in plugins provide zh/en/ja names, parameter labels and descriptions. Third-party
+plugins that only provide a Chinese string keep showing it as-is; plugins may opt in by
+supplying `{"zh","en","ja"}` objects (see `docs/plugin-api.en.md`).
 
 Parameter defaults are defined by `PARAMS` in the source. After you save, Prism hot-reloads automatically in about 1.5 seconds.
 
@@ -37,9 +37,9 @@ Parameter defaults are defined by `PARAMS` in the source. After you save, Prism 
 <!-- BEGIN GENERATED catalog -->
 | id | Name / version | Parameters | Description | SHA-256 (first 12) | Install file |
 | --- | --- | --- | --- | --- | --- |
-| grad-nd | Grad ND 1.0 | slider 减光强度 0–100（45） · select 压暗一侧（顶部 / 底部） · slider 过渡宽度 5–100（45） | Smoothly darkens one side, like a graduated ND filter; handy for skies | `cf8552bd0a43…` | `demo-grad-nd.py` |
-| soft-glow | Soft glow 1.0 | slider 强度 0–100（45） · slider 半径 1–40（18） · slider 高光门槛 0–100（55） | Highlight bloom with a soft blur overlay; gentler portraits and backlight | `a6935f32b593…` | `soft-glow.py` |
-| duotone | Duotone 1.0 | select 暗部颜色（深蓝 / 暗红 / 墨绿 / 紫夜 / 黑） · select 亮部颜色（米白 / 浅橙 / 天蓝 / 薄荷 / 白） · slider 强度 0–100（100） | Maps luminance between two colors; good for posters and covers | `d05950554b55…` | `duotone.py` |
+| grad-nd | Grad ND 1.0 | slider Strength 0–100（45） · select Darken side（顶部 / 底部） · slider Feather 5–100（45） | Smoothly darkens one side, like a graduated ND filter; handy for skies | `de955ec1dde2…` | `demo-grad-nd.py` |
+| soft-glow | Soft glow 1.0 | slider Strength 0–100（45） · slider Radius 1–40（18） · slider Highlight threshold 0–100（55） | Highlight bloom with a soft blur overlay; gentler portraits and backlight | `e189b41e226d…` | `soft-glow.py` |
+| duotone | Duotone 1.0 | select Shadow color（深蓝 / 暗红 / 墨绿 / 紫夜 / 黑） · select Highlight color（米白 / 浅橙 / 天蓝 / 薄荷 / 白） · slider Strength 0–100（100） | Maps luminance between two colors; good for posters and covers | `ab0936ecd1c6…` | `duotone.py` |
 <!-- END GENERATED catalog -->
 
 - In-app entry: plugin window → "Plugin marketplace". Browse plugins, check their "Installed / Update available / Not installed"

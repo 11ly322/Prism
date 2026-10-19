@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 PLUGIN_NAME = "自动色阶"
-PLUGIN_DESC = "把直方图拉满，去掉灰蒙蒙的感觉"
+PLUGIN_DESC = {"zh": "把直方图拉满，去掉灰蒙蒙的感觉", "en": "Stretches the histogram to remove a washed-out look", "ja": "ヒストグラムを引き伸ばして霞んだ印象を解消"}
 PLUGIN_VERSION = "2.0"
 PLUGIN_AUTHOR = "Prism"
 
@@ -10,9 +10,9 @@ PLUGIN = {"id": "autolevel", "name": PLUGIN_NAME, "version": PLUGIN_VERSION,
           "api": 2, "author": PLUGIN_AUTHOR}
 
 PARAMS = [
-    {"key": "cutoff", "label": "裁切比例", "min": 0, "max": 5,
+    {"key": "cutoff", "label": {"zh": "裁切比例", "en": "Cutoff", "ja": "カット率"}, "min": 0, "max": 5,
      "default": 0.4, "step": 0.1},
-    {"key": "strength", "label": "强度", "min": 0, "max": 100,
+    {"key": "strength", "label": {"zh": "强度", "en": "Strength", "ja": "強さ"}, "min": 0, "max": 100,
      "default": 100, "step": 5},
 ]
 

@@ -83,6 +83,18 @@ def main():
                       mutate(lambda o: o["plugins"][0].pop("id"))))
     bad_cases.append(("条目不是对象",
                       mutate(lambda o: o["plugins"].append("x"))))
+    bad_cases.append(("id 以 _ 开头",
+                      mutate(lambda o: o["plugins"][0].__setitem__(
+                          "id", "_utils"))))
+    bad_cases.append(("id 含大写",
+                      mutate(lambda o: o["plugins"][0].__setitem__(
+                          "id", "GradND"))))
+    bad_cases.append(("id 含空格",
+                      mutate(lambda o: o["plugins"][0].__setitem__(
+                          "id", "a b"))))
+    bad_cases.append(("id 太长",
+                      mutate(lambda o: o["plugins"][0].__setitem__(
+                          "id", "a" * 41))))
     for name, obj in bad_cases:
         try:
             mod.validate_plugin_catalog(obj)
@@ -156,6 +168,33 @@ def main():
         ok("清单哈希不符拒绝", False)
     except mod.PluginSourceError as exc:
         ok("清单哈希不符拒绝", "SHA-256" in str(exc), str(exc)[:32])
+
+    # 安装源码的 id 也走同一套规则（防止 _utils / 中文 id 落成怪文件名）
+    for bad_id in ("_utils", "GradND", "a b", ""):
+        src = ('PLUGIN = {"id": %r, "name": "x", "api": 2}\n'
+               'def run(img):\n    return img\n' % bad_id).encode("utf-8")
+        try:
+            mod.parse_plugin_source(src)
+            ok("拒绝源码 id：" + repr(bad_id), False)
+        except mod.PluginSourceError:
+            ok("拒绝源码 id：" + repr(bad_id), True)
+
+    # 三语 name / description
+    loc_src = (b'PLUGIN = {"id": "loc", "name": {"zh": "\xe5\x90\x8d", '
+               b'"en": "Name", "ja": "\xe5\x90\x8d\xe5\x89\x8d"}, '
+               b'"description": {"zh": "\xe8\xaf\xb4", "en": "Desc", '
+               b'"ja": "\xe8\xaa\xac\xe6\x98\x8e"}, "api": 2}\n'
+               b'def run(img):\n    return img\n')
+    old = mod.APP_LANG
+    mod.APP_LANG = "en"
+    meta_loc = mod.parse_plugin_source(loc_src)
+    ok("源码 name 本地化", meta_loc["name"] == "Name", meta_loc["name"])
+    ok("源码 description 本地化", meta_loc["description"] == "Desc",
+       meta_loc["description"])
+    mod.APP_LANG = "ja"
+    meta_loc = mod.parse_plugin_source(loc_src)
+    ok("源码 ja 回落/命中", meta_loc["name"] == "名前", meta_loc["name"])
+    mod.APP_LANG = old
 
     shutil.rmtree(tmp, ignore_errors=True)
     print()

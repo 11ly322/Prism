@@ -61,7 +61,7 @@ Therefore:
 | Field | Required | Description |
 | :--- | :--- | :--- |
 | key | Yes | Parameter name; also the key for kwargs in run |
-| label | Yes | UI label |
+| label | Yes | UI label; a string or {zh,en,ja} (9.6.0) |
 | type | No | slider (default) / select / checkbox / text |
 | min / max | Required for slider | Value range |
 | step | No | Step size, default 1 |
@@ -90,14 +90,23 @@ is a string.
 
 | Field | Required | Description |
 | :--- | :--- | :--- |
-| id | Yes | Unique identifier: lowercase letters/digits/underscore; used for logs and for disabling |
-| name | Yes | Display name |
+| id | Yes | Unique identifier: lowercase letters/digits/`-`/`_`, must not start with `_` (also used as the install filename) |
+| name | Yes | Display name; a string or {zh,en,ja} |
 | version | Yes | The plugin's own version |
 | api | Yes | Interface version; must currently be 2 |
 | author | Yes | Author |
-| description | Recommended | One-line description shown in the plugin window |
+| description | Recommended | One-line description shown in the plugin window; a string or {zh,en,ja} |
 | network | Optional | Capability declaration: whether it accesses the network (default False)|
 | writes_files | Optional | Capability declaration: whether it writes files (default False)|
+
+### Localized text (9.6.0)
+
+`name`, `description` and `PARAMS.label` may be plain strings, or objects like
+`{"zh": "...", "en": "...", "ja": "..."}`. A missing language falls back to Chinese.
+Third-party plugins that only provide a string keep showing it as-is. Values in
+`options` are passed to `run()` unchanged and are not translated (the displayed
+option is the value itself).
+
 
 network / writes_files are shown in the plugin window purely to improve transparency;
 **they are not enforced constraints** — plugins still run with full permissions.

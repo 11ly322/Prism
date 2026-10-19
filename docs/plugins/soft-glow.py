@@ -12,17 +12,17 @@ PLUGIN = {
     "version": "1.0",
     "api": 2,
     "author": "Prism",
-    "description": "高光溢出 + 轻微模糊叠加，人像与逆光更柔和",
+    "description": {"zh": "高光溢出 + 轻微模糊叠加，人像与逆光更柔和", "en": "Highlight bloom with a soft blur overlay; gentler portraits and backlight", "ja": "ハイライトをにじませて柔らかく。人物や逆光がやさしくなります"},
     "network": False,
     "writes_files": False,
 }
 
 PARAMS = [
-    {"key": "amount", "label": "强度", "type": "slider",
+    {"key": "amount", "label": {"zh": "强度", "en": "Strength", "ja": "強さ"}, "type": "slider",
      "min": 0, "max": 100, "default": 45, "step": 5},
-    {"key": "radius", "label": "半径", "type": "slider",
+    {"key": "radius", "label": {"zh": "半径", "en": "Radius", "ja": "半径"}, "type": "slider",
      "min": 1, "max": 40, "default": 18, "step": 1},
-    {"key": "threshold", "label": "高光门槛", "type": "slider",
+    {"key": "threshold", "label": {"zh": "高光门槛", "en": "Highlight threshold", "ja": "ハイライトのしきい値"}, "type": "slider",
      "min": 0, "max": 100, "default": 55, "step": 5},
 ]
 

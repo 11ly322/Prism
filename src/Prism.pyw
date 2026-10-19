@@ -65,7 +65,7 @@ IS_WIN = sys.platform.startswith("win")
 K = "Command" if IS_MAC else "Control"
 
 APP_NAME = "Prism"
-APP_VERSION = "9.5.1"
+APP_VERSION = "9.6.0"
 APP_BUILD = "2025-12.9"
 # ---------------------------------------------------------------- 运行模式
 # 同一份源码编出两个版本：
@@ -842,6 +842,16 @@ LANG_TABLE = {
         "下载并校验中…": "Downloading and verifying…",
         "下载到的插件 id 与清单不一致": "Downloaded plugin id does not match the catalog",
         "已更新「%s」到 %s": "Updated “%s” to %s",
+        # 9.6.0 插件 id 规则
+        "插件 id 只能用小写字母数字与 -_，且不能以 _ 开头：%s": "Plugin id may only use lowercase letters, digits and -_, and must not start with _: %s",
+        "与已装插件冲突": "Conflicts with an installed plugin",
+        "冲突": "Conflict",
+        "这个 id 已被另一个插件占用（%s），不能覆盖安装。\n请先移除那个插件，或让作者换一个 id。": "This id is already used by another plugin (%s); refusing to overwrite.\nRemove that plugin first, or ask the author to pick another id.",
+        "插件 id 与 %s 重复，已跳过 %s": "Duplicate plugin id %s; skipped %s",
+        # 9.6.0 市场搜索
+        "搜索": "Search",
+        "共 %d / %d 个插件": "%d / %d plugins",
+        "没有匹配的插件": "No matching plugins",
     },
     "ja": {
         "文件": "ファイル", "编辑": "編集", "视图": "表示", "工具": "ツール",
@@ -1429,6 +1439,16 @@ LANG_TABLE = {
         "下载并校验中…": "ダウンロードして検証中…",
         "下载到的插件 id 与清单不一致": "ダウンロードしたプラグインの id がカタログと一致しません",
         "已更新「%s」到 %s": "「%s」を %s に更新しました",
+        # 9.6.0 插件 id 规则
+        "插件 id 只能用小写字母数字与 -_，且不能以 _ 开头：%s": "プラグイン id は小文字英数字と -_ のみ、_ で始められません：%s",
+        "与已装插件冲突": "インストール済みと競合",
+        "冲突": "競合",
+        "这个 id 已被另一个插件占用（%s），不能覆盖安装。\n请先移除那个插件，或让作者换一个 id。": "この id は別のプラグイン（%s）が使用中です。上書きはできません。\n先にそのプラグインを削除するか、作者に id の変更を依頼してください。",
+        "插件 id 与 %s 重复，已跳过 %s": "プラグイン id %s が重複。%s をスキップしました",
+        # 9.6.0 市场搜索
+        "搜索": "検索",
+        "共 %d / %d 个插件": "%d / %d 個のプラグイン",
+        "没有匹配的插件": "一致するプラグインがありません",
     },
 }
 
@@ -2278,6 +2298,9 @@ PLUGIN_CATALOG_URL = (os.environ.get("PRISM_PLUGIN_CATALOG")
                       or "https://11ly322.github.io/Prism/plugins/index.json")
 PLUGIN_CATALOG_MAX_BYTES = 256 * 1024   # 清单只是索引，256 KB 足够
 PLUGIN_CATALOG_CACHE = "plugin_catalog.json"
+# 安装/清单里的 id 必须能安全地当文件名用：小写字母数字开头，长度 1~40。
+# 本地手放插件不走这条规则（兼容中文 id 的老插件）。
+PLUGIN_ID_RE = re.compile(r"^[a-z0-9][a-z0-9_-]{0,39}$")
 
 
 class PluginSourceError(ValueError):
@@ -2347,6 +2370,9 @@ def parse_plugin_source(data):
     pid = str(meta.get("id") or "").strip()
     if not pid:
         raise PluginSourceError(_tr("PLUGIN 缺少 id"))
+    if not PLUGIN_ID_RE.match(pid):
+        raise PluginSourceError(
+            _tr("插件 id 只能用小写字母数字与 -_，且不能以 _ 开头：%s") % pid)
     try:
         api = int(meta.get("api", 1))
     except Exception:
@@ -2355,10 +2381,10 @@ def parse_plugin_source(data):
         raise PluginSourceError(_tr("需要 API %s，当前支持 %s") % (
             api, "/".join(str(v) for v in PLUGIN_API_SUPPORTED)))
     return {"id": pid,
-            "name": str(meta.get("name") or pid),
+            "name": _localized(meta.get("name") or pid),
             "version": str(meta.get("version") or ""),
             "author": str(meta.get("author") or ""),
-            "description": str(meta.get("description") or ""),
+            "description": _localized(meta.get("description") or ""),
             "network": bool(meta.get("network")),
             "writes_files": bool(meta.get("writes_files")),
             "api": api,
@@ -2412,8 +2438,8 @@ def plugin_catalog_cache_path():
     return os.path.join(_data_dir(), PLUGIN_CATALOG_CACHE)
 
 
-def _catalog_text(value, lang=None):
-    """清单里的名字/说明是 {zh,en,ja}；缺当前语言就回落中文。"""
+def _localized(value, lang=None):
+    """插件/清单里的文本允许是字符串或 {zh,en,ja}；缺当前语言回落中文。"""
     if isinstance(value, dict):
         for key in (lang or APP_LANG, "zh", "en", "ja"):
             text = str(value.get(key) or "").strip()
@@ -2421,6 +2447,11 @@ def _catalog_text(value, lang=None):
                 return text
         return ""
     return str(value or "")
+
+
+def _catalog_text(value, lang=None):
+    """清单里的名字/说明是 {zh,en,ja}；缺当前语言就回落中文。"""
+    return _localized(value, lang)
 
 
 def validate_plugin_catalog(obj):
@@ -2445,6 +2476,9 @@ def validate_plugin_catalog(obj):
         pid = str(raw.get("id") or "").strip()
         if not pid:
             raise PluginSourceError(_tr("清单条目缺少 id"))
+        if not PLUGIN_ID_RE.match(pid):
+            raise PluginSourceError(
+                _tr("插件 id 只能用小写字母数字与 -_，且不能以 _ 开头：%s") % pid)
         if pid in seen:
             raise PluginSourceError(_tr("清单里 id 重复：%s") % pid)
         seen.add(pid)
@@ -9917,6 +9951,7 @@ class QPEApp(_BASE):
             return
         import importlib.util
         import inspect
+        seen_ids = set()
         for fn in names:
             if fn.endswith(".py.disabled"):
                 self.plugins_disabled.append(fn[:-len(".disabled")])
@@ -9953,6 +9988,12 @@ class QPEApp(_BASE):
             except Exception:
                 api = 1
             pid_guess = str(meta.get("id") or os.path.splitext(fn)[0])
+            if pid_guess in seen_ids:
+                msg = _tr("插件 id 与 %s 重复，已跳过 %s") % (pid_guess, fn)
+                _plugin_log(msg, plugin_id=pid_guess, stage="load")
+                self.plugin_errors.append((fn, msg))
+                continue
+            seen_ids.add(pid_guess)
             if api not in PLUGIN_API_SUPPORTED:
                 msg = "插件 %s 需要 API %s，当前为 %s" % (
                     pid_guess, api,
@@ -9977,10 +10018,10 @@ class QPEApp(_BASE):
                 "file": fn, "module": mod, "run": run, "api": api,
                 "call_mode": call_mode,
                 "id": str(meta.get("id") or os.path.splitext(fn)[0]),
-                "name": str(meta.get("name") or getattr(mod, "PLUGIN_NAME",
-                                                        os.path.splitext(fn)[0])),
-                "desc": str(meta.get("description")
-                            or getattr(mod, "PLUGIN_DESC", "")),
+                "name": _localized(meta.get("name") or getattr(
+                    mod, "PLUGIN_NAME", os.path.splitext(fn)[0])),
+                "desc": _localized(meta.get("description")
+                                   or getattr(mod, "PLUGIN_DESC", "")),
                 "ver": str(meta.get("version") or getattr(mod, "PLUGIN_VERSION", "")),
                 "author": str(meta.get("author") or getattr(mod, "PLUGIN_AUTHOR", "")),
                 "load_ms": load_ms,
@@ -10170,6 +10211,17 @@ class QPEApp(_BASE):
                                        fg=FG_DIM, anchor="w", justify="left",
                                        wraplength=px(600))
         self._market_status.pack(fill="x", padx=px(16), pady=(px(4), 0))
+        search_row = tk.Frame(win, bg=BAR_BG)
+        search_row.pack(fill="x", padx=px(16), pady=(px(4), 0))
+        tk.Label(search_row, text=_tr("搜索"), font=self.ui_font_s,
+                 bg=BAR_BG, fg=FG_DIM).pack(side="left")
+        self._market_query = tk.StringVar()
+        _q = tk.Entry(search_row, textvariable=self._market_query, bg=DEEP_BG,
+                      fg=FG, insertbackground=FG, relief="flat", bd=0,
+                      highlightthickness=0, font=self.ui_font_s)
+        _q.pack(side="left", fill="x", expand=True, padx=(px(8), 0),
+                ipady=px(3))
+        _q.bind("<KeyRelease>", lambda e: self._market_render())
 
         box = tk.Frame(win, bg=BAR_BG)
         box.pack(fill="both", expand=True, padx=px(16), pady=(px(8), px(4)))
@@ -10245,15 +10297,41 @@ class QPEApp(_BASE):
             return
         for ch in inner.winfo_children():
             ch.destroy()
-        entries = getattr(self, "_market_entries", [])
+        all_entries = getattr(self, "_market_entries", [])
+        query = ""
+        try:
+            query = self._market_query.get().strip().casefold()
+        except Exception:
+            pass
+        entries = all_entries
+        if query:
+            def hay(e):
+                return " ".join((
+                    str(e.get("id") or ""), _catalog_text(e.get("name")),
+                    _catalog_text(e.get("description")),
+                    str(e.get("author") or ""))).casefold()
+            entries = [e for e in all_entries if query in hay(e)]
+            self._market_status.configure(
+                text=_tr("共 %d / %d 个插件") % (len(entries), len(all_entries)))
+        elif all_entries:
+            self._market_status.configure(
+                text=_tr("共 %d 个插件") % len(all_entries))
         if not entries:
-            tk.Label(inner, text="没有可安装的插件", font=self.ui_font,
-                     bg=BAR_BG, fg=FG_DIM, anchor="w").pack(fill="x", pady=px(10))
+            tk.Label(inner, text=(_tr("没有匹配的插件") if query
+                                  else _tr("没有可安装的插件")),
+                     font=self.ui_font, bg=BAR_BG, fg=FG_DIM,
+                     anchor="w").pack(fill="x", pady=px(10))
             return
         installed = {str(p.get("id")): p for p in self.plugins}
         for entry in entries:
             cur = installed.get(entry["id"])
-            if cur is None:
+            # 同一个 id 但文件不是 <id>.py（例如内置插件）→ 不允许覆盖式安装
+            conflict = bool(cur and os.path.basename(
+                str(cur.get("file") or "")) != safe_plugin_filename(
+                    entry["id"]) + ".py")
+            if conflict:
+                state, color, action = _tr("与已装插件冲突"), "#ff8a80", _tr("冲突")
+            elif cur is None:
                 state, color = _tr("未安装"), FG_DIM
                 action = _tr("安装")
             elif catalog_is_newer(entry["version"], cur.get("ver", "")):
@@ -10296,6 +10374,14 @@ class QPEApp(_BASE):
         name = _catalog_text(entry["name"])
         installed = {str(p.get("id")): p for p in self.plugins}
         cur = installed.get(entry["id"])
+        if cur is not None and os.path.basename(
+                str(cur.get("file") or "")) != safe_plugin_filename(
+                    entry["id"]) + ".py":
+            messagebox.showerror(
+                _tr("插件市场"),
+                _tr("这个 id 已被另一个插件占用（%s），不能覆盖安装。\n请先移除那个插件，或让作者换一个 id。")
+                % cur.get("file"), parent=win)
+            return
         caps = _tr("联网 %s · 写文件 %s") % (
             _tr("是") if entry["network"] else _tr("否"),
             _tr("是") if entry["writes_files"] else _tr("否"))
@@ -10679,7 +10765,7 @@ def run(img, **params):
                 kind = "range"
             out.append({
                 "key": str(p["key"]),
-                "label": str(p.get("label", p["key"])),
+                "label": _localized(p.get("label", p["key"])),
                 "type": kind,
                 "min": p.get("min", 0),
                 "max": p.get("max", 100),

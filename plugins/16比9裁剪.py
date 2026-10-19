@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 PLUGIN_NAME = "16比9裁剪"
-PLUGIN_DESC = "按目标比例居中裁剪，做视频封面和 PPT 配图"
+PLUGIN_DESC = {"zh": "按目标比例居中裁剪，做视频封面和 PPT 配图", "en": "Center-crops to a preset aspect ratio; useful for video covers and slide images", "ja": "指定比率で中央トリミング。動画サムネやスライド用画像に"}
 PLUGIN_VERSION = "2.0"
 PLUGIN_AUTHOR = "Prism"
 
@@ -10,9 +10,9 @@ PLUGIN = {"id": "crop169", "name": PLUGIN_NAME, "version": PLUGIN_VERSION,
           "api": 2, "author": PLUGIN_AUTHOR}
 
 PARAMS = [
-    {"key": "ratio", "label": "目标比例", "type": "choice",
+    {"key": "ratio", "label": {"zh": "目标比例", "en": "Aspect ratio", "ja": "アスペクト比"}, "type": "choice",
      "choices": ["16:9", "9:16", "4:3", "1:1"], "default": "16:9"},
-    {"key": "align", "label": "对齐", "type": "choice",
+    {"key": "align", "label": {"zh": "对齐", "en": "Align", "ja": "位置"}, "type": "choice",
      "choices": ["居中", "偏上", "偏下"], "default": "居中"},
 ]
 

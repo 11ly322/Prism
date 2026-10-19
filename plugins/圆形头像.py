@@ -1,5 +1,5 @@
 PLUGIN_NAME = "圆形头像"
-PLUGIN_DESC = "圆形蒙版头像。可调留白、背景色与输出尺寸"
+PLUGIN_DESC = {"zh": "圆形蒙版头像。可调留白、背景色与输出尺寸", "en": "Round-mask avatar. Adjustable padding, background color and output size", "ja": "円形マスクのアバター。余白・背景色・出力サイズを調整"}
 PLUGIN_VERSION = "2.0"
 PLUGIN_AUTHOR = "Prism"
 
@@ -12,11 +12,11 @@ from PIL import Image, ImageDraw
 _LANCZOS = getattr(getattr(Image, "Resampling", Image), "LANCZOS", 1)
 
 PARAMS = [
-    {"key": "size", "label": "输出边长", "min": 128, "max": 1024,
+    {"key": "size", "label": {"zh": "输出边长", "en": "Output size", "ja": "出力サイズ"}, "min": 128, "max": 1024,
      "default": 512, "step": 64},
-    {"key": "margin", "label": "留白比例", "min": 0, "max": 30,
+    {"key": "margin", "label": {"zh": "留白比例", "en": "Padding", "ja": "余白"}, "min": 0, "max": 30,
      "default": 0, "step": 1},
-    {"key": "bg", "label": "背景", "type": "choice",
+    {"key": "bg", "label": {"zh": "背景", "en": "Background", "ja": "背景"}, "type": "choice",
      "choices": ["透明", "白色", "黑色"], "default": "透明"},
 ]
 

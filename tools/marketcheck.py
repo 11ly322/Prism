@@ -118,6 +118,16 @@ def main():
         e["url"] = base + "/" + os.path.basename(e["url"])
     threading.Thread(target=srv.serve_forever, daemon=True).start()
 
+    # 伪造一个「内置插件」：id=bw 但文件名是 黑白.py；清单里塞同 id 条目测试冲突
+    open(os.path.join(plugins_dir, "黑白.py"), "w", encoding="utf-8").write(
+        'PLUGIN = {"id": "bw", "name": "黑白", "version": "2.0", "api": 2}\n'
+        'def run(img, **params):\n    return img\n')
+    bw_entry = json.loads(json.dumps(catalog["plugins"][0]))
+    bw_entry["id"] = "bw"
+    bw_entry["name"] = {"zh": "黑白", "en": "Mono", "ja": "モノクロ"}
+    bw_entry["version"] = "1.0"
+    catalog["plugins"].append(bw_entry)
+
     # 预置状态：soft-glow 已装当前版；duotone 装旧版；grad-nd 未装
     by_id = {e["id"]: e for e in raw["plugins"]}
     soft = open(os.path.join(ROOT, by_id["soft-glow"]["source"]), "rb").read()
@@ -148,11 +158,34 @@ def main():
         ok("状态：未安装", "未安装" in texts, "")
         ok("状态：已安装", "已安装" in texts, "")
         ok("状态：可更新", any("可更新 0.9 → 1.0" in t for t in texts), "")
+        ok("状态：与已装插件冲突", "与已装插件冲突" in texts, "")
         ok("按钮：安装 / 更新 / 重新安装",
            all(x in texts for x in ("安装", "更新", "重新安装")), "")
 
         def entry(pid):
             return next(e for e in app._market_entries if e["id"] == pid)
+
+        # 搜索过滤：按 id / 名称 / 说明 / 作者
+        app._market_query.set("duo")
+        app._market_render()
+        wait_until(app, lambda: False, 0.2)
+        texts = []
+        collect(app.market_win, texts)
+        ok("搜索命中 duotone",
+           any("双色调" in t for t in texts) and not any("柔光" in t for t in texts))
+        ok("搜索计数", "共 1 / 4 个插件" in texts,
+           [t for t in texts if "共 " in t][:1])
+        app._market_query.set("")
+        app._market_render()
+        wait_until(app, lambda: False, 0.2)
+
+        # 冲突 id：直接拒绝，不能覆盖内置插件
+        n_err = len(fake.errors)
+        app._market_install(entry("bw"))
+        hit = wait_until(app, lambda: len(fake.errors) > n_err, 8)
+        ok("冲突 id 不能覆盖安装", hit and any(
+            "占用" in e for e in fake.errors[n_err:]),
+           fake.errors[-1][:40] if fake.errors else "无错误")
 
         # 一键安装 grad-nd
         app._market_install(entry("grad-nd"))
@@ -173,10 +206,12 @@ def main():
         bad = dict(entry("soft-glow"))
         bad["sha256"] = "0" * 64
         before = open(os.path.join(plugins_dir, "soft-glow.py"), "rb").read()
+        n_err = len(fake.errors)
         app._market_install(bad)
-        hit = wait_until(app, lambda: bool(fake.errors), 12)
+        hit = wait_until(app, lambda: len(fake.errors) > n_err, 12)
         after = open(os.path.join(plugins_dir, "soft-glow.py"), "rb").read()
-        ok("哈希不符被拒绝", hit and any("SHA-256" in e for e in fake.errors),
+        ok("哈希不符被拒绝", hit and any(
+            "SHA-256" in e for e in fake.errors[n_err:]),
            (fake.errors[-1][:40] if fake.errors else "无错误"))
         ok("哈希不符未改动文件", before == after)
         texts = []

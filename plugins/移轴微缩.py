@@ -9,17 +9,17 @@ from PIL import Image, ImageFilter, ImageEnhance
 
 PLUGIN = {"id": "tilt_shift", "name": PLUGIN_NAME, "version": PLUGIN_VERSION,
           "api": 2, "author": PLUGIN_AUTHOR,
-          "description": "横向清晰带 + 上下渐进虚化，做微缩模型效果",
+          "description": {"zh": "横向清晰带 + 上下渐进虚化，做微缩模型效果", "en": "Horizontal focus band with progressive blur above and below, for a miniature look", "ja": "横方向のピント帯と上下のぼかしでミニチュア風に"},
           "network": False, "writes_files": False}
 
 PARAMS = [
-    {"key": "band", "label": "清晰带", "type": "slider",
+    {"key": "band", "label": {"zh": "清晰带", "en": "Focus band", "ja": "ピント帯"}, "type": "slider",
      "min": 4, "max": 80, "default": 26, "step": 2},
-    {"key": "blur", "label": "虚化强度", "type": "slider",
+    {"key": "blur", "label": {"zh": "虚化强度", "en": "Blur", "ja": "ぼかし"}, "type": "slider",
      "min": 1, "max": 30, "default": 12, "step": 1},
-    {"key": "sat", "label": "饱和提升", "type": "slider",
+    {"key": "sat", "label": {"zh": "饱和提升", "en": "Saturation", "ja": "彩度"}, "type": "slider",
      "min": 0, "max": 100, "default": 45, "step": 5},
-    {"key": "pos", "label": "清晰带位置", "type": "select",
+    {"key": "pos", "label": {"zh": "清晰带位置", "en": "Band position", "ja": "ピント帯の位置"}, "type": "select",
      "options": ["居中", "偏上", "偏下"], "default": "居中"},
 ]
 

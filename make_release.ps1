@@ -1,6 +1,6 @@
 ﻿# Prism 发布脚本：打包主程序 -> 生成自解压安装包 -> 删除旧版本发布物
 # 用法：powershell -ExecutionPolicy Bypass -File make_release.ps1
-param([switch]$SkipApp, [switch]$CheckOnly)
+param([switch]$SkipApp, [switch]$CheckOnly, [switch]$VerifySite)
 
 $ErrorActionPreference = 'Continue'
 $root = $PSScriptRoot
@@ -8,6 +8,19 @@ $py = 'C:\Users\75643\.dsh\dsh-runtimes\dsh-primary-runtime\dependencies\python\
 $env:PYTHONIOENCODING = 'utf-8'
 
 $ver = (Select-String -Path (Join-Path $root 'src\Prism.pyw') -Pattern 'APP_VERSION = "(.*)"').Matches[0].Groups[1].Value
+
+# ---- 发布后线上验收：push 之后跑这个，不打包 ----
+if ($VerifySite) {
+    & $py (Join-Path $root 'tools\verifysite.py') --ver $ver
+    exit $LASTEXITCODE
+}
+
+# ---- 打包环境预检：缺 PyInstaller 直接给安装命令，别打包到一半才失败 ----
+if (-not $CheckOnly) {
+    Write-Host '-- 0/4 打包环境检查'
+    & $py (Join-Path $root 'tools\buildenvcheck.py')
+    if ($LASTEXITCODE -ne 0) { exit 1 }
+}
 
 # ---- 词条门禁：新增界面文案必须三语，缺一条就不许发 ----
 Write-Host '-- 0/4 词条自检（新增文案必须三语）'
@@ -30,6 +43,14 @@ Write-Host '-- 0/4 三语文档自检'
 & $py (Join-Path $root 'tools\docscheck.py')
 if ($LASTEXITCODE -ne 0) {
     Write-Host '三语文档自检失败：看上面哪份文档的链接/标记不对' -ForegroundColor Red
+    exit 1
+}
+
+# ---- 回归总表（快跑）：词条 / 索引 / 文档 / 插件 / 市场 / 三语界面 ----
+Write-Host '-- 0/4 回归总表（快跑）'
+& $py (Join-Path $root 'tools\runall.py') --fast
+if ($LASTEXITCODE -ne 0) {
+    Write-Host '回归失败：先修上面 FAIL 的套件，再发版' -ForegroundColor Red
     exit 1
 }
 
@@ -65,13 +86,13 @@ if ($CheckOnly) {
     $bad = @()
     foreach ($u in $hrefs) {
         $code = 0
-        foreach ($attempt in 1..3) {
+        foreach ($attempt in 1..5) {
             try {
                 $r = Invoke-WebRequest -Uri $u -Method Head -UseBasicParsing -MaximumRedirection 5 -TimeoutSec 25
                 $code = [int]$r.StatusCode
             } catch { try { $code = [int]$_.Exception.Response.StatusCode.value__ } catch { $code = 0 } }
             if ($code -eq 200) { break }
-            Start-Sleep -Seconds 4
+            Start-Sleep -Seconds 6
         }
         $name = ($u -replace '.*/download/', '')
         Write-Host ("   {0}  {1}" -f $name.PadRight(34), $code)
@@ -176,8 +197,9 @@ if ((Test-Path (Join-Path $root 'Prism.exe')) -and (Test-Path (Join-Path $root '
     Write-Host '   !! 未找到 onedir 构建，跳过便携版'
 }
 
-Write-Host '== 生成英文/日文静态页 =='
-& $py (Join-Path $root 'tools\make_langpages.py')
+Write-Host '== 生成文档 HTML =='
+& $py (Join-Path $root 'tools\make_docs_html.py')
+if ($LASTEXITCODE -ne 0) { throw '文档 HTML 生成失败' }
 
 Write-Host '== 重新生成网页效果图 =='
 $sample = Join-Path $root 'design\sample.jpg'
@@ -219,6 +241,12 @@ try {
             Set-Content -LiteralPath $page -Value $html -Encoding UTF8 -NoNewline
             Write-Host ("   页面已更新 SHA " + $sha.Substring(0, 12) + " / " + $sizeMb + " MB / 版本 $ver")
         }
+        # 英文/日文页必须从更新后的中文页生成，否则版本号会落后一版
+        Write-Host '== 生成英文/日文静态页 =='
+        & $py (Join-Path $root 'tools\make_langpages.py')
+        if ($LASTEXITCODE -ne 0) { throw '语言页生成失败' }
+        & $py (Join-Path $root 'check_versions.py')
+        if ($LASTEXITCODE -ne 0) { throw '版本号不一致：页面已更新但仍有旧版本号' }
         $tag = "v$ver"
         & git -C $root tag -f $tag 2>&1 | Out-Null
         & git -C $root push origin $tag --force 2>&1 | Out-Null

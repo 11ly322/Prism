@@ -8,16 +8,16 @@ from PIL import Image
 
 PLUGIN = {"id": "watermark", "name": PLUGIN_NAME, "version": PLUGIN_VERSION,
           "api": 2, "author": PLUGIN_AUTHOR,
-          "description": "右下角加一行署名，文字内容可自定义",
+          "description": {"zh": "右下角加一行署名，文字内容可自定义", "en": "Adds a signature line in the bottom-right; text is customizable", "ja": "右下に署名を 1 行追加。テキストは自由に変更可"},
           "network": False, "writes_files": False}
 
 PARAMS = [
-    {"key": "text", "label": "署名文字", "type": "text", "default": "© Prism"},
-    {"key": "size", "label": "字号占比", "min": 1, "max": 8,
+    {"key": "text", "label": {"zh": "署名文字", "en": "Signature text", "ja": "署名テキスト"}, "type": "text", "default": "© Prism"},
+    {"key": "size", "label": {"zh": "字号占比", "en": "Font size", "ja": "文字サイズ"}, "min": 1, "max": 8,
      "default": 3.2, "step": 0.2},
-    {"key": "margin", "label": "边距占比", "min": 0, "max": 8,
+    {"key": "margin", "label": {"zh": "边距占比", "en": "Margin", "ja": "余白"}, "min": 0, "max": 8,
      "default": 2.0, "step": 0.5},
-    {"key": "stroke", "label": "描边", "type": "checkbox", "default": True},
+    {"key": "stroke", "label": {"zh": "描边", "en": "Outline", "ja": "フチ"}, "type": "checkbox", "default": True},
 ]
 
 

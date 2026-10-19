@@ -1,11 +1,15 @@
 {
  "schema": 1,
- "updated": "2026-10-19",
+ "updated": "2026-10-20",
  "homepage": "https://11ly322.github.io/Prism/",
  "plugins": [
   {
    "id": "grad-nd",
-   "name": {"zh": "渐变减光", "en": "Grad ND", "ja": "グラデ ND"},
+   "name": {
+    "zh": "渐变减光",
+    "en": "Grad ND",
+    "ja": "グラデ ND"
+   },
    "version": "1.0",
    "api": 2,
    "author": "Prism",
@@ -17,12 +21,16 @@
    "network": false,
    "writes_files": false,
    "url": "https://11ly322.github.io/Prism/plugins/demo-grad-nd.py",
-   "sha256": "cf8552bd0a4393e5a798582c00970b2981d6a7f8e14182c682c2eabe666e54ee",
+   "sha256": "de955ec1dde20450b596fecef8f37805cd1a46015c97a6a024e3d4895d49ab20",
    "source": "docs/plugins/demo-grad-nd.py"
   },
   {
    "id": "soft-glow",
-   "name": {"zh": "柔光", "en": "Soft glow", "ja": "ソフトグロー"},
+   "name": {
+    "zh": "柔光",
+    "en": "Soft glow",
+    "ja": "ソフトグロー"
+   },
    "version": "1.0",
    "api": 2,
    "author": "Prism",
@@ -34,12 +42,16 @@
    "network": false,
    "writes_files": false,
    "url": "https://11ly322.github.io/Prism/plugins/soft-glow.py",
-   "sha256": "a6935f32b59306e08583812a16e1815956eb2e27b2e2a89bbe46da34ec846483",
+   "sha256": "e189b41e226dfdf3d366dd2175002b51262b46c776c92e3392bfcb212522e8aa",
    "source": "docs/plugins/soft-glow.py"
   },
   {
    "id": "duotone",
-   "name": {"zh": "双色调", "en": "Duotone", "ja": "デュオトーン"},
+   "name": {
+    "zh": "双色调",
+    "en": "Duotone",
+    "ja": "デュオトーン"
+   },
    "version": "1.0",
    "api": 2,
    "author": "Prism",
@@ -51,8 +63,9 @@
    "network": false,
    "writes_files": false,
    "url": "https://11ly322.github.io/Prism/plugins/duotone.py",
-   "sha256": "d05950554b55f10d5419dfba9b82f471063a586144bf64808b3ca8a725294522",
+   "sha256": "ab0936ecd1c6f79aa18ea914733ee92e9f7bf6ee2734dc8c59ee53c6c71accd9",
    "source": "docs/plugins/duotone.py"
   }
  ]
 }
+

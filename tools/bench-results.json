@@ -265,6 +265,120 @@
           ]
         }
       }
+    },
+    {
+      "machine": {
+        "os": "Windows-11-10.0.26200-SP0",
+        "python": "3.12.14",
+        "cpu": "AMD Ryzen 7 H 255 w/ Radeon 780M Graphics",
+        "ram_gb": 19.8,
+        "machine": "AMD64"
+      },
+      "app_version": "9.6.0",
+      "startup_ms": 2431.8,
+      "first_frame_40mp_ms": 1237.8,
+      "slider_ms": 100.0,
+      "proxy_ms": 0.6,
+      "mem_current_mb": 244.1,
+      "mem_peak_mb": 356.1,
+      "repeat": 3,
+      "proxy_limit": 3400,
+      "note": "9.6.0 插件 id 规则 / 三语标签 / 市场搜索",
+      "paths": {
+        "draft_1600": {
+          "ms": 232.71139999997104,
+          "mp": 2.5,
+          "mp_s": 10.74,
+          "size": [
+            2000,
+            1250
+          ]
+        },
+        "load_full": {
+          "ms": 296.37710000315565,
+          "mp": 40.0,
+          "mp_s": 134.96,
+          "size": [
+            8000,
+            5000
+          ]
+        },
+        "reduce4_resize1600": {
+          "ms": 88.14840000195545,
+          "mp": 1.6,
+          "mp_s": 18.15,
+          "size": [
+            1600,
+            1000
+          ]
+        },
+        "resize1600_only": {
+          "ms": 362.74000000048545,
+          "mp": 1.6,
+          "mp_s": 4.41,
+          "size": [
+            1600,
+            1000
+          ]
+        }
+      }
+    },
+    {
+      "machine": {
+        "os": "Windows-11-10.0.26200-SP0",
+        "python": "3.12.14",
+        "cpu": "AMD Ryzen 7 H 255 w/ Radeon 780M Graphics",
+        "ram_gb": 19.8,
+        "machine": "AMD64"
+      },
+      "app_version": "9.6.0",
+      "startup_ms": 2361.5,
+      "first_frame_40mp_ms": 582.1,
+      "slider_ms": 88.9,
+      "proxy_ms": 0.7,
+      "mem_current_mb": 243.9,
+      "mem_peak_mb": 358.3,
+      "repeat": 5,
+      "proxy_limit": 3400,
+      "note": "9.6.0 repeat5 (quiet)",
+      "paths": {
+        "draft_1600": {
+          "ms": 229.5893000009528,
+          "mp": 2.5,
+          "mp_s": 10.89,
+          "size": [
+            2000,
+            1250
+          ]
+        },
+        "load_full": {
+          "ms": 323.90489999670535,
+          "mp": 40.0,
+          "mp_s": 123.49,
+          "size": [
+            8000,
+            5000
+          ]
+        },
+        "reduce4_resize1600": {
+          "ms": 101.00099999908707,
+          "mp": 1.6,
+          "mp_s": 15.84,
+          "size": [
+            1600,
+            1000
+          ]
+        },
+        "resize1600_only": {
+          "ms": 367.0683000018471,
+          "mp": 1.6,
+          "mp_s": 4.36,
+          "size": [
+            1600,
+            1000
+          ]
+        }
+      }
     }
   ]
 }

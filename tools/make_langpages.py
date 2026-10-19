@@ -60,6 +60,13 @@ def build(lang, raw, dicts, ver):
     # 资源与按钮
     out = re.sub(r'(src|href)="(?!https?:|//|#|mailto:|\.\./)([^"]+)"',
                  lambda m: '%s="../%s"' % (m.group(1), m.group(2)), out)
+    # 文档页有独立的三语 HTML：把站点内的链接指向当前语言版本
+    if lang == "en":
+        out = out.replace('href="plugin-guide.html"', 'href="plugin-guide.en.html"')
+        out = out.replace('href="plugin-api.html"', 'href="plugin-api.en.html"')
+    elif lang == "ja":
+        out = out.replace('href="plugin-guide.html"', 'href="plugin-guide.ja.html"')
+        out = out.replace('href="plugin-api.html"', 'href="plugin-api.ja.html"')
     for kind in ("main", "viewer", "plugins", "settings"):
         # 本地化截图不存在就保留中文原图：宁可少一张本地化，也不要 404 破图
         loc = "ui-%s-%s.webp" % (kind, lang)

@@ -4,6 +4,58 @@
 > 已一并改为 Prism，功能与时间线不变。代码里的 QPEApp / _QpeSlider 等内部
 > 标识符与旧配置迁移路径保持原名，改动会破坏兼容。
 
+## v9.6.0  （插件 id 边界 + 三语标签 + 市场搜索 + 发布链路加固）
+
+### 插件 id 规则（避免装出同 id / 怪文件名）
+
+- 安装与清单里的 id 必须是 `^[a-z0-9][a-z0-9_-]{0,39}$`，不能用 `_` 开头；
+  本地手放插件仍兼容中文 id（不走安装校验）。
+- 扫描时同一个 id 只保留第一个，其余写入 `plugin_errors`，不再出现两个同 id 插件。
+- 市场里若清单 id 与已装插件的文件名不一致（例如内置 `bw` 在 `黑白.py` 里），
+  显示「与已装插件冲突」，安装/更新直接拒绝，不会覆盖。
+- `make_plugin_index.py` 同步校验 id 规则与内置冲突，清单写错会在生成阶段失败。
+
+### 三语标签（插件自己的文本）
+
+- `PLUGIN.name` / `PLUGIN.description` / `PARAMS.label` 支持字符串或
+  `{"zh","en","ja"}`；缺当前语言回落中文，第三方只写字符串也照旧可用。
+- 12 个内置插件与 3 个清单插件的标签、说明全部补齐英/日；
+  `plugins/README` 的三语表格现在是真三语（选项值仍是协议值，不翻译）。
+- 插件模板与 `docs/plugin-api` 三语说明同步更新。
+
+### 插件市场
+
+- 新增搜索框：按 id / 名称 / 说明 / 作者过滤，显示「共 N / 总数」；无结果有提示。
+- 冲突状态与拒绝安装（见上）。
+- 列表宽度、滚动区此前已修，市场窗口内容铺满。
+
+### 发布链路
+
+- `tools/runall.py`：一条命令跑全部回归，`--fast` 11 套约 38 秒；
+  已接进 `make_release.ps1` 的 `-CheckOnly` 门禁。
+- `requirements-build.txt` + `tools/buildenvcheck.py`：打包前核对 PyInstaller / Pillow / numpy，
+  缺了直接给安装命令（9.4.0 曾因本机缺 PyInstaller 打包失败）。
+- `tools/verifysite.py` + `make_release.ps1 -VerifySite`：push 之后验版本、6 个资产、
+  清单 SHA、三语文档，最多等一小时。
+- `tools/make_docs_html.py`：把三语 MD 生成 6 页静态 HTML（API + 指南 × 三语），
+  站点插件表加入口；Markdown 里的 `.md` 互链在 HTML 中改指 `.html`，其余仓库文件指 GitHub。
+- CI / Pages Actions 工作流已写好，但当前 token 缺 `workflow` 权限推不上去，
+  暂存为 `ci/ci.yml.pending`、`ci/pages.yml.pending`，启用步骤见 `ci/README.md`。
+
+### 验证
+
+- `runall --fast`：11/11 通过（词条、索引、文档、HTML、版本、安装、清单、插件、市场、三语、导入）。
+- 新增测试：id 非法用例、重复 id 扫描、内置冲突拒绝、市场搜索与计数、标签三语回落。
+- Bench（Ryzen 7 H 255 / 19.8 GB / Python 3.12.14，repeat 5）：
+  启动 2362 ms、40MP 首帧 582 ms（标准差 6）、滑杆 89 ms、内存 244/358 MB；
+  本轮未改渲染/解码路径。repeat 3 时首帧出现 582/1238 ms 双峰（冷缓存），已用 repeat 5 复核。
+
+### 已知限制
+
+- 插件选项值（`options`）不参与翻译，显示的就是传给 `run()` 的值。
+- CI 尚未启用，需要 `workflow` 权限；Pages 仍是 legacy 部署。
+- 站点同时提供 `.md`（可读原文）与 `.html`（排版版），HTML 样式是精简版，不复刻 GitHub。
+
 ## v9.5.1  （修复插件重新启用 + 三语文档 + 发布到市场指南）
 
 ### 修复：插件禁用后无法重新启用

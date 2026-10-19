@@ -1,5 +1,5 @@
 PLUGIN_NAME = "像素化"
-PLUGIN_DESC = "马赛克。可调方块大小、取样方式与描边"
+PLUGIN_DESC = {"zh": "马赛克。可调方块大小、取样方式与描边", "en": "Mosaic. Adjustable block size, sampling and edge drawing", "ja": "モザイク。ブロックサイズ・サンプリング・縁取りを調整"}
 PLUGIN_VERSION = "2.0"
 PLUGIN_AUTHOR = "Prism"
 
@@ -13,11 +13,11 @@ _BOX = getattr(getattr(Image, "Resampling", Image), "BOX", 4)
 _NEAREST = getattr(getattr(Image, "Resampling", Image), "NEAREST", 0)
 
 PARAMS = [
-    {"key": "block", "label": "方块大小", "min": 4, "max": 160,
+    {"key": "block", "label": {"zh": "方块大小", "en": "Block size", "ja": "ブロックサイズ"}, "min": 4, "max": 160,
      "default": 24, "step": 1},
-    {"key": "mode", "label": "取样方式", "type": "choice",
+    {"key": "mode", "label": {"zh": "取样方式", "en": "Sampling", "ja": "サンプリング"}, "type": "choice",
      "choices": ["平均", "放大镜"], "default": "平均"},
-    {"key": "edge", "label": "画方块边", "type": "bool", "default": False},
+    {"key": "edge", "label": {"zh": "画方块边", "en": "Draw edges", "ja": "縁を描く"}, "type": "bool", "default": False},
 ]
 
 

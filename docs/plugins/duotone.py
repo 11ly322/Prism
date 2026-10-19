@@ -12,7 +12,7 @@ PLUGIN = {
     "version": "1.0",
     "api": 2,
     "author": "Prism",
-    "description": "明度映射到暗部/亮部两种颜色，做海报与封面配色",
+    "description": {"zh": "明度映射到暗部/亮部两种颜色，做海报与封面配色", "en": "Maps luminance between two colors; good for posters and covers", "ja": "明度を 2 色にマッピング。ポスターや表紙の配色に"},
     "network": False,
     "writes_files": False,
 }
@@ -33,11 +33,11 @@ LIGHT = {
 }
 
 PARAMS = [
-    {"key": "dark", "label": "暗部颜色", "type": "select",
+    {"key": "dark", "label": {"zh": "暗部颜色", "en": "Shadow color", "ja": "暗部の色"}, "type": "select",
      "options": list(DARK), "default": "深蓝"},
-    {"key": "light", "label": "亮部颜色", "type": "select",
+    {"key": "light", "label": {"zh": "亮部颜色", "en": "Highlight color", "ja": "明部の色"}, "type": "select",
      "options": list(LIGHT), "default": "米白"},
-    {"key": "amount", "label": "强度", "type": "slider",
+    {"key": "amount", "label": {"zh": "强度", "en": "Strength", "ja": "強さ"}, "type": "slider",
      "min": 0, "max": 100, "default": 100, "step": 5},
 ]
 

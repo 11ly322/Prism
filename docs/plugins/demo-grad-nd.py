@@ -16,17 +16,17 @@ PLUGIN = {
     "version": "1.0",
     "api": 2,
     "author": "Prism",
-    "description": "从画面一侧平滑压暗，模拟中灰渐变镜；常用来压天空",
+    "description": {"zh": "从画面一侧平滑压暗，模拟中灰渐变镜；常用来压天空", "en": "Smoothly darkens one side, like a graduated ND filter; handy for skies", "ja": "画面の片側をなめらかに暗くし、ハーフ ND フィルターのように空を抑えます"},
     "network": False,
     "writes_files": False,
 }
 
 PARAMS = [
-    {"key": "amount", "label": "减光强度", "type": "slider",
+    {"key": "amount", "label": {"zh": "减光强度", "en": "Strength", "ja": "減光の強さ"}, "type": "slider",
      "min": 0, "max": 100, "default": 45, "step": 5},
-    {"key": "side", "label": "压暗一侧", "type": "select",
+    {"key": "side", "label": {"zh": "压暗一侧", "en": "Darken side", "ja": "暗くする側"}, "type": "select",
      "options": ["顶部", "底部"], "default": "顶部"},
-    {"key": "feather", "label": "过渡宽度", "type": "slider",
+    {"key": "feather", "label": {"zh": "过渡宽度", "en": "Feather", "ja": "グラデ幅"}, "type": "slider",
      "min": 5, "max": 100, "default": 45, "step": 5},
 ]
 

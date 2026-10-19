@@ -11,12 +11,14 @@
 # 前五项必填（id 唯一）。network / writes_files 是能力声明，填了会在
 # 插件窗口显示，让用户知道这个插件会不会联网、会不会写文件。
 PLUGIN = {
-    "id": "myplugin",              # 唯一标识：小写字母、数字、下划线
-    "name": "我的插件",             # 插件窗口显示的名字
+    "id": "myplugin",              # 唯一标识：小写字母数字与 -_，不能以 _ 开头
+    "name": "我的插件",             # 插件窗口显示的名字（也可写 {zh,en,ja}）
     "version": "1.0",              # 你的版本号
     "api": 2,                      # 接口版本，当前必须是 2
     "author": "你的名字",
-    "description": "一句话说明这个插件做什么",
+    "description": {"zh": "一句话说明这个插件做什么",
+                    "en": "One line about this plugin",
+                    "ja": "このプラグインの説明"},   # 也可只写字符串
     "network": False,              # 是否联网（必须如实声明）
     "writes_files": False,         # 是否会写文件
 }
@@ -27,7 +29,7 @@ PARAMS = [
     # 数值滑杆：type 写 slider（省略 type 也默认是 slider）
     {
         "key": "amount",           # kwargs 键名
-        "label": "强度",            # 界面标签
+        "label": {"zh": "强度", "en": "Strength", "ja": "強さ"},  # 也可只写字符串
         "type": "slider",
         "min": 0,                  # 最小值
         "max": 100,                # 最大值

@@ -44,7 +44,11 @@ def main():
     picked = [s for s in SUITES if not args.fast or s[3]]
     if args.only:
         names = {x.strip() for x in args.only.split(",") if x.strip()}
-        picked = [s for s in picked if s[0] in names]
+        def _match(s):
+            return (s[0] in names
+                    or os.path.basename(s[1]) in names
+                    or os.path.splitext(os.path.basename(s[1]))[0] in names)
+        picked = [s for s in picked if _match(s)]
     if not picked:
         print("没有匹配的套件")
         return 2

@@ -98,6 +98,23 @@ def main():
             ok("%s 透明角落" % label, doc2.img.getpixel((0, 0))[3] == 0,
                str(doc2.img.getpixel((0, 0))))
 
+            # 真实照片（design/sample.jpg）再跑一遍转换一致性
+            sample = os.path.join(ROOT, "design", "sample.jpg")
+            if os.path.isfile(sample):
+                pjpg = os.path.join(tmp, "%s_photo.jpg" % label.replace(" ", "_"))
+                Image.open(sample).convert("RGB").save(
+                    pjpg, quality=92, icc_profile=icc)
+                pd = mod.ImageDoc.load(pjpg)
+                pexp = ImageCms.profileToProfile(
+                    Image.open(pjpg).convert("RGB"),
+                    ImageCms.ImageCmsProfile(io.BytesIO(icc)),
+                    ImageCms.createProfile("sRGB"), renderingIntent=0,
+                    outputMode="RGB")
+                pdiff = ImageChops.difference(pd.img, pexp)
+                pmx = max(band[1] for band in ImageStat.Stat(pdiff).extrema)
+                ok("%s 真实照片转换一致" % label, pmx <= 1,
+                   "max Δ=%d" % pmx)
+
             out = os.path.join(tmp, "%s_out.jpg" % label.replace(" ", "_"))
             doc.img.save(out, quality=92,
                          icc_profile=mod._srgb_icc_bytes())

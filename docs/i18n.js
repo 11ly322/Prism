@@ -285,6 +285,8 @@ window.PRISM_I18N = {
 "大屏版也是纯看图，但工具栏在底部、按钮更大、没有应用快捷键，启动即最大化；适合展厅、会议室、触摸屏和长时间展示。看图版保留顶部工具栏与快捷键，适合日常桌面使用。": "The large-screen edition is also viewer-only, but with a bottom toolbar, bigger buttons, no app shortcuts and a maximized start; it suits showrooms, meeting rooms, touch screens and long-running displays. The viewer keeps the top toolbar and shortcuts for everyday desktop use.",
 "安装器": "Installer",
 "与完整版相同的自解压 exe，可选安装或就地解压": "Same self-extracting exe as the full edition; install or extract in place",
+"大屏版已放进顶部「下载」菜单和下方下载区，与完整版、看图版排在一起：": "The large-screen edition is now in the top Download menu and the download section below, next to the full and viewer editions:",
+"查看全部下载": "See all downloads",
 "下载大屏版": "Download large-screen edition"
 },
 "ja": {
@@ -572,6 +574,8 @@ window.PRISM_I18N = {
 "大屏版也是纯看图，但工具栏在底部、按钮更大、没有应用快捷键，启动即最大化；适合展厅、会议室、触摸屏和长时间展示。看图版保留顶部工具栏与快捷键，适合日常桌面使用。": "大画面版も閲覧専用ですが、ツールバーは下部・ボタンはより大きく・アプリのショートカットなし・起動時に最大化。展示場・会議室・タッチ画面・長時間表示向けです。ビューアは上部ツールバーとショートカットを残し、日常のデスクトップ向けです。",
 "安装器": "インストーラー",
 "与完整版相同的自解压 exe，可选安装或就地解压": "フル版と同じ自己解凍 exe。インストールまたはその場で解凍できます",
+"大屏版已放进顶部「下载」菜单和下方下载区，与完整版、看图版排在一起：": "大画面版は上部の「ダウンロード」メニューと下部のダウンロード欄に、フル版・ビューア版と並んでいます：",
+"查看全部下载": "すべてのダウンロードを見る",
 "下载大屏版": "大画面版をダウンロード"
 }
 };

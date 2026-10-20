@@ -1,37 +1,31 @@
-# CI 与 Pages 部署（待启用）
+# CI 与 Pages 部署
 
-当前 GitHub token 只有 `repo / read:org / gist`，**没有 `workflow` 权限**，所以
-`.github/workflows/` 下的文件推不上去（会报 `refusing to allow an OAuth App to create
-or update workflow ... without workflow scope`）。
+已启用（2026-10-20）：
 
-启用方式（二选一）：
+- `.github/workflows/ci.yml`：push / PR 跑静态门禁（词条、插件索引、三语文档、
+  文档 HTML、版本号），另有一个 `continue-on-error` 的 GUI 回归任务
+  （插件/市场/三语/启动）。
+- `.github/workflows/pages.yml`：push `docs/**` 或手动触发时，用
+  `actions/deploy-pages` 发布 `docs/`。
 
-1. **网页端添加**：在 GitHub 网页新建
-   - `.github/workflows/ci.yml` ← 复制 `ci/ci.yml.pending`
-   - `.github/workflows/pages.yml` ← 复制 `ci/pages.yml.pending`
-2. **本地授权**：
-   ```bash
-   gh auth refresh -s workflow
-   mkdir -p .github/workflows
-   cp ci/ci.yml.pending .github/workflows/ci.yml
-   cp ci/pages.yml.pending .github/workflows/pages.yml
-   git add .github/workflows && git commit -m "ci: enable workflows" && git push
-   ```
+Pages 的 Source 已切成 **GitHub Actions**；legacy 分支部署不再使用。
+回退方式：Settings → Pages → Source 改回 `Deploy from a branch` → `main` / `/docs`。
 
-## Pages 切换到 Actions 的顺序（重要）
+## 权限
 
-`pages.yml` 只有在仓库里**已经存在**之后，才能把 Pages 的 Source 改成 GitHub Actions；
-顺序反了站点会 404：
+推送/修改 workflow 需要 token 带 `workflow` scope。当前账号已授权：
 
-1. 先让 `pages.yml` 出现在 `main`；
-2. Settings → Pages → Build and deployment → Source 选 **GitHub Actions**；
-3. 手动跑一次 Deploy Pages workflow，确认 `https://11ly322.github.io/Prism/` 200；
-4. 之后 push `docs/` 自动部署，不再依赖 legacy build。
+```bash
+gh auth refresh --hostname github.com --scopes workflow
+```
 
-回退：Source 改回 `Deploy from a branch` → `main` / `/docs`。
+以前因缺这个 scope 暂存的 `ci.yml.pending` / `pages.yml.pending` 已删除；
+`.github/workflows/` 是唯一来源。
 
-## 两个 workflow 做什么
+## 注意
 
-- `ci.yml`：push / PR 时跑静态门禁（词条、插件索引、三语文档、文档 HTML、版本号），
-  另有一个 `continue-on-error` 的 GUI 回归任务（Windows runner）。
-- `pages.yml`：push `docs/` 时用 `actions/deploy-pages` 发布静态站。
+- Windows runner 的输出编码靠 job 里的 `PYTHONIOENCODING=utf-8` / `PYTHONUTF8=1`。
+- `.gitattributes` 强制 `.py` / `.md` / `.json` 等用 LF；否则 Windows 检出的 CRLF
+  会让 `plugins/index.json` 的 SHA-256 与文件不一致，市场安装会被拒绝。
+- GUI 任务依赖 GitHub Windows runner 的桌面会话；失败时不会阻塞 CI 主结论
+  （`continue-on-error: true`），但会在日志里保留原因。

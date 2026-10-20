@@ -15,7 +15,7 @@
 
 <div align="center">
 
-![version](https://img.shields.io/badge/version-9.11.0-3d7dff?style=flat-square)
+![version](https://img.shields.io/badge/version-9.11.1-3d7dff?style=flat-square)
 ![platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-2b2f36?style=flat-square)
 ![python](https://img.shields.io/badge/python-3.9%2B-3776ab?style=flat-square&logo=python&logoColor=white)
 ![license](https://img.shields.io/badge/license-MIT-3ddc84?style=flat-square)
@@ -65,10 +65,10 @@ Prism 服务两种场景 ——
 
 | 平台 | 文件 | 说明 |
 | :--- | :--- | :--- |
-| Windows | `Prism-Setup-9.11.0.exe` | 安装包 · 含修图面板与插件 · 40.1 MB |
-| Windows | `Prism-Viewer-9.11.0.zip` | 纯看图版 · 便携免安装 · 30.1 MB |
-| macOS | `Prism-macOS-9.11.0.zip` | 源码运行 · 需 Python 3 + Pillow · 227 KB |
-| Linux | `Prism-Linux-9.11.0.zip` | 源码运行 · 带 `.desktop` · 227 KB |
+| Windows | `Prism-Setup-9.11.1.exe` | 安装包 · 含修图面板与插件 · 40.1 MB |
+| Windows | `Prism-Viewer-9.11.1.zip` | 纯看图版 · 便携免安装 · 30.1 MB |
+| macOS | `Prism-macOS-9.11.1.zip` | 源码运行 · 需 Python 3 + Pillow · 227 KB |
+| Linux | `Prism-Linux-9.11.1.zip` | 源码运行 · 带 `.desktop` · 227 KB |
 
 <div align="center">
 
@@ -293,8 +293,8 @@ api 必须是 2（旧的 1 仍能加载）。版本更高的插件会被跳过�
   不再藏在命令行。
 - **最近打开**（9.10.0）：文件菜单保留最近 10 张图，一键重开或清空；
   启动时默认中文不再做一遍无意义的全界面翻译，首屏更快。
-- **批量导出异步**（9.11.0）：解码与保存走后台线程，主线程持续更新进度，
-  不再一张一张卡住界面；全分辨率载入显示已用时间，可 Esc 取消。
+- **批量导出异步**（9.11.1）：解码、渲染、保存都走后台线程（渲染用独立副本，
+  不共享界面状态），主线程只更新进度；全分辨率载入显示已用时间，可 Esc 取消。
 
 改造前后的截图存放在 `design/before/` 与 `design/after/`。
 

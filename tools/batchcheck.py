@@ -52,7 +52,13 @@ def main():
         app.b_fmt_name = "JPEG"
         app.b_quality = 85
         app.b_maxlong = 0
-        app.b_use_adj = False
+        app.adj["exposure"] = 0.35
+        app.adj["vignette"] = 30
+        app.adj["skin_smooth"] = 25
+        app.wm_text = "TEST"
+        app.wm_pos = "br"
+        app.wm_size = 4
+        app.b_use_adj = True
         app.b_overwrite = False
         app.b_i = 0
         app.b_ok = 0

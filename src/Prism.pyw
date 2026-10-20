@@ -68,7 +68,7 @@ IS_WIN = sys.platform.startswith("win")
 K = "Command" if IS_MAC else "Control"
 
 APP_NAME = "Prism"
-APP_VERSION = "9.11.0"
+APP_VERSION = "9.11.1"
 APP_BUILD = "2025-12.9"
 # ---------------------------------------------------------------- 运行模式
 # 同一份源码编出两个版本：
@@ -11680,8 +11680,35 @@ def run(img, **params):
         self._async_call(
             lambda: ImageDoc.load(path, force_full=True), loaded)
 
+    def _make_render_clone(self, doc, adj, geom, locs):
+        """给后台批量渲染用的轻量副本。
+
+        渲染管线只读 doc/adj/geom/locals 与少量缓存；复制一份独立对象的
+        __dict__，把缓存换成新的，就能在 worker 里跑 _flatten，不碰 Tk。
+        """
+        clone = object.__new__(type(self))
+        clone.__dict__.update(self.__dict__)
+        clone.doc = doc
+        clone.adj = adj
+        clone.geom = geom
+        clone.locals = locs
+        clone.frame_i = 0
+        clone.show_original = False
+        clone.soft_proof = False
+        clone.soft_proof_transforms = None
+        clone.geom_key = None
+        clone.geom_img = None
+        clone.contrast_mean = None
+        clone.auto_lut = None
+        clone.hsv_src = None
+        clone.hsv_chans = None
+        clone.tile_cache = {}
+        clone.detail_cache = {}
+        clone.local_mask_cache = {}
+        return clone
+
     def _batch_loaded(self, doc, err, name, target, adj, locs, geom, params):
-        """后台解码完成；渲染必须回主线程（会短暂借用 app 状态）。"""
+        """解码完成：用渲染副本在 worker 里渲染+保存，主线程只收进度。"""
         if self.batch_win is None or not self.batch_win.winfo_exists():
             self.b_busy = False
             return
@@ -11694,11 +11721,7 @@ def run(img, **params):
             self._batch_item_done()
             return
         try:
-            im = self.flatten_doc(doc, adj, geom, locs, self.b_maxlong)
-            if im is None:
-                raise ValueError("渲染失败")
-            if self.b_fmt_name == "JPEG" and im.mode != "RGB":
-                im = im.convert("RGB")
+            clone = self._make_render_clone(doc, adj, geom, locs)
             self.b_msg.configure(
                 text=_trf("%d / %d · 正在保存 %s")
                 % (self.b_i + 1, len(self.b_files), name))
@@ -11706,6 +11729,9 @@ def run(img, **params):
             self.b_fail.append((name, str(exc)))
             self._batch_item_done()
             return
+
+        fmt = self.b_fmt_name
+        maxlong = self.b_maxlong
 
         def saved(_result, save_err):
             if save_err is not None:
@@ -11715,10 +11741,21 @@ def run(img, **params):
             self._batch_item_done()
 
         def work():
+            im = clone._flatten()
+            if im is None:
+                raise ValueError("渲染失败")
+            if maxlong and max(im.size) > maxlong:
+                r = maxlong / float(max(im.size))
+                im = im.resize((max(1, int(im.width * r)),
+                                max(1, int(im.height * r))),
+                               Image.Resampling.LANCZOS, reducing_gap=2.0)
+            if fmt == "JPEG" and im.mode != "RGB":
+                im = im.convert("RGB")
             im.save(target, **params)
             return True
 
         self._async_call(work, saved)
+
 
     def _batch_item_done(self):
         self.b_busy = False

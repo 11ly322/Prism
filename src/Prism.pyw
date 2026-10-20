@@ -65,7 +65,7 @@ IS_WIN = sys.platform.startswith("win")
 K = "Command" if IS_MAC else "Control"
 
 APP_NAME = "Prism"
-APP_VERSION = "9.8.0"
+APP_VERSION = "9.8.1"
 APP_BUILD = "2025-12.9"
 # ---------------------------------------------------------------- 运行模式
 # 同一份源码编出两个版本：
@@ -13402,7 +13402,7 @@ HELP_TEXT = """快捷键
   排序      点面板「排序」按钮，按文件名 / 修改时间 / 文件大小 升序或降序
   精确输入  右键点滑块右边的数值可输入精确数字；双击标签或数值可复位
   羽化范围  选中径向滤镜时会画出内圈虚线，表示「满强度到开始衰减」的边界
-  拖动预览  拖滑块时大图会临时降半分辨率渲染换取跟手，松手后自动恢复全分辨率
+  拖动预览  拖动时用双线性重采样、跳过暗角与水印（设置里可开），松手后补全细节
   工具栏图标 ◀ ▶ 上一/下一张，⤢ 适应窗口，左/右弧形箭头 旋转 90°（自绘图标，不依赖字体）
   所在文件夹  F2 或面板按钮：在系统文件管理器里打开当前图片所在目录
   预设导入导出  预设分区里的「导入… / 导出…」，JSON 文件，方便分享或备份
@@ -13489,7 +13489,7 @@ Retouch panel (E toggles; Lightroom-like)
   Sort            Click the panel's "Sort" button to sort by file name / modified time / file size, ascending or descending
   Precise input   Right-click the value to the right of a slider to type an exact number; double-click the label or value to reset
   Feather range   With a radial filter selected, an inner dashed ring marks the boundary where full strength starts to fall off
-  Drag preview    While dragging a slider, the large image renders at half resolution for responsiveness, then returns to full resolution on release
+  Drag preview    While dragging a slider, draws with bilinear resampling and can skip vignette/watermark (setting), then refines on release
   Toolbar icons   ◀ ▶ previous/next, ⤢ fit window, left/right curved arrows rotate 90° (self-drawn icons, no font dependency)
   Containing folder  F2 or the panel button: open the current image's folder in the system file manager
   Preset import/export  "Import... / Export..." in the presets section; JSON files, easy to share or back up
@@ -13574,7 +13574,7 @@ HELP_TEXT_JA = """ショートカット
   並べ替え          パネルの「並べ替え」ボタンで、ファイル名 / 更新日時 / ファイルサイズの昇順または降順
   数値入力          スライダー右側の数値を右クリックすると正確な数値を入力できます。ラベルまたは数値をダブルクリックでリセット
   ぼかし範囲        放射フィルターを選択すると内側に破線の輪が描かれ、「最大強度から減衰が始まる」境界を示します
-  ドラッグプレビュー  スライダーをドラッグ中は大きな画像を半解像度で描画して追従性を確保し、離すと全解像度に戻ります
+  ドラッグプレビュー  ドラッグ中はバイリニアで描画し、ビネット/透かしを省略（設定可）、離すと高品質に戻します
   ツールバーアイコン  ◀ ▶ 前/次、⤢ ウィンドウに合わせる、左/右の弧状矢印で 90° 回転（自前描画アイコン、フォント非依存）
   フォルダーを開く  F2 またはパネルのボタン：現在の画像があるフォルダーをシステムのファイルマネージャーで開きます
   プリセットの読み込み/書き出し  プリセットセクションの「読み込み… / 書き出し…」、JSON ファイルで共有やバックアップに便利

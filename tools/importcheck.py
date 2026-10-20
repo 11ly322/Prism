@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """导入与启动冒烟：防止「py_compile 通过、类却没了」的改动混进发版。
 
 跑法： python tools/importcheck.py
@@ -30,6 +30,10 @@ def main():
         ok("存在属性 %s" % attr, hasattr(mod, attr))
     ok("版本号格式", isinstance(getattr(mod, "APP_VERSION", ""), str)
        and mod.APP_VERSION.count(".") == 2, getattr(mod, "APP_VERSION", "?"))
+    ok("numpy 延迟加载", getattr(mod, "_np", "?") is None)
+    mod._op_dehaze(Image.new("RGB", (32, 32), (100, 120, 140)), 20)
+    ok("首次使用才 import numpy",
+       getattr(mod, "_np", None) is not None or getattr(mod, "_np_missing", False))
 
     S = os.path.join(os.path.dirname(APP), "Prism_settings.json")
     if os.path.exists(S):

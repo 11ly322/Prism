@@ -15,7 +15,7 @@
 
 <div align="center">
 
-![version](https://img.shields.io/badge/version-9.11.1-3d7dff?style=flat-square)
+![version](https://img.shields.io/badge/version-9.11.2-3d7dff?style=flat-square)
 ![platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-2b2f36?style=flat-square)
 ![python](https://img.shields.io/badge/python-3.9%2B-3776ab?style=flat-square&logo=python&logoColor=white)
 ![license](https://img.shields.io/badge/license-MIT-3ddc84?style=flat-square)
@@ -65,10 +65,10 @@ Prism 服务两种场景 ——
 
 | 平台 | 文件 | 说明 |
 | :--- | :--- | :--- |
-| Windows | `Prism-Setup-9.11.1.exe` | 安装包 · 含修图面板与插件 · 40.1 MB |
-| Windows | `Prism-Viewer-9.11.1.zip` | 纯看图版 · 便携免安装 · 30.1 MB |
-| macOS | `Prism-macOS-9.11.1.zip` | 源码运行 · 需 Python 3 + Pillow · 227 KB |
-| Linux | `Prism-Linux-9.11.1.zip` | 源码运行 · 带 `.desktop` · 227 KB |
+| Windows | `Prism-Setup-9.11.2.exe` | 安装包 · 含修图面板与插件 · 40.1 MB |
+| Windows | `Prism-Viewer-9.11.2.zip` | 纯看图版 · 便携免安装 · 30.1 MB |
+| macOS | `Prism-macOS-9.11.2.zip` | 源码运行 · 需 Python 3 + Pillow · 227 KB |
+| Linux | `Prism-Linux-9.11.2.zip` | 源码运行 · 带 `.desktop` · 227 KB |
 
 <div align="center">
 

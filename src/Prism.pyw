@@ -57,10 +57,20 @@ class _TranslatedMessageBox:
 
 messagebox = _TranslatedMessageBox()
 
-try:
-    import numpy as _np          # 可选：亮度降噪的边缘保护用它算得更准
-except Exception:
-    _np = None
+_np = None
+_np_missing = False
+
+
+def _np_ready():
+    """按需加载 numpy：它是可选依赖，启动时 import 要 ~300 ms。"""
+    global _np, _np_missing
+    if _np is None and not _np_missing:
+        try:
+            import numpy as _numpy
+            _np = _numpy       # 可选：亮度降噪的边缘保护用它算得更准
+        except Exception:
+            _np_missing = True
+    return _np
 
 IS_MAC = sys.platform == "darwin"
 IS_WIN = sys.platform.startswith("win")
@@ -68,7 +78,7 @@ IS_WIN = sys.platform.startswith("win")
 K = "Command" if IS_MAC else "Control"
 
 APP_NAME = "Prism"
-APP_VERSION = "9.11.1"
+APP_VERSION = "9.11.2"
 APP_BUILD = "2025-12.9"
 # ---------------------------------------------------------------- 运行模式
 # 同一份源码编出两个版本：
@@ -999,6 +1009,7 @@ def _op_clarity(img, amount):
 
 def _op_dehaze(img, amount):
     """去朦胧：暗通道先验的简化版（估大气光 + 透射率，不做引导滤波）。"""
+    _np_ready()
     if _np is None:
         return img
     a = _np.asarray(img, dtype=_np.float32) / 255.0
@@ -1026,6 +1037,7 @@ def _op_denoise_color(img, amount):
 
 def _op_denoise_luma(img, amount):
     """亮度降噪：模糊后按与原图的差异加权融合，差异大（边缘）的地方保留原图。"""
+    _np_ready()
     r = 0.5 + (amount / 100.0) * 2.0
     blur = img.filter(ImageFilter.GaussianBlur(r))
     k = amount / 100.0
@@ -4575,6 +4587,7 @@ class QPEApp(_BASE):
 
     def _denoise_luma(self, img, amount):
         """亮度降噪：模糊后按「与原图的差异」加权融合，差异大的地方（边缘）保留原图。"""
+        _np_ready()
         r = 0.5 + (amount / 100.0) * 2.0
         blur = img.filter(ImageFilter.GaussianBlur(r))
         k = amount / 100.0
@@ -4599,6 +4612,7 @@ class QPEApp(_BASE):
 
     def _apply_dehaze(self, img, amount):
         """去朦胧：暗通道先验的简化版（估大气光 + 透射率，不做引导滤波）。"""
+        _np_ready()
         if _np is None:
             return img
         a = _np.asarray(img, dtype=_np.float32) / 255.0

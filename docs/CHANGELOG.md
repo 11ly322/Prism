@@ -4,6 +4,47 @@
 > 已一并改为 Prism，功能与时间线不变。代码里的 QPEApp / _QpeSlider 等内部
 > 标识符与旧配置迁移路径保持原名，改动会破坏兼容。
 
+## v9.7.0  （插件选项三语 + 文档 HTML 排版 + 签名钩子）
+
+### 插件选项也能三语
+
+- `PARAMS.options` 现在支持两种写法：字符串，或 `{"value": ..., "label": {zh,en,ja}}`。
+  界面显示 label，`run()` 收到的仍是 value；旧插件不改也能用。
+- 15 个插件（12 内置 + 3 清单）的所有下拉选项补齐英/日。
+- `plugins/README` 三语表格、插件结果窗口、`docs/plugin-api` 三语说明同步更新；
+  模板 `_template.py` 给出混用示例。
+- 新增测试：字符串/字典混用、选项标签本地化、默认值仍取 value。
+
+### 文档 HTML 排版版
+
+- `tools/make_docs_html.py` 生成的 6 页改成品牌化排版：固定顶栏、语言胶囊、
+  深浅色自适应、斑马纹表格、圆角代码块、页脚；不再是“能读的纯 HTML”。
+- 站点插件表的「文档」入口照旧指向 `plugin-guide*.html` / `plugin-api*.html`，
+  英文/日文页分别指向本地化版本。
+
+### 代码签名钩子
+
+- `make_release.ps1` 增加可选签名：设置 `PRISM_SIGN_CERT`（PFX）或
+  `PRISM_SIGN_THUMBPRINT`，以及可选的 `PRISM_SIGN_PASSWORD` / `PRISM_SIGNTOOL`，
+  构建后会签 `Prism.exe` 与自解压安装包；签名失败直接中止发布。
+- 新增三语文档 `docs/code-signing{,.en,.ja}.md`：证书类型（OV/EV）、时间戳、
+  验证命令、CI 里的做法。
+- **证书本身仍需购买并完成身份验证，代码侧无法代劳**；未签名时 SmartScreen 提示会继续存在。
+
+### 验证
+
+- `runall --fast` 全过（新增选项三语用例）；三语文档自检覆盖签名文档。
+- 本轮未改渲染/解码路径，未重跑 bench；9.6.0 的 repeat 5 数据仍有效
+  （启动 2362 ms、40MP 首帧 582 ms、滑杆 89 ms、内存 244/358 MB）。
+
+### 仍未做
+
+- CI / Pages Actions 仍被 `workflow` 权限挡住：`ci/*.pending` 已就绪，
+  授予权限后即可启用（步骤见 `ci/README.md`）。
+- 单文件 `Prism.pyw` 暂不拆分：拆语言的 1400 行数据会连带改 `i18ncheck`、
+  `addlang`、打包与平台脚本，收益是可维护性，代价是破坏“单文件源码”这个卖点；
+  建议留到下次大改统一评估。
+
 ## v9.6.0  （插件 id 边界 + 三语标签 + 市场搜索 + 发布链路加固）
 
 ### 插件 id 规则（避免装出同 id / 怪文件名）

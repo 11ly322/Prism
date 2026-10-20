@@ -25,7 +25,7 @@ PARAMS = [
     {"key": "amount", "label": {"zh": "减光强度", "en": "Strength", "ja": "減光の強さ"}, "type": "slider",
      "min": 0, "max": 100, "default": 45, "step": 5},
     {"key": "side", "label": {"zh": "压暗一侧", "en": "Darken side", "ja": "暗くする側"}, "type": "select",
-     "options": ["顶部", "底部"], "default": "顶部"},
+     "options": [{"value": "顶部", "label": {"zh": "顶部", "en": "Top", "ja": "上"}}, {"value": "底部", "label": {"zh": "底部", "en": "Bottom", "ja": "下"}}], "default": "顶部"},
     {"key": "feather", "label": {"zh": "过渡宽度", "en": "Feather", "ja": "グラデ幅"}, "type": "slider",
      "min": 5, "max": 100, "default": 45, "step": 5},
 ]

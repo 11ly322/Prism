@@ -17,7 +17,7 @@ PARAMS = [
     {"key": "margin", "label": {"zh": "留白比例", "en": "Padding", "ja": "余白"}, "min": 0, "max": 30,
      "default": 0, "step": 1},
     {"key": "bg", "label": {"zh": "背景", "en": "Background", "ja": "背景"}, "type": "choice",
-     "choices": ["透明", "白色", "黑色"], "default": "透明"},
+     "choices": [{"value": "透明", "label": {"zh": "透明", "en": "Transparent", "ja": "透明"}}, {"value": "白色", "label": {"zh": "白色", "en": "White", "ja": "白"}}, {"value": "黑色", "label": {"zh": "黑色", "en": "Black", "ja": "黒"}}], "default": "透明"},
 ]
 
 

@@ -61,7 +61,7 @@ def run(img, **params) -> PIL.Image
 | min / max | slider では必須 | 値の範囲 |
 | step | いいえ | ステップ幅。デフォルトは 1 |
 | default | はい | デフォルト値 |
-| options | select では必須 | 選択肢のリスト（旧 choices にも対応）|
+| options | select では必須 | 選択肢のリスト（旧 choices にも対応）。要素は文字列または {value,label} で、label は三言語可 |
 | default | text | 文字列。空文字列も可 |
 
 3 種類のコントロール：
@@ -99,7 +99,8 @@ type=bool は checkbox と同じです。古いプラグインは変更不要で
 `name` / `description` / `PARAMS.label` は文字列のほか、
 `{"zh": "...", "en": "...", "ja": "..."}` の形でも書けます。現在の言語が無い場合は
 中国語にフォールバックします。文字列だけを書いたサードパーティ製プラグインはそのまま表示されます。
-`options` の値は `run()` にそのまま渡され、翻訳されません（表示される値がそのまま選択値です）。
+`options` を `{value, label}` で書くと、画面には label を表示し、`run()` には value が渡されます。
+文字列だけの場合は値そのものが表示されます。
 
 
 network / writes_files はプラグインウィンドウに表示され、透明性を高めるためだけのものです。

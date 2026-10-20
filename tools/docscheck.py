@@ -17,6 +17,7 @@ SETS = [
     ("plugins", ["README.md", "README.en.md", "README.ja.md"]),
     ("plugins/community", ["README.md", "README.en.md", "README.ja.md"]),
     ("docs", ["plugin-api.md", "plugin-api.en.md", "plugin-api.ja.md"]),
+    ("docs", ["code-signing.md", "code-signing.en.md", "code-signing.ja.md"]),
 ]
 FAIL = []
 

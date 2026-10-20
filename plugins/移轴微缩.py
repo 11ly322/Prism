@@ -20,7 +20,7 @@ PARAMS = [
     {"key": "sat", "label": {"zh": "饱和提升", "en": "Saturation", "ja": "彩度"}, "type": "slider",
      "min": 0, "max": 100, "default": 45, "step": 5},
     {"key": "pos", "label": {"zh": "清晰带位置", "en": "Band position", "ja": "ピント帯の位置"}, "type": "select",
-     "options": ["居中", "偏上", "偏下"], "default": "居中"},
+     "options": [{"value": "居中", "label": {"zh": "居中", "en": "Center", "ja": "中央"}}, {"value": "偏上", "label": {"zh": "偏上", "en": "Top", "ja": "上寄せ"}}, {"value": "偏下", "label": {"zh": "偏下", "en": "Bottom", "ja": "下寄せ"}}], "default": "居中"},
 ]
 
 

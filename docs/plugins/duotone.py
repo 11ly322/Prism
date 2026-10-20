@@ -31,12 +31,29 @@ LIGHT = {
     "薄荷": (205, 240, 222),
     "白": (255, 255, 255),
 }
+# 选项值仍是中文（run 里按值查表），只是界面上按语言显示 label
+DARK_LABELS = {
+    "深蓝": {"zh": "深蓝", "en": "Deep blue", "ja": "深い青"},
+    "暗红": {"zh": "暗红", "en": "Dark red", "ja": "暗い赤"},
+    "墨绿": {"zh": "墨绿", "en": "Ink green", "ja": "墨緑"},
+    "紫夜": {"zh": "紫夜", "en": "Night purple", "ja": "夜紫"},
+    "黑": {"zh": "黑", "en": "Black", "ja": "黒"},
+}
+LIGHT_LABELS = {
+    "米白": {"zh": "米白", "en": "Cream", "ja": "生成り"},
+    "浅橙": {"zh": "浅橙", "en": "Light orange", "ja": "薄橙"},
+    "天蓝": {"zh": "天蓝", "en": "Sky blue", "ja": "空色"},
+    "薄荷": {"zh": "薄荷", "en": "Mint", "ja": "ミント"},
+    "白": {"zh": "白", "en": "White", "ja": "白"},
+}
 
 PARAMS = [
     {"key": "dark", "label": {"zh": "暗部颜色", "en": "Shadow color", "ja": "暗部の色"}, "type": "select",
-     "options": list(DARK), "default": "深蓝"},
+     "options": [{"value": k, "label": DARK_LABELS[k]} for k in DARK],
+     "default": "深蓝"},
     {"key": "light", "label": {"zh": "亮部颜色", "en": "Highlight color", "ja": "明部の色"}, "type": "select",
-     "options": list(LIGHT), "default": "米白"},
+     "options": [{"value": k, "label": LIGHT_LABELS[k]} for k in LIGHT],
+     "default": "米白"},
     {"key": "amount", "label": {"zh": "强度", "en": "Strength", "ja": "強さ"}, "type": "slider",
      "min": 0, "max": 100, "default": 100, "step": 5},
 ]

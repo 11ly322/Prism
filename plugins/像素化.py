@@ -16,7 +16,7 @@ PARAMS = [
     {"key": "block", "label": {"zh": "方块大小", "en": "Block size", "ja": "ブロックサイズ"}, "min": 4, "max": 160,
      "default": 24, "step": 1},
     {"key": "mode", "label": {"zh": "取样方式", "en": "Sampling", "ja": "サンプリング"}, "type": "choice",
-     "choices": ["平均", "放大镜"], "default": "平均"},
+     "choices": [{"value": "平均", "label": {"zh": "平均", "en": "Average", "ja": "平均"}}, {"value": "放大镜", "label": {"zh": "放大镜", "en": "Magnifier", "ja": "ルーペ"}}], "default": "平均"},
     {"key": "edge", "label": {"zh": "画方块边", "en": "Draw edges", "ja": "縁を描く"}, "type": "bool", "default": False},
 ]
 

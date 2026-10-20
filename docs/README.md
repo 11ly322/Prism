@@ -12,7 +12,7 @@
 
 <div align="center">
 
-![version](https://img.shields.io/badge/version-9.6.0-3d7dff?style=flat-square)
+![version](https://img.shields.io/badge/version-9.7.0-3d7dff?style=flat-square)
 ![platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-2b2f36?style=flat-square)
 ![python](https://img.shields.io/badge/python-3.9%2B-3776ab?style=flat-square&logo=python&logoColor=white)
 ![license](https://img.shields.io/badge/license-MIT-3ddc84?style=flat-square)
@@ -61,10 +61,10 @@ Prism 服务两种场景 ——
 
 | 平台 | 文件 | 说明 |
 | :--- | :--- | :--- |
-| Windows | `Prism-Setup-9.6.0.exe` | 安装包 · 含修图面板与插件 · 40.1 MB |
-| Windows | `Prism-Viewer-9.6.0.zip` | 纯看图版 · 便携免安装 · 30.1 MB |
-| macOS | `Prism-macOS-9.6.0.zip` | 源码运行 · 需 Python 3 + Pillow · 215 KB |
-| Linux | `Prism-Linux-9.6.0.zip` | 源码运行 · 带 `.desktop` · 215 KB |
+| Windows | `Prism-Setup-9.7.0.exe` | 安装包 · 含修图面板与插件 · 40.1 MB |
+| Windows | `Prism-Viewer-9.7.0.zip` | 纯看图版 · 便携免安装 · 30.1 MB |
+| macOS | `Prism-macOS-9.7.0.zip` | 源码运行 · 需 Python 3 + Pillow · 216 KB |
+| Linux | `Prism-Linux-9.7.0.zip` | 源码运行 · 带 `.desktop` · 216 KB |
 
 <div align="center">
 
@@ -235,7 +235,8 @@ api 必须是 2（旧的 1 仍能加载）。版本更高的插件会被跳过�
   下载后**只解析 AST、不执行代码**，先确认再写盘；单文件上限 2 MB。
   安装 id 只允许小写字母数字与 `-` `_`，且不能以 `_` 开头（本地手放插件不受限）。
 - 插件自己的 `name` / `description` / `PARAMS.label` 可写 `{zh,en,ja}`，
-  内置 12 个与清单 3 个已全部三语；选项值仍是传给 `run()` 的协议值，不翻译。
+  内置 12 个与清单 3 个已全部三语；`options` 可写 `{value,label}`，界面显示 label、
+  传给 `run()` 的仍是 value。
 - 清单与 README 索引共用一份数据：`tools/make_plugin_index.py` 从
   `plugins/index.json` + 插件源码生成三语表格，`--check` 接进发布门禁。
 - 三语文档同时生成排版版 HTML：`docs/plugin-guide*.html`、`docs/plugin-api*.html`。

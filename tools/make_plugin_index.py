@@ -89,7 +89,9 @@ def fmt_params(params, lang="zh"):
         label = loc(p.get("label", p.get("key", "?")), lang)
         if kind in ("select", "choice", "dropdown"):
             opts = p.get("options") or p.get("choices") or []
-            parts.append("select %s（%s）" % (label, " / ".join(map(str, opts))))
+            disp = [loc(o.get("label", o.get("value")), lang)
+                    if isinstance(o, dict) else str(o) for o in opts]
+            parts.append("select %s（%s）" % (label, " / ".join(disp)))
         elif kind in ("checkbox", "bool"):
             parts.append("checkbox %s" % label)
         elif kind in ("text", "string"):

@@ -41,7 +41,7 @@ PARAMS = [
         "key": "mode",
         "label": "风格",
         "type": "select",
-        "options": ["原样", "偏暖", "偏冷"],
+        "options": [{"value": "原样", "label": {"zh": "原样", "en": "As is", "ja": "そのまま"}}, {"value": "偏暖", "label": {"zh": "偏暖", "en": "Warm", "ja": "暖色"}}, {"value": "偏冷", "label": {"zh": "偏冷", "en": "Cool", "ja": "寒色"}}],
         "default": "偏暖",
     },
     # 复选框：type 写 checkbox

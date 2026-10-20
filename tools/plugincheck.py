@@ -78,6 +78,21 @@ def main():
         ok("参数标签本地化 " + lang, got == want, got)
     mod.APP_LANG = old_lang
 
+    # 选项：字符串与 {value,label} 混用；界面拿 label，run 拿 value
+    class _FakeChoice:
+        PARAMS = [{"key": "m", "type": "select", "label": "模式",
+                   "options": [{"value": "a",
+                                "label": {"zh": "甲", "en": "A", "ja": "あ"}},
+                               {"value": "b", "label": "乙"}],
+                   "default": "a"}]
+    mod.APP_LANG = "en"
+    cs = app._plugin_params_spec({"module": _FakeChoice, "id": "fc"})[0]
+    ok("选项值保持协议值", cs["choices"] == ["a", "b"], str(cs["choices"]))
+    ok("选项标签本地化", cs["choice_labels"] == {"a": "A", "b": "乙"},
+       str(cs["choice_labels"]))
+    ok("选项默认值", cs["default"] == "a", str(cs["default"]))
+    mod.APP_LANG = old_lang
+
     before = [w for w in app.winfo_children() if isinstance(w, tk.Toplevel)]
     t0 = time.perf_counter()
     app.run_plugin(item)

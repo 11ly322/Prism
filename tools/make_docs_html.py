@@ -177,46 +177,63 @@ PAGE = """<!DOCTYPE html>
 <title>%(title)s</title>
 <meta name="description" content="%(title)s">
 <style>
-:root{color-scheme:light dark}
+:root{color-scheme:light dark;--bg:#f6f6f4;--fg:#1c1c1c;--dim:#666;--line:#dcdcd8;--card:#fff;--accent:#245fce;--code:#1f1f22}
 *{box-sizing:border-box}
-body{margin:0;background:#f6f6f4;color:#1c1c1c;font:16px/1.7 -apple-system,"Segoe UI",Roboto,"Noto Sans JP","Noto Sans SC",sans-serif}
-main{max-width:820px;margin:0 auto;padding:40px 22px 80px}
-nav.top{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:26px;font-size:14px}
-nav.top a{color:#555;text-decoration:none;border-bottom:1px solid #ccc}
-nav.lang{display:flex;gap:10px;font-size:14px;color:#666;margin-bottom:22px}
-nav.lang a{color:#2f6df6;text-decoration:none}
-h1{font-size:30px;line-height:1.3;margin:0 0 18px}
-h2{font-size:23px;margin:34px 0 10px}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.75 -apple-system,"Segoe UI",Roboto,"Noto Sans JP","Noto Sans SC",sans-serif}
+header.hd{position:sticky;top:0;z-index:10;background:color-mix(in srgb,var(--bg) 88%%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.hd-in{max-width:900px;margin:0 auto;padding:12px 22px;display:flex;align-items:center;gap:22px}
+.brand{font-weight:700;font-size:18px;color:var(--fg);text-decoration:none;letter-spacing:.02em}
+nav.links{display:flex;gap:16px;flex-wrap:wrap;font-size:14px}
+nav.links a{color:var(--dim);text-decoration:none;padding:3px 0;border-bottom:1px solid transparent}
+nav.links a:hover{color:var(--fg);border-color:var(--line)}
+main{max-width:900px;margin:0 auto;padding:34px 22px 70px}
+nav.lang{display:flex;gap:8px;font-size:13px;margin-bottom:24px;flex-wrap:wrap}
+nav.lang a,nav.lang strong{display:inline-block;padding:3px 10px;border:1px solid var(--line);border-radius:999px;text-decoration:none;color:var(--dim);font-weight:400}
+nav.lang strong{color:var(--fg);border-color:var(--fg)}
+h1{font-size:31px;line-height:1.28;margin:0 0 20px;letter-spacing:-.01em}
+h2{font-size:23px;margin:38px 0 10px;padding-top:8px;border-top:1px solid var(--line)}
 h3{font-size:18px;margin:24px 0 8px}
-p,li{color:#2a2a2a}
-a{color:#245fce}
-code{background:#ececea;border-radius:4px;padding:1px 5px;font-size:90%%;font-family:ui-monospace,Consolas,monospace}
-pre{background:#1f1f22;color:#eaeaea;border-radius:8px;padding:14px 16px;overflow:auto}
-pre code{background:none;padding:0;color:inherit;font-size:13px;line-height:1.55}
-table{border-collapse:collapse;width:100%%;margin:12px 0;font-size:14px}
-th,td{border:1px solid #d8d8d4;padding:6px 9px;text-align:left;vertical-align:top}
-th{background:#ececea;font-weight:600}
-blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid #c9c9c4;color:#555}
+p,li{color:color-mix(in srgb,var(--fg) 88%%,transparent)}
+a{color:var(--accent)}
+code{background:color-mix(in srgb,var(--fg) 8%%,transparent);border-radius:4px;padding:1px 5px;font-size:90%%;font-family:ui-monospace,Consolas,monospace}
+pre{background:var(--code);color:#eaeaea;border-radius:10px;padding:15px 17px;overflow:auto;border:1px solid #2c2c30}
+pre code{background:none;padding:0;color:inherit;font-size:13px;line-height:1.6}
+table{border-collapse:collapse;width:100%%;margin:14px 0;font-size:14px;background:var(--card)}
+th,td{border:1px solid var(--line);padding:7px 10px;text-align:left;vertical-align:top}
+th{background:color-mix(in srgb,var(--fg) 6%%,transparent);font-weight:600}
+tbody tr:nth-child(even){background:color-mix(in srgb,var(--fg) 2.5%%,transparent)}
+blockquote{margin:14px 0;padding:9px 15px;border-left:3px solid var(--line);color:var(--dim)}
+footer{border-top:1px solid var(--line);margin-top:40px}
+.ft-in{max-width:900px;margin:0 auto;padding:18px 22px 40px;font-size:13px;color:var(--dim)}
 @media (prefers-color-scheme:dark){
- body{background:#141414;color:#e8e8e8}
- p,li{color:#d6d6d6}
- code{background:#262628}
- th,td{border-color:#333}
- th{background:#222}
- blockquote{border-color:#444;color:#aaa}
- nav.top a{color:#bbb;border-color:#444}
- a{color:#8ab4ff}
+ :root{--bg:#141414;--fg:#e8e8e8;--dim:#a0a0a0;--line:#333;--card:#191919;--accent:#8ab4ff}
 }
+@media (max-width:620px){h1{font-size:26px}h2{font-size:20px}main{padding-top:24px}}
 </style>
 </head>
 <body>
+<header class="hd"><div class="hd-in">
+<a class="brand" href="./">Prism</a>
+<nav class="links">
+<a href="./">%(home)s</a>
+<a href="plugin-guide%(lang_suffix)s.html">%(guide)s</a>
+<a href="plugin-api%(lang_suffix)s.html">%(api)s</a>
+<a href="https://github.com/11ly322/Prism">GitHub</a>
+</nav></div></header>
 <main>
-<nav class="top"><a href="./">Prism</a><a href="plugin-guide%(lang_suffix)s.html">Guide</a><a href="plugin-api%(lang_suffix)s.html">API</a></nav>
 %(body)s
 </main>
+<footer><div class="ft-in">Prism · MIT License · <a href="https://github.com/11ly322/Prism">GitHub</a></div></footer>
 </body>
 </html>
 """
+
+HEAD_LABELS = {
+    "zh": ("首页", "指南", "API"),
+    "en": ("Home", "Guide", "API"),
+    "ja": ("ホーム", "ガイド", "API"),
+}
+
 
 
 def build_all():
@@ -237,12 +254,14 @@ def build_all():
                  "README.ja.md": "plugin-guide.ja.html"}.get(m.group(1),
                                                               m.group(1))), body)
             suffix = "" if lang == "zh" else "." + lang
+            home, guide, api = HEAD_LABELS[lang]
             page = PAGE % {
                 "lang": {"zh": "zh-CN", "en": "en", "ja": "ja"}[lang],
                 "title": spec["title"][lang],
                 # 正文里的 % 不能被外层格式化吃掉
                 "body": body.replace("%", "%%"),
                 "lang_suffix": suffix,
+                "home": home, "guide": guide, "api": api,
             }
             outputs[os.path.join(DOCS, spec["out"][lang])] = page
     return outputs

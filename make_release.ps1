@@ -9,6 +9,30 @@ $env:PYTHONIOENCODING = 'utf-8'
 
 $ver = (Select-String -Path (Join-Path $root 'src\Prism.pyw') -Pattern 'APP_VERSION = "(.*)"').Matches[0].Groups[1].Value
 
+# ---- 可选代码签名：设置 PRISM_SIGN_CERT(.pfx) 或 PRISM_SIGN_THUMBPRINT 才生效 ----
+function Sign-PrismExe {
+    param([string]$Path)
+    if (-not $env:PRISM_SIGN_CERT -and -not $env:PRISM_SIGN_THUMBPRINT) { return }
+    $signtool = $env:PRISM_SIGNTOOL
+    if (-not $signtool) {
+        $cmd = Get-Command signtool.exe -ErrorAction SilentlyContinue
+        if ($cmd) { $signtool = $cmd.Source }
+    }
+    if (-not $signtool) {
+        throw '找不到 signtool.exe：安装 Windows SDK 或设置 PRISM_SIGNTOOL'
+    }
+    $a = @('sign', '/fd', 'SHA256', '/tr', 'http://timestamp.digicert.com', '/td', 'SHA256')
+    if ($env:PRISM_SIGN_THUMBPRINT) {
+        $a += @('/sha1', $env:PRISM_SIGN_THUMBPRINT)
+    } else {
+        $a += @('/f', $env:PRISM_SIGN_CERT)
+        if ($env:PRISM_SIGN_PASSWORD) { $a += @('/p', $env:PRISM_SIGN_PASSWORD) }
+    }
+    & $signtool @a $Path
+    if ($LASTEXITCODE -ne 0) { throw ('代码签名失败：' + $Path) }
+    Write-Host ('   已签名 ' + (Split-Path $Path -Leaf))
+}
+
 # ---- 发布后线上验收：push 之后跑这个，不打包 ----
 if ($VerifySite) {
     & $py (Join-Path $root 'tools\verifysite.py') --ver $ver
@@ -122,6 +146,7 @@ if (-not $SkipApp) {
            '--workpath',"$build\work",'--specpath',$build,"$root\src\Prism.pyw")
     & $py @a *> $null
     if (-not (Test-Path -LiteralPath "$build\dist\Prism\Prism.exe")) { throw '主程序构建失败' }
+    Sign-PrismExe "$build\dist\Prism\Prism.exe"
     Remove-Item -LiteralPath (Join-Path $root 'Prism.exe') -Force -ErrorAction SilentlyContinue
     Remove-Item -LiteralPath (Join-Path $root '_internal') -Recurse -Force -ErrorAction SilentlyContinue
     Copy-Item -Path "$build\dist\Prism\*" -Destination $root -Recurse -Force
@@ -152,6 +177,7 @@ $b = @('-m','PyInstaller','--noconfirm','--clean','--onefile','--windowed','--na
 & $py @b *> $null
 $newInst = Join-Path $build "distinst\Prism $ver 自解压安装.exe"
 if (-not (Test-Path -LiteralPath $newInst)) { throw '安装包构建失败' }
+Sign-PrismExe $newInst
 
 Write-Host '-- 4/4 清理旧版本'
 Get-ChildItem -LiteralPath $root -Filter 'Prism * 自解压安装.exe' -ErrorAction SilentlyContinue | ForEach-Object { Remove-Item -LiteralPath $_.FullName -Force; Write-Host ('   删除旧安装包 ' + $_.Name) }

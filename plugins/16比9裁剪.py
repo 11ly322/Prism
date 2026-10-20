@@ -13,7 +13,7 @@ PARAMS = [
     {"key": "ratio", "label": {"zh": "目标比例", "en": "Aspect ratio", "ja": "アスペクト比"}, "type": "choice",
      "choices": ["16:9", "9:16", "4:3", "1:1"], "default": "16:9"},
     {"key": "align", "label": {"zh": "对齐", "en": "Align", "ja": "位置"}, "type": "choice",
-     "choices": ["居中", "偏上", "偏下"], "default": "居中"},
+     "choices": [{"value": "居中", "label": {"zh": "居中", "en": "Center", "ja": "中央"}}, {"value": "偏上", "label": {"zh": "偏上", "en": "Top", "ja": "上寄せ"}}, {"value": "偏下", "label": {"zh": "偏下", "en": "Bottom", "ja": "下寄せ"}}], "default": "居中"},
 ]
 
 _RATIOS = {"16:9": (16, 9), "9:16": (9, 16), "4:3": (4, 3), "1:1": (1, 1)}

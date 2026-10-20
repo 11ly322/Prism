@@ -66,7 +66,7 @@ Therefore:
 | min / max | Required for slider | Value range |
 | step | No | Step size, default 1 |
 | default | Yes | Default value |
-| options | Required for select | Option list (the old choices is also accepted)|
+| options | Required for select | Option list (the old choices is also accepted). Items may be strings or {value,label}; label may be localized |
 | default | text | String, may be an empty string |
 
 Three kinds of controls:
@@ -103,9 +103,9 @@ is a string.
 
 `name`, `description` and `PARAMS.label` may be plain strings, or objects like
 `{"zh": "...", "en": "...", "ja": "..."}`. A missing language falls back to Chinese.
-Third-party plugins that only provide a string keep showing it as-is. Values in
-`options` are passed to `run()` unchanged and are not translated (the displayed
-option is the value itself).
+Third-party plugins that only provide a string keep showing it as-is. With
+`options` written as `{value, label}`, the UI shows the label while `run()` still
+receives the value; plain strings display the value itself.
 
 
 network / writes_files are shown in the plugin window purely to improve transparency;

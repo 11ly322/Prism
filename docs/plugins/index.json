@@ -21,7 +21,7 @@
    "network": false,
    "writes_files": false,
    "url": "https://11ly322.github.io/Prism/plugins/demo-grad-nd.py",
-   "sha256": "de955ec1dde20450b596fecef8f37805cd1a46015c97a6a024e3d4895d49ab20",
+   "sha256": "5796a8bafe9b4c561033cc7d78fde1fd92609dadcd17eb876bfb61728892b05e",
    "source": "docs/plugins/demo-grad-nd.py"
   },
   {
@@ -63,7 +63,7 @@
    "network": false,
    "writes_files": false,
    "url": "https://11ly322.github.io/Prism/plugins/duotone.py",
-   "sha256": "ab0936ecd1c6f79aa18ea914733ee92e9f7bf6ee2734dc8c59ee53c6c71accd9",
+   "sha256": "624d6e22a743be6fbccb11524c80af07a1c83b68c0f7dc42d3d318f427b4650d",
    "source": "docs/plugins/duotone.py"
   }
  ]

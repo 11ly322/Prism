@@ -65,7 +65,7 @@ IS_WIN = sys.platform.startswith("win")
 K = "Command" if IS_MAC else "Control"
 
 APP_NAME = "Prism"
-APP_VERSION = "9.6.0"
+APP_VERSION = "9.7.0"
 APP_BUILD = "2025-12.9"
 # ---------------------------------------------------------------- 运行模式
 # 同一份源码编出两个版本：
@@ -10751,7 +10751,21 @@ def run(img, **params):
             if not isinstance(p, dict) or "key" not in p:
                 continue
             raw = str(p.get("type", "")).strip().lower()
-            choices = list(p.get("choices") or p.get("options") or [])
+            raw_choices = list(p.get("choices") or p.get("options") or [])
+            # options 既可以是字符串，也可以是 {"value","label"}；label 可三语
+            choices, choice_labels = [], {}
+            for choice in raw_choices:
+                if isinstance(choice, dict):
+                    val = choice.get("value", choice.get("label"))
+                    if isinstance(val, dict):
+                        val = _localized(val)
+                    val = "" if val is None else str(val)
+                    choices.append(val)
+                    choice_labels[val] = _localized(
+                        choice.get("label", val))
+                else:
+                    choices.append(choice)
+                    choice_labels[choice] = str(choice)
             # 新写法 slider/select/checkbox 与旧写法 range/choice/bool 等价
             if raw in ("select", "choice", "dropdown"):
                 kind = "choice"
@@ -10771,6 +10785,7 @@ def run(img, **params):
                 "max": p.get("max", 100),
                 "step": p.get("step", 1),
                 "choices": choices,
+                "choice_labels": choice_labels,
                 "default": p.get(
                     "default",
                     (choices[0] if choices else
@@ -10927,15 +10942,25 @@ def run(img, **params):
                          lambda e, k=key, v=var: params.__setitem__(k, v.get()))
                 getters.append((key, lambda v=var: v.get()))
             elif p["type"] == "choice":
-                var = tk.StringVar(value=str(params.get(key) or p["default"]))
-                cb = ttk.Combobox(row, textvariable=var, values=p["choices"],
+                labels = [p.get("choice_labels", {}).get(v, str(v))
+                          for v in p["choices"]]
+                label_to_value = {lab: v for v, lab in zip(p["choices"], labels)}
+                cur = params.get(key, p["default"])
+                var = tk.StringVar(
+                    value=p.get("choice_labels", {}).get(cur, str(cur)))
+                cb = ttk.Combobox(row, textvariable=var, values=labels,
                                   state="readonly", width=10,
                                   font=self.ui_font_s)
                 cb.pack(side="left")
-                cb.bind("<<ComboboxSelected>>",
-                        lambda e, k=key, v=var: (params.__setitem__(k, v.get()),
-                                                 on_change()))
-                getters.append((key, lambda v=var: v.get()))
+
+                def pick(_e=None, k=key, v=var):
+                    params.__setitem__(
+                        k, label_to_value.get(v.get(), v.get()))
+                    on_change()
+
+                cb.bind("<<ComboboxSelected>>", pick)
+                getters.append((key, lambda v=var: label_to_value.get(
+                    v.get(), v.get())))
             else:
                 var = tk.DoubleVar(
                     value=float(params.get(key, p["default"])))

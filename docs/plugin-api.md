@@ -63,7 +63,7 @@ def run(img, **params) -> PIL.Image
 | min / max | slider 必填 | 取值范围 |
 | step | 否 | 步长，默认 1 |
 | default | 是 | 默认值 |
-| options | select 必填 | 选项列表（旧的 choices 也兼容）|
+| options | select 必填 | 选项列表（旧的 choices 也兼容）；元素可写字符串或 {value,label}，label 可三语 |
 | default | text | 字符串，可为空字符串 |
 
 三种控件：
@@ -99,8 +99,8 @@ type=bool 等于 checkbox。老插件不用改。text 是 8.3.0 新增，值为�
 
 `name` / `description` / `PARAMS.label` 都可以写字符串，或写
 `{"zh": "...", "en": "...", "ja": "..."}`；缺当前语言会回落中文。
-只写字符串的第三方插件保持原样。`options` 的选项值仍是 `run()` 收到的值，
-不参与翻译（显示的就是值本身）。
+只写字符串的第三方插件保持原样。`options` 写成 `{value, label}` 时，界面显示 label，
+传给 `run()` 的仍是 value；只写字符串时显示的就是值本身。
 
 
 network / writes_files 会在插件窗口显示出来，只用于提高透明度，

@@ -13,7 +13,7 @@ PARAMS = [
     {"key": "ratio", "label": {"zh": "边框宽度", "en": "Border width", "ja": "フチ幅"}, "min": 1, "max": 20,
      "default": 4, "step": 1},
     {"key": "color", "label": {"zh": "颜色", "en": "Color", "ja": "色"}, "type": "choice",
-     "choices": ["白色", "黑色", "米白"], "default": "白色"},
+     "choices": [{"value": "白色", "label": {"zh": "白色", "en": "White", "ja": "白"}}, {"value": "黑色", "label": {"zh": "黑色", "en": "Black", "ja": "黒"}}, {"value": "米白", "label": {"zh": "米白", "en": "Cream", "ja": "生成り"}}], "default": "白色"},
     {"key": "line", "label": {"zh": "内侧细线", "en": "Inner line", "ja": "内側の線"}, "type": "bool", "default": False},
 ]
 

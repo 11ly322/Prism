@@ -68,7 +68,7 @@ IS_WIN = sys.platform.startswith("win")
 K = "Command" if IS_MAC else "Control"
 
 APP_NAME = "Prism"
-APP_VERSION = "9.9.1"
+APP_VERSION = "9.10.0"
 APP_BUILD = "2025-12.9"
 # ---------------------------------------------------------------- 运行模式
 # 同一份源码编出两个版本：
@@ -2868,6 +2868,7 @@ class QPEApp(_BASE):
         # 配色要在建界面之前定下来，否则控件会先按默认色建出来
         self.fast_skip_fx = False
         self.tips_seen = False
+        self._lang_ready = False
         self.low_mem = bool(globals().get("LOW_MEM_ARG", False))
         self.perf_profile = globals().get("PERF_PROFILE", "fast-slider")
         self.focus_mode = False
@@ -3045,6 +3046,7 @@ class QPEApp(_BASE):
         self.last_dir = ""
         self.saved_geom = ""
         self.saved_panel = False
+        self.recent = []
         self.rename_win = None
         self.auto_btn = None
         self.split_x = None
@@ -3334,6 +3336,9 @@ class QPEApp(_BASE):
         self._menu_item(m_file, "打开文件…", self.open_dialog, "Ctrl+O")
         self._menu_item(m_file, "打开文件夹…", self.open_folder_dialog,
                         "Ctrl+Shift+O")
+        self._recent_menu = tk.Menu(m_file, tearoff=0)
+        self._rebuild_recent_menu()
+        m_file.add_cascade(label=_tr("最近打开"), menu=self._recent_menu)
         m_file.add_separator()
         self._menu_item(m_file, "批量导出…", self.batch_export)
         self._menu_item(m_file, "批量重命名…", self.batch_rename)
@@ -3796,6 +3801,7 @@ class QPEApp(_BASE):
         if not paths:
             return
         first = paths[0]
+        self._remember_recent(first)
         folder = os.path.dirname(first)
         listing = list_images(folder)
         if first in listing and len(listing) > 1:
@@ -3809,6 +3815,62 @@ class QPEApp(_BASE):
             self.files = paths
             self.index = -1
             self.goto(0)
+
+    def _remember_recent(self, path):
+        if not path or not os.path.isfile(path):
+            return
+        path = os.path.abspath(path)
+        self.recent = [path] + [p for p in getattr(self, "recent", [])
+                                if p != path]
+        self.recent = self.recent[:10]
+        try:
+            self.save_settings()
+        except Exception:
+            pass
+        self._rebuild_recent_menu()
+
+    def _rebuild_recent_menu(self):
+        menu = getattr(self, "_recent_menu", None)
+        if menu is None:
+            return
+        try:
+            menu.delete(0, "end")
+            recent = list(getattr(self, "recent", []))
+            if not recent:
+                menu.add_command(label=_tr("（空）"), state="disabled")
+                return
+            for p in recent:
+                name = os.path.basename(p)
+                if len(name) > 48:
+                    name = name[:46] + "…"
+                menu.add_command(
+                    label="%s    %s" % (name, os.path.dirname(p)),
+                    command=lambda q=p: self.open_recent(q))
+            menu.add_separator()
+            menu.add_command(label=_tr("清空最近打开"), command=self.clear_recent)
+        except Exception:
+            pass
+
+    def clear_recent(self):
+        self.recent = []
+        try:
+            self.save_settings()
+        except Exception:
+            pass
+        self._rebuild_recent_menu()
+
+    def open_recent(self, path):
+        if os.path.isfile(path):
+            self.open_files([path])
+            return
+        self.recent = [p for p in getattr(self, "recent", []) if p != path]
+        self._rebuild_recent_menu()
+        try:
+            self.save_settings()
+        except Exception:
+            pass
+        messagebox.showwarning("最近打开", "文件已不存在：%s" % path,
+                               parent=self)
 
     def _on_drop(self, event):
         raw = self.tk.splitlist(event.data)
@@ -7948,6 +8010,12 @@ class QPEApp(_BASE):
 
     def _apply_lang(self):
         """把界面文字切换成当前语言（保留原文，可来回切换）。"""
+        first = not getattr(self, "_lang_ready", False)
+        self._lang_ready = True
+        # 默认中文启动时界面本来就是中文，逐控件翻译一遍纯属浪费
+        # （实测启动阶段这里约 0.5 秒）；真正切换语言时才走完整流程。
+        if first and APP_LANG == "zh":
+            return
         if True:
             def do_widget(w):
                 for ch in w.winfo_children():
@@ -10459,6 +10527,10 @@ def run(img, **params):
             if self._geom_ok(geom):
                 self.saved_geom = geom
             self.saved_panel = bool(d.get("panel", False))
+            raw_recent = d.get("recent")
+            if isinstance(raw_recent, list):
+                self.recent = [str(p) for p in raw_recent
+                               if isinstance(p, str) and p][:10]
         except Exception:
             pass
 
@@ -10524,6 +10596,7 @@ def run(img, **params):
                          "plugin_params": getattr(self, "plug_params", {}),
                          "fast_skip_fx": bool(getattr(self, "fast_skip_fx", False)),
                          "tips_seen": bool(getattr(self, "tips_seen", False)),
+                         "recent": list(getattr(self, "recent", []))[:10],
                          "perf_profile": getattr(self, "perf_profile",
                                                  "fast-slider"),
                          "panel_w": int(getattr(self, "panel_width", px(238)))})

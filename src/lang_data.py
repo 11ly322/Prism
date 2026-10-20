@@ -640,6 +640,11 @@ LANG_TABLE = {
         "发现新版本": "New version available",
         "发现新版本 %s（当前 %s）。\n\n打开下载页？": "New version %s is available (current %s).\n\nOpen the download page?",
         "已是最新版本 %s。": "You are up to date (%s).",
+        # 9.10.0 最近打开
+        "最近打开": "Recent files",
+        "（空）": "(empty)",
+        "清空最近打开": "Clear recent files",
+        "文件已不存在：%s": "File no longer exists: %s",
     },
     "ja": {
         "文件": "ファイル", "编辑": "編集", "视图": "表示", "工具": "ツール",
@@ -1271,6 +1276,11 @@ LANG_TABLE = {
         "发现新版本": "新しいバージョンがあります",
         "发现新版本 %s（当前 %s）。\n\n打开下载页？": "新しいバージョン %s があります（現在 %s）。\n\nダウンロードページを開きますか？",
         "已是最新版本 %s。": "最新バージョンです（%s）。",
+        # 9.10.0 最近打开
+        "最近打开": "最近使ったファイル",
+        "（空）": "（なし）",
+        "清空最近打开": "最近使ったファイルを消去",
+        "文件已不存在：%s": "ファイルが見つかりません：%s",
     },
 }
 
@@ -1292,6 +1302,7 @@ HELP_TEXT = """快捷键
   幻灯片            S（右键点「幻灯片」按钮可改间隔）
   暂停动图          P
 全分辨率          F5 / 状态栏按钮：大图默认代理，取回原图
+最近打开          文件 → 最近打开：最近 10 张，点一下直接开
 色彩管理          载入按 ICC 转 sRGB 预览，导出写入 sRGB profile
 专注模式          Tab：收起工具条、状态栏和面板，只留画布
 性能档位          设置 → 性能：拖动优先 / 首帧优先 / 自动
@@ -1379,6 +1390,7 @@ HELP_TEXT_EN = """Shortcuts
   Slideshow         S (right-click the "Slideshow" button to change the interval)
   Pause animation   P
   Full resolution   F5 or status-bar button: load the original (large images use a proxy)
+  Recent files      File → Recent files: the last 10 images, one click to reopen
   Color management  ICC profiles are converted to sRGB on load; exports embed sRGB
   Focus mode        Tab: hide toolbar, status bar and panel; press again to restore
   Performance       Settings → Performance: drag-first / first-frame-first / auto
@@ -1465,6 +1477,7 @@ HELP_TEXT_JA = """ショートカット
   スライドショー      S（「スライドショー」ボタンを右クリックで間隔を変更）
   アニメーション停止  P
   フル解像度        F5 / ステータスバーのボタン：原寸を読み込む
+  最近のファイル    ファイル → 最近使ったファイル：直近 10 枚をワンクリックで開く
   カラー管理        ICC を sRGB に変換して表示し、書き出し時に sRGB を埋め込みます
   集中モード        Tab：ツールバー・ステータスバー・パネルを隠す
   パフォーマンス    設定 → パフォーマンス：ドラッグ優先 / 初回表示優先 / 自動

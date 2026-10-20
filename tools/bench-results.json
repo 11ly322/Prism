@@ -379,6 +379,63 @@
           ]
         }
       }
+    },
+    {
+      "machine": {
+        "os": "Windows-11-10.0.26200-SP0",
+        "python": "3.12.14",
+        "cpu": "AMD Ryzen 7 H 255 w/ Radeon 780M Graphics",
+        "ram_gb": 19.8,
+        "machine": "AMD64"
+      },
+      "app_version": "9.9.1",
+      "startup_ms": 2023.0,
+      "first_frame_40mp_ms": 587.1,
+      "slider_ms": 81.5,
+      "proxy_ms": 0.9,
+      "mem_current_mb": 244.5,
+      "mem_peak_mb": 356.2,
+      "repeat": 5,
+      "proxy_limit": 3400,
+      "note": "9.10.0 启动跳过中文首译 + 最近打开",
+      "paths": {
+        "draft_1600": {
+          "ms": 227.11059999710415,
+          "mp": 2.5,
+          "mp_s": 11.01,
+          "size": [
+            2000,
+            1250
+          ]
+        },
+        "load_full": {
+          "ms": 316.16139999823645,
+          "mp": 40.0,
+          "mp_s": 126.52,
+          "size": [
+            8000,
+            5000
+          ]
+        },
+        "reduce4_resize1600": {
+          "ms": 88.53770000860095,
+          "mp": 1.6,
+          "mp_s": 18.07,
+          "size": [
+            1600,
+            1000
+          ]
+        },
+        "resize1600_only": {
+          "ms": 385.6431000021985,
+          "mp": 1.6,
+          "mp_s": 4.15,
+          "size": [
+            1600,
+            1000
+          ]
+        }
+      }
     }
   ]
 }

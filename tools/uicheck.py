@@ -89,7 +89,15 @@ def main():
         ok("1:1 缩放为 100%", abs(app.scale - 1.0) < 1e-6,
            "%.3f" % app.scale)
 
-        # 3) 专注模式
+        # 3) 最近打开
+        ok("最近打开记录第一张", paths[0] in app.recent, str(len(app.recent)))
+        ok("最近打开置顶第二张", app.recent and app.recent[0] == paths[1],
+           str(app.recent[:1]))
+        ok("最近打开菜单有项", app._recent_menu.index("end") is not None)
+        app.clear_recent()
+        ok("清空最近打开", app.recent == [], str(app.recent))
+
+        # 4) 专注模式
         app.toggle_panel(True)
         for _ in range(5):
             app.update(); time.sleep(0.01)

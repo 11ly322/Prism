@@ -12,7 +12,7 @@ import time
 import subprocess
 import zipfile
 
-VER = "9.9.1"
+VER = "9.10.0"
 APP = "Prism"
 DISPLAY = "Prism %s" % VER
 

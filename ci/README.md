@@ -34,3 +34,11 @@ gh auth refresh --hostname github.com --scopes workflow
   会让 `plugins/index.json` 的 SHA-256 与文件不一致，市场安装会被拒绝。
 - GUI 任务依赖 GitHub Windows runner 的桌面会话；失败时不会阻塞 CI 主结论
   （`continue-on-error: true`），但会在日志里保留原因。
+
+## GUI job 转正计划
+
+- 从 2026-10-20 起观察两周（到 **2026-11-03**）：期间 `gui` job 应保持 success。
+- 条件满足后：删除 `.github/workflows/ci.yml` 里 `gui` 的
+  `continue-on-error: true`，push 一轮确认；如果 Windows runner 没有可用桌面导致
+  真实失败，恢复该开关并把失败原因记进 issue。
+- 在这之前 `gui` 失败不阻塞合并，但日志仍要检查，不能长期忽略。

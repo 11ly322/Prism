@@ -19,6 +19,11 @@ main{max-width:900px;margin:0 auto;padding:34px 22px 70px}
 nav.lang{display:flex;gap:8px;font-size:13px;margin-bottom:24px;flex-wrap:wrap}
 nav.lang a,nav.lang strong{display:inline-block;padding:3px 10px;border:1px solid var(--line);border-radius:999px;text-decoration:none;color:var(--dim);font-weight:400}
 nav.lang strong{color:var(--fg);border-color:var(--fg)}
+nav.toc{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:baseline;margin:0 0 26px;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:var(--card);font-size:13px}
+nav.toc b{font-size:12px;color:var(--dim);font-weight:600;margin-right:4px}
+nav.toc a{color:var(--fg);text-decoration:none;border-bottom:1px dotted var(--line)}
+nav.toc a:hover{border-bottom-style:solid}
+h2{scroll-margin-top:70px}
 h1{font-size:31px;line-height:1.28;margin:0 0 20px;letter-spacing:-.01em}
 h2{font-size:23px;margin:38px 0 10px;padding-top:8px;border-top:1px solid var(--line)}
 h3{font-size:18px;margin:24px 0 8px}
@@ -50,20 +55,20 @@ footer{border-top:1px solid var(--line);margin-top:40px}
 <a href="https://github.com/11ly322/Prism">GitHub</a>
 </nav></div></header>
 <main>
-<nav class="lang"><strong>中文</strong> · <a href="plugin-api.en.html">English</a> · <a href="plugin-api.ja.html">日本語</a></nav>
+<nav class="lang"><strong>中文</strong> · <a href="plugin-api.en.html">English</a> · <a href="plugin-api.ja.html">日本語</a></nav><nav class="toc"><b>目录</b><a href="#sec-1">最小插件</a><a href="#sec-2">签名</a><a href="#sec-3">图像契约（重要）</a><a href="#sec-4">PARAMS 字段</a><a href="#sec-5">PLUGIN 字段</a><a href="#sec-6">参数记忆（9.4.0）</a><a href="#sec-7">安装与分发</a><a href="#sec-8">热重载与开发模式</a><a href="#sec-9">错误日志格式</a><a href="#sec-10">版本兼容策略</a><a href="#sec-11">启用 / 禁用</a><a href="#sec-12">硬性约束</a><a href="#sec-13">自带插件</a></nav>
 <h1>插件 API（api = 2）</h1>
-<h2>最小插件</h2>
+<h2 id="sec-1">最小插件</h2>
 <pre><code>PLUGIN = {&quot;id&quot;: &quot;bw&quot;, &quot;name&quot;: &quot;黑白&quot;, &quot;version&quot;: &quot;2.0&quot;, &quot;api&quot;: 2,
           &quot;author&quot;: &quot;Prism&quot;, &quot;description&quot;: &quot;转黑白&quot;}
 
 
 def run(img, **params):
     return img.convert(&quot;L&quot;).convert(&quot;RGB&quot;)</code></pre>
-<h2>签名</h2>
+<h2 id="sec-2">签名</h2>
 <pre><code>def run(img, **params) -&gt; PIL.Image</code></pre>
 <p>没传的键用 default 补齐。</p>
 <ul><li>img：PIL.Image，可能是 RGB / RGBA / L。<strong>不要原地修改它</strong>。</li><li>params：键为 PARAMS 的 key，值已按类型转换（slider=float、select=str、checkbox=bool），</li><li>返回值：新的 PIL.Image，尺寸与模式都可以变。</li><li>在主线程调用：不要 sleep、不要网络请求、不要开线程。</li><li>异常直接抛：loader 捕获后写日志并回退原图，主程序不崩。<strong>不要吞异常返回 None</strong>。</li></ul>
-<h2>图像契约（重要）</h2>
+<h2 id="sec-3">图像契约（重要）</h2>
 <table><thead><tr><th>场景</th><th>run 拿到什么</th></tr></thead><tbody><tr><td>首次运行插件</td><td><strong>代理图</strong>：当前图片 + 全部调整后的结果，长边不超过 2048（小图不缩）</td></tr><tr><td>结果窗口里拖参数</td><td>同一张代理图，每动一次重算一次</td></tr><tr><td>点「保存为…」</td><td>按<strong>原分辨率</strong>把整条管线重算一遍，再用当前参数跑一次插件</td></tr></tbody></table>
 <p>因此：</p>
 <p>所见即所得。 反复逐像素处理也会拖慢滑杆。可以直接用下面的写法：</p>
@@ -77,7 +82,7 @@ def run(img, **params):
           return small.convert(&quot;L&quot;).convert(&quot;RGB&quot;)
       return preview_then_export(work, img)</code></pre>
 <ul><li>preview_then_export 会自己处理降采样、放大回原尺寸、RGBA 的 alpha 贴回。</li><li>想手工控制时用 downscale_if_needed / upscale_back，逻辑同上。</li></ul>
-<h2>PARAMS 字段</h2>
+<h2 id="sec-4">PARAMS 字段</h2>
 <table><thead><tr><th>字段</th><th>必填</th><th>说明</th></tr></thead><tbody><tr><td>key</td><td>是</td><td>参数名，也是 run 里 kwargs 的键</td></tr><tr><td>label</td><td>是</td><td>界面标签；可写字符串或 {zh,en,ja}（9.6.0）</td></tr><tr><td>type</td><td>否</td><td>slider（默认）/ select / checkbox / text</td></tr><tr><td>min / max</td><td>slider 必填</td><td>取值范围</td></tr><tr><td>step</td><td>否</td><td>步长，默认 1</td></tr><tr><td>default</td><td>是</td><td>默认值</td></tr><tr><td>options</td><td>select 必填</td><td>选项列表（旧的 choices 也兼容）；元素可写字符串或 {value,label}，label 可三语</td></tr><tr><td>default</td><td>text</td><td>字符串，可为空字符串</td></tr></tbody></table>
 <p>三种控件：</p>
 <pre><code>PARAMS = [
@@ -89,16 +94,16 @@ def run(img, **params):
     {&quot;key&quot;: &quot;caption&quot;, &quot;label&quot;: &quot;说明文字&quot;, &quot;type&quot;: &quot;text&quot;, &quot;default&quot;: &quot;&quot;},
 ]</code></pre>
 <p>向后兼容：省略 type 或写 range 等于 slider；type=choice + choices 等于 select； type=bool 等于 checkbox。老插件不用改。text 是 8.3.0 新增，值为字符串。</p>
-<h2>PLUGIN 字段</h2>
+<h2 id="sec-5">PLUGIN 字段</h2>
 <table><thead><tr><th>字段</th><th>必填</th><th>说明</th></tr></thead><tbody><tr><td>id</td><td>是</td><td>唯一标识：小写字母/数字/<code>-</code>/<code>_</code>，不能以 <code>_</code> 开头（安装文件名也用它）</td></tr><tr><td>name</td><td>是</td><td>显示名；可写字符串或 {zh,en,ja}</td></tr><tr><td>version</td><td>是</td><td>插件自身版本</td></tr><tr><td>api</td><td>是</td><td>接口版本，当前必须是 2</td></tr><tr><td>author</td><td>是</td><td>作者</td></tr><tr><td>description</td><td>建议</td><td>插件窗口里的一行说明；可写字符串或 {zh,en,ja}</td></tr><tr><td>network</td><td>可选</td><td>能力声明：是否联网（默认 False）</td></tr><tr><td>writes_files</td><td>可选</td><td>能力声明：是否写文件（默认 False）</td></tr></tbody></table>
 <h3>三语文本（9.6.0）</h3>
 <p><code>name</code> / <code>description</code> / <code>PARAMS.label</code> 都可以写字符串，或写 <code>{&quot;zh&quot;: &quot;...&quot;, &quot;en&quot;: &quot;...&quot;, &quot;ja&quot;: &quot;...&quot;}</code>；缺当前语言会回落中文。 只写字符串的第三方插件保持原样。<code>options</code> 写成 <code>{value, label}</code> 时，界面显示 label， 传给 <code>run()</code> 的仍是 value；只写字符串时显示的就是值本身。</p>
 <p>network / writes_files 会在插件窗口显示出来，只用于提高透明度， <strong>不是强制约束</strong> —— 插件仍然以完整权限运行。</p>
-<h2>参数记忆（9.4.0）</h2>
+<h2 id="sec-6">参数记忆（9.4.0）</h2>
 <p>Prism 按 PLUGIN.id 记住每个插件上次用的参数，存在 <code>Prism_settings.json</code> 的 <code>plugin_params</code> 里，重启后仍在。下次运行同一个插件时自动恢复。</p>
 <ul><li>范围外的旧值会被夹到新的 min/max。</li><li>已删除的选项回落到新的 default。</li><li>换了 id 等于换了一个插件，旧参数不会套上去。</li><li>结果窗口的「恢复默认」会清空这个插件的记忆。</li></ul>
 <p>插件不需要为此写任何代码；PARAMS 里声明的默认值仍然是首次运行时的值。</p>
-<h2>安装与分发</h2>
+<h2 id="sec-7">安装与分发</h2>
 <h3>插件市场（9.5.0）</h3>
 <p>插件窗口 →「插件市场」：列表来自官方清单 <code>plugins/index.json</code>，可看 「已安装 / 可更新 / 未安装」，点按钮直接安装或更新。</p>
 <p>环境变量 <code>PRISM_PLUGIN_CATALOG</code> 可以指向自己的清单（自建市场 / 内网镜像 / 测试）。 窗口里会标明「离线缓存」。 更新会写回原来的文件名，避免同一个 id 出现两份。</p>
@@ -131,22 +136,22 @@ def run(img, **params):
 <p><code>api</code> 必须在支持范围内。 已存在同名文件会再问一次是否覆盖。</p>
 <ol><li>后台线程下载，单文件上限 2 MB，15 秒超时。</li><li><strong>只解析 AST，不执行代码</strong>：必须有 <code>PLUGIN</code> 字面量字典与 <code>run()</code>，</li><li>填了 SHA-256 就强制比对；不符直接拒绝。</li><li>弹确认框（名字 / 版本 / 作者 / 联网 / 写文件），确认后才写入插件目录。</li><li>文件名取 <code>PLUGIN.id</code> 清洗后的结果（只留 ASCII 字母数字与 <code>-</code> <code>_</code>），</li></ol>
 <p>因此 <code>id</code> 建议只用小写字母、数字、<code>-</code>、<code>_</code>：它同时是日志里的标识和安装后的文件名。 SHA-256 只能证明文件没被改过，不能证明作者可信；装之前仍然要自己判断。</p>
-<h2>热重载与开发模式</h2>
+<h2 id="sec-8">热重载与开发模式</h2>
 <p>插件窗口里也有「重载插件」按钮可手动触发。 界面上提示「插件 X 执行耗时 Nms」，异常时提示插件名 + 异常类型 + 首行信息。</p>
 <ul><li>默认开启热重载：插件目录每 1.5 秒检查一次 mtime，改动即重新加载并刷新插件窗口。</li><li>启动参数 --plugin-dev：日志里记录每个插件的加载耗时与执行耗时，</li></ul>
-<h2>错误日志格式</h2>
+<h2 id="sec-9">错误日志格式</h2>
 <p>统一写在 logs/plugins.log（与 Prism_settings.json 同层）：</p>
 <pre><code>[2026-10-18 14:02:11] plugin=skin_smooth api=2 run failed: ValueError: 参数 &#x27;强度&#x27; 超出范围 (got 120, max 100)</code></pre>
 <p>字段顺序：时间、插件 id、api 版本、阶段（load / run / reload）、异常类型、首行信息。 --plugin-dev 下会额外追加完整 traceback。</p>
-<h2>版本兼容策略</h2>
+<h2 id="sec-10">版本兼容策略</h2>
 <p>「插件 X 需要 API N，当前为 M」，不崩溃、不刷 traceback。</p>
 <ul><li>API <strong>只增不改</strong>：新字段、新控件类型都可以加，已有字段语义不变。</li><li>破坏性变更会升<strong>主版本</strong>（api 3），并至少保留 api 2 一个版本周期。</li><li>Prism 只加载 api 等于自身支持范围的插件；更高的会被跳过，并在插件窗口提示</li></ul>
-<h2>启用 / 禁用</h2>
+<h2 id="sec-11">启用 / 禁用</h2>
 <p>把 插件.py 改名为 插件.py.disabled 即禁用，改回来即启用。插件窗口会列出已禁用项。</p>
-<h2>硬性约束</h2>
+<h2 id="sec-12">硬性约束</h2>
 <p>PLUGIN.network 里如实声明，安装确认框会把这条声明显示给用户。 PLUGIN.writes_files 里如实声明。</p>
 <ul><li>不联网：默认不得发起网络请求、不得上传用户图片。确实需要联网的插件必须在</li><li>不写原图路径之外的任何文件（日志由 Prism 自己写）。需要写文件的插件必须在</li><li>不读用户未授权的目录。</li><li>不修改调用方传入的 img 对象。</li></ul>
-<h2>自带插件</h2>
+<h2 id="sec-13">自带插件</h2>
 <p>12 个插件的 id、参数与源码见 plugins/README.md；模板见 plugins/_template.py； 小工具见 plugins/_utils.py。示例安装插件 grad-nd 的源码在 docs/plugins/demo-grad-nd.py。</p>
 </main>
 <footer><div class="ft-in">Prism · MIT License · <a href="https://github.com/11ly322/Prism">GitHub</a></div></footer>

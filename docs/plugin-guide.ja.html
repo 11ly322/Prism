@@ -19,6 +19,11 @@ main{max-width:900px;margin:0 auto;padding:34px 22px 70px}
 nav.lang{display:flex;gap:8px;font-size:13px;margin-bottom:24px;flex-wrap:wrap}
 nav.lang a,nav.lang strong{display:inline-block;padding:3px 10px;border:1px solid var(--line);border-radius:999px;text-decoration:none;color:var(--dim);font-weight:400}
 nav.lang strong{color:var(--fg);border-color:var(--fg)}
+nav.toc{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:baseline;margin:0 0 26px;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:var(--card);font-size:13px}
+nav.toc b{font-size:12px;color:var(--dim);font-weight:600;margin-right:4px}
+nav.toc a{color:var(--fg);text-decoration:none;border-bottom:1px dotted var(--line)}
+nav.toc a:hover{border-bottom-style:solid}
+h2{scroll-margin-top:70px}
 h1{font-size:31px;line-height:1.28;margin:0 0 20px;letter-spacing:-.01em}
 h2{font-size:23px;margin:38px 0 10px;padding-top:8px;border-top:1px solid var(--line)}
 h3{font-size:18px;margin:24px 0 8px}
@@ -50,27 +55,27 @@ footer{border-top:1px solid var(--line);margin-top:40px}
 <a href="https://github.com/11ly322/Prism">GitHub</a>
 </nav></div></header>
 <main>
-<nav class="lang"><a href="plugin-guide.html">中文</a> · <a href="plugin-guide.en.html">English</a> · <strong>日本語</strong></nav>
+<nav class="lang"><a href="plugin-guide.html">中文</a> · <a href="plugin-guide.en.html">English</a> · <strong>日本語</strong></nav><nav class="toc"><b>目次</b><a href="#sec-1">同梱プラグイン（本体に付属）</a><a href="#sec-2">公式カタログ（プラグインマーケットからワンクリックでインストール可能）</a><a href="#sec-3">プラグインをインストールする</a><a href="#sec-4">プラグインをマーケットに公開する</a><a href="#sec-5">パラメータは記憶される（9.4.0）</a><a href="#sec-6">開発フロー</a><a href="#sec-7">3 種類のコントロール</a><a href="#sec-8">PLUGIN フィールド</a><a href="#sec-9">サードパーティ製プラグインの入れ方</a><a href="#sec-10">再利用できる関数</a></nav>
 <h1>Prism プラグインインデックス</h1>
 <p>同梱プラグイン 12 個 + 公式のインストール可能なカタログ 1 つ。カタログ <code>index.json</code> はアプリ内の「プラグインマーケット」の データソースも兼ねています。以下の 2 つの表は <code>tools/make_plugin_index.py</code> が<strong>プラグインのソース + index.json</strong> から生成します。 表の中身は手で編集しないでください（変更後はスクリプトを 1 回実行するか、<code>--check</code> で最新かどうかを確認してください）。</p>
-<h2>同梱プラグイン（本体に付属）</h2>
+<h2 id="sec-1">同梱プラグイン（本体に付属）</h2>
 <p>&lt;!-- BEGIN GENERATED builtin --&gt;</p>
 <table><thead><tr><th>id</th><th>名前 / バージョン</th><th>パラメータ（コントロール · 範囲 · 既定値）</th><th>説明</th><th>ネットワーク</th><th>ファイル書き込み</th><th>ソース</th></tr></thead><tbody><tr><td>crop169</td><td>16:9 トリミング 2.0</td><td>select アスペクト比（16:9 / 9:16 / 4:3 / 1:1） · select 位置（中央 / 上寄せ / 下寄せ）</td><td>指定比率で中央トリミング。動画サムネやスライド用画像に</td><td>いいえ</td><td>いいえ</td><td><code>16比9裁剪.py</code></td></tr><tr><td>god_rays</td><td>光芒 1.0</td><td>slider 光のしきい値 50–98（86） · slider 光線の長さ 20–220（110） · slider 角度 -60–60（14） · slider 強さ 10–100（55）</td><td>ハイライトを一方向に伸ばして光芒を再現（逆光のゴッドレイ）</td><td>いいえ</td><td>いいえ</td><td><code>丁达尔光.py</code></td></tr><tr><td>pixelate</td><td>ピクセル化 2.0</td><td>slider ブロックサイズ 4–160（24） · select サンプリング（平均 / ルーペ） · checkbox 縁を描く</td><td>モザイク。ブロックサイズ・サンプリング・縁取りを調整</td><td>いいえ</td><td>いいえ</td><td><code>像素化.py</code></td></tr><tr><td>watermark</td><td>文字入れ 2.1</td><td>text 署名テキスト · slider 文字サイズ 1–8（3.2） · slider 余白 0–8（2） · checkbox フチ</td><td>右下に署名を 1 行追加。テキストは自由に変更可</td><td>いいえ</td><td>いいえ</td><td><code>加文字.py</code></td></tr><tr><td>avatar</td><td>丸アバター 2.0</td><td>slider 出力サイズ 128–1024（512） · slider 余白 0–30（0） · select 背景（透明 / 白 / 黒）</td><td>円形マスクのアバター。余白・背景色・出力サイズを調整</td><td>いいえ</td><td>いいえ</td><td><code>圆形头像.py</code></td></tr><tr><td>sepia</td><td>ビンテージフィルム 2.0</td><td>slider セピア強度 0–100（70） · slider コントラスト 50–150（96） · slider 周辺減光 0–100（35）</td><td>暖かいセピア調。強さ・コントラスト・周辺減光を調整</td><td>いいえ</td><td>いいえ</td><td><code>复古胶片.py</code></td></tr><tr><td>glitch</td><td>グリッチ 1.0</td><td>slider チャンネルずれ 0–30（8） · slider スライス数 0–40（12） · slider シード 0–99（7） · checkbox 走査線</td><td>RGB チャンネルのずれと横方向のスライスでデジタルグリッチ表現</td><td>いいえ</td><td>いいえ</td><td><code>故障艺术.py</code></td></tr><tr><td>border</td><td>白フチ 2.0</td><td>slider フチ幅 1–20（4） · select 色（白 / 黒 / 生成り） · checkbox 内側の線</td><td>画像の周囲にフチを追加。幅・色・内側の細線を調整</td><td>いいえ</td><td>いいえ</td><td><code>白边框.py</code></td></tr><tr><td>tilt_shift</td><td>チルトシフト 1.0</td><td>slider ピント帯 4–80（26） · slider ぼかし 1–30（12） · slider 彩度 0–100（45） · select ピント帯の位置（中央 / 上寄せ / 下寄せ）</td><td>横方向のピント帯と上下のぼかしでミニチュア風に</td><td>いいえ</td><td>いいえ</td><td><code>移轴微缩.py</code></td></tr><tr><td>autolevel</td><td>自動レベル 2.0</td><td>slider カット率 0–5（0.4） · slider 強さ 0–100（100）</td><td>ヒストグラムを引き伸ばして霞んだ印象を解消</td><td>いいえ</td><td>いいえ</td><td><code>自动色阶.py</code></td></tr><tr><td>sharpen</td><td>シャープ 2.0</td><td>slider 半径 0.5–5（1.4） · slider 強さ %% 10–300（90） · slider しきい値 0–20（3）</td><td>USM シャープ。半径・強さ・しきい値を調整</td><td>いいえ</td><td>いいえ</td><td><code>锐化.py</code></td></tr><tr><td>bw</td><td>モノクロ 2.0</td><td>slider コントラスト強調 0–100（20）</td><td>最小例：もっとも短いプラグイン。コントラスト強調を調整</td><td>いいえ</td><td>いいえ</td><td><code>黑白.py</code></td></tr></tbody></table>
 <p>&lt;!-- END GENERATED builtin --&gt;</p>
 <p>同梱プラグインは名前・パラメータのラベル・説明を zh/en/ja で提供しています。中国語の文字列だけを 持つサードパーティ製プラグインはそのまま表示され、<code>{&quot;zh&quot;,&quot;en&quot;,&quot;ja&quot;}</code> を書けば三言語に対応できます （<code>docs/plugin-api.ja.md</code> 参照）。</p>
 <p>パラメータの既定値はソースの <code>PARAMS</code> が正です。保存すると Prism が約 1.5 秒で自動的にホットリロードします。</p>
-<h2>公式カタログ（プラグインマーケットからワンクリックでインストール可能）</h2>
+<h2 id="sec-2">公式カタログ（プラグインマーケットからワンクリックでインストール可能）</h2>
 <p>&lt;!-- BEGIN GENERATED catalog --&gt;</p>
 <table><thead><tr><th>id</th><th>名前 / バージョン</th><th>パラメータ</th><th>説明</th><th>SHA-256（先頭 12 桁）</th><th>インストールファイル</th></tr></thead><tbody><tr><td>grad-nd</td><td>グラデ ND 1.0</td><td>slider 減光の強さ 0–100（45） · select 暗くする側（上 / 下） · slider グラデ幅 5–100（45）</td><td>画面の片側をなめらかに暗くし、ハーフ ND フィルターのように空を抑えます</td><td><code>5796a8bafe9b…</code></td><td><code>demo-grad-nd.py</code></td></tr><tr><td>soft-glow</td><td>ソフトグロー 1.0</td><td>slider 強さ 0–100（45） · slider 半径 1–40（18） · slider ハイライトのしきい値 0–100（55）</td><td>ハイライトをにじませて柔らかく。人物や逆光がやさしくなります</td><td><code>e189b41e226d…</code></td><td><code>soft-glow.py</code></td></tr><tr><td>duotone</td><td>デュオトーン 1.0</td><td>select 暗部の色（深い青 / 暗い赤 / 墨緑 / 夜紫 / 黒） · select 明部の色（生成り / 薄橙 / 空色 / ミント / 白） · slider 強さ 0–100（100）</td><td>明度を 2 色にマッピング。ポスターや表紙の配色に</td><td><code>624d6e22a743…</code></td><td><code>duotone.py</code></td></tr></tbody></table>
 <p>&lt;!-- END GENERATED catalog --&gt;</p>
 <p>確認して、ワンクリックでインストールまたは更新できます。 公開時に <code>docs/plugins/index.json</code> へコピーされます）。 表示され、確認してから初めてディスクに書き込みます。 schema は <a href="plugin-api.ja.html">docs/plugin-api.md</a> を参照してください。 ウィンドウ内に「オフラインキャッシュ」と表示します。</p>
 <ul><li>アプリ内の入口：プラグインウィンドウ →「プラグインマーケット」。一覧を閲覧でき、「インストール済み / 更新あり / 未インストール」の状態を</li><li>カタログの URL：<code>https://11ly322.github.io/Prism/plugins/index.json</code>（リポジトリ内のソースは <code>plugins/index.json</code>、</li><li>各エントリには SHA-256 が付いています。ダウンロード後は<strong>AST を解析するだけでコードは実行しません</strong>。確認ダイアログに作者と機能宣言が</li><li>独自のカタログを使う場合：環境変数 <code>PRISM_PLUGIN_CATALOG</code> を自分の <code>index.json</code> に向けて設定してください。</li><li>オンラインのカタログを取得できない場合、アプリは前回取得に成功したキャッシュ（<code>plugin_catalog.json</code>、設定ファイルと同じディレクトリ）を使い、</li></ul>
-<h2>プラグインをインストールする</h2>
+<h2 id="sec-3">プラグインをインストールする</h2>
 <p>方法は 3 つで、結果は同じです：</p>
 <ol><li><strong>プラグインマーケット</strong>（9.5.0）：プラグインウィンドウ →「プラグインマーケット」→ 1 つ選ぶ →「インストール」/「更新」。</li><li><strong>URL からインストール</strong>：プラグインウィンドウ →「URL からインストール…」→ <code>.py</code> の http(s) 直リンクを入力します。SHA-256 も入力できます。</li><li><strong>フォルダに入れる</strong>：<code>.py</code> をプラグインフォルダ（プラグインウィンドウの上部にフルパスが表示されます）に入れ、「再スキャン」を押すか 1.5 秒のホットリロードを待ちます。</li></ol>
 <p>一時的な無効化：<code>xxx.py</code> を <code>xxx.py.disabled</code> にリネームすると、プラグインウィンドウに「xxx を有効化」ボタンが表示されます。</p>
 <p>インストールが解決するのは「ダウンロードしたものが改ざんされていないこと」（SHA-256）だけで、<strong>作者が信頼できるかどうかは解決しません</strong>。 プラグインが宣言する <code>network</code> / <code>writes_files</code> は確認ダイアログに表示されますが、それは作者自身が記入した宣言にすぎません。</p>
-<h2>プラグインをマーケットに公開する</h2>
+<h2 id="sec-4">プラグインをマーケットに公開する</h2>
 <p>公式マーケットは <code>plugins/index.json</code> を読みます。プラグインを書いてからユーザーがマーケットで見られるようになるまで、全部で 6 ステップです：</p>
 <p><code>PLUGIN</code> では <code>id</code> を一意にし、<code>api: 2</code> とし、<code>network</code> / <code>writes_files</code> は事実どおりに記入します。 <code>PARAMS</code> には <code>slider</code> / <code>select</code> / <code>checkbox</code> / <code>text</code> を使います。 <code>--plugin-dev</code> 付きで起動すると、<code>logs/plugins.log</code> の読み込み・実行時間を確認できます。</p>
 <ol><li><strong>プラグインを書く</strong>：単一ファイルを <code>docs/plugins/&lt;ファイル名&gt;.py</code> に置き、ファイル名は ASCII にします。</li><li><strong>ローカルで自己テスト</strong>：<code>.py</code> をプラグインフォルダ（プラグインウィンドウの上部にフルパスがあります）に入れ、実行し、パラメータを調整し、保存します。</li><li><strong>SHA-256 を計算</strong>（ファイルとバイト単位で一致している必要があります）：</li></ol>
@@ -99,19 +104,19 @@ footer{border-top:1px solid var(--line);margin-top:40px}
 <p><strong>独自のマーケットを自分で運用する（公式リポジトリに入れない場合）</strong>：</p>
 <ul><li>同じ形式の <code>index.json</code> を任意の http(s) 静的ホスティングに置きます（各エントリには引き続き SHA-256 が必要です）。</li><li>ユーザーは<strong>Prism を起動する前に</strong>環境変数 <code>PRISM_PLUGIN_CATALOG</code> をそのカタログに向けて設定します。</li><li>コードの変更も再パッケージも不要です。</li></ul>
 <p>セキュリティの最低ライン：カタログ自体は一切のコードを実行しません。インストール時は AST を解析するだけで、SHA-256 を必ず照合し、 確認してから初めてディスクに書き込みます。</p>
-<h2>パラメータは記憶される（9.4.0）</h2>
+<h2 id="sec-5">パラメータは記憶される（9.4.0）</h2>
 <p>各プラグインのパラメータは <code>id</code> ごとに設定ファイル（<code>plugin_params</code>）に保存されます。次に同じプラグインを実行すると前回の値が自動的に復元され、 Prism を再起動した後も同様です。結果ウィンドウの「初期値に戻す」を押すと、この記憶は消去されます。</p>
 <ul><li>プラグインがパラメータの範囲を変更した場合：範囲外の値は新しい範囲にクランプされます。</li><li>プラグインが選択肢を削除した場合：無効になった選択肢は新しい既定値にフォールバックします。</li><li>プラグインが <code>id</code> を変更した場合：新しいプラグインと見なされ、古い記憶は適用されません。</li></ul>
-<h2>開発フロー</h2>
+<h2 id="sec-6">開発フロー</h2>
 <ol><li><code>_template.py</code> を <code>myplugin.py</code> にコピーします（ファイル名をアンダースコアで始めないでください。それはフレームワーク用ファイルに予約されています）</li><li><code>PLUGIN</code> / <code>PARAMS</code> / <code>run</code> を変更します</li><li>保存すると Prism が約 1.5 秒で自動的にリロードします（プラグインウィンドウで「再読み込み」を押すこともできます）</li><li>エラーが発生してもメインアプリはクラッシュしません：<code>logs/plugins.log</code> に書き込まれ、元画像にフォールバックします</li></ol>
-<h2>3 種類のコントロール</h2>
+<h2 id="sec-7">3 種類のコントロール</h2>
 <table><thead><tr><th>type</th><th>必須フィールド</th><th>run に渡される型</th><th>旧記法（引き続き互換）</th></tr></thead><tbody><tr><td>slider</td><td>min / max / default、任意で step</td><td>float</td><td>type を省略するか range と書く</td></tr><tr><td>select</td><td>options / default</td><td>str</td><td>type=choice + choices</td></tr><tr><td>checkbox</td><td>default</td><td>bool</td><td>type=bool</td></tr><tr><td>text</td><td>default（空文字列可）</td><td>str</td><td>なし（8.3.0 で追加）</td></tr></tbody></table>
-<h2>PLUGIN フィールド</h2>
+<h2 id="sec-8">PLUGIN フィールド</h2>
 <table><thead><tr><th>フィールド</th><th>必須</th><th>説明</th></tr></thead><tbody><tr><td>id</td><td>はい</td><td>一意の識別子。パラメータの記憶、インストール時のファイル名、マーケットのカタログで使われます。ASCII の英数字と <code>-</code> <code>_</code> を推奨</td></tr><tr><td>name</td><td>はい</td><td>一覧に表示される名前</td></tr><tr><td>version</td><td>推奨</td><td>名前の後に表示されます。マーケットが更新可否の判断に使います</td></tr><tr><td>api</td><td>推奨</td><td>現在は 1、2 に対応しています。<code>2</code> は <code>run(img, **params)</code> の書き方です</td></tr><tr><td>author</td><td>推奨</td><td>ホバーのツールチップに表示されます</td></tr><tr><td>description</td><td>推奨</td><td>ホバーのツールチップに表示されます</td></tr><tr><td>network</td><td>推奨</td><td>ネットワークを使うかどうか。事実どおりに記入</td></tr><tr><td>writes_files</td><td>推奨</td><td>ファイルを書き込むかどうか。事実どおりに記入</td></tr></tbody></table>
-<h2>サードパーティ製プラグインの入れ方</h2>
+<h2 id="sec-9">サードパーティ製プラグインの入れ方</h2>
 <p><code>source</code>、<code>url</code>、<code>sha256</code> と zh/en/ja 三言語の名前・説明を補完します。<code>make_plugin_index.py --check</code> が通る必要があります。</p>
 <ul><li>単一ファイルで、依存は Pillow と numpy のみ（Prism に同梱）。スレッドを起動せず、Prism の内部状態を変更しないでください。</li><li>ファイル名は ASCII、<code>id</code> は一意にしてください。<code>_</code> で始めないでください。</li><li>自分のプラグインはユーザープラグインフォルダ（プラグインウィンドウの上部にフルパスがあります）に置いてください。インストールディレクトリ内の同梱プラグインは変更しないでください。</li><li>公式カタログに収録したい場合：PR を出して <code>plugins/index.json</code> に項目を追加し、ソースを <code>docs/plugins/</code> に置き、</li><li>ネットワーク / ファイル書き込みの副作用があるプラグインは、<code>PLUGIN</code> で事実どおりに宣言する必要があります。</li></ul>
-<h2>再利用できる関数</h2>
+<h2 id="sec-10">再利用できる関数</h2>
 <p><code>_utils.py</code> は <code>preview_then_export</code> / <code>downscale_if_needed</code> / <code>upscale_back</code> / <code>preserve_alpha</code> / <code>split_alpha</code> / <code>to_rgb</code> / <code>clamp_params</code> を提供しています。フレームワークではないので、コピーして使っても構いません。 <code>preview_then_export(func, img)</code> が一番手軽です：ダウンサンプリング → func を実行 → 元のサイズに拡大 → alpha を貼り戻す。 インポート前にプラグインフォルダを <code>sys.path</code> に追加する必要があります（そのファイル先頭のコメントを参照してください）。</p>
 </main>
 <footer><div class="ft-in">Prism · MIT License · <a href="https://github.com/11ly322/Prism">GitHub</a></div></footer>

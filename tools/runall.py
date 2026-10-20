@@ -24,11 +24,13 @@ SUITES = [
     # 版本号不放在这里：发布前页面还停留在上一版，由 make_release 在更新页面后单独检查
     ("URL 安装", "tools/plugininstallcheck.py", [], True, 120),
     ("清单", "tools/plugincatalogcheck.py", [], True, 120),
+    ("清单静态", "tools/pluginprcheck.py", [], True, 60),
     ("插件回归", "tools/plugincheck.py", [], True, 180),
     ("市场界面", "tools/marketcheck.py", [], True, 180),
     ("三语界面", "tools/langcheck.py", [], True, 240),
     ("导入冒烟", "tools/importcheck.py", [], True, 120),
     ("界面/性能", "tools/uicheck.py", [], True, 240),
+    ("ICC", "tools/icccheck.py", [], True, 60),
     ("补充功能", "tools/newcheck.py", [], False, 300),
     ("自检", "tools/selfcheck.py", [], False, 420),
     ("美颜", "tools/beautycheck.py", [], False, 420),

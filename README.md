@@ -8,6 +8,9 @@
 
 <sub>打开快 · 切图快 · 调色准</sub>
 
+[![CI](https://github.com/11ly322/Prism/actions/workflows/ci.yml/badge.svg)](https://github.com/11ly322/Prism/actions/workflows/ci.yml)
+[![Pages](https://github.com/11ly322/Prism/actions/workflows/pages.yml/badge.svg)](https://github.com/11ly322/Prism/actions/workflows/pages.yml)
+
 </div>
 
 <div align="center">

@@ -3,8 +3,10 @@
 已启用（2026-10-20）：
 
 - `.github/workflows/ci.yml`：push / PR 跑静态门禁（词条、插件索引、三语文档、
-  文档 HTML、版本号），另有一个 `continue-on-error` 的 GUI 回归任务
-  （插件/市场/三语/启动）。
+  文档 HTML、版本号），一个 Ubuntu 静态 job（清单/文档/HTML/版本），
+  另有一个 `continue-on-error` 的 GUI 回归任务（插件/市场/三语/启动）。
+- `.github/workflows/plugin-pr.yml`：PR 改 `plugins/index.json`、`plugins/*.py`
+  或 `docs/plugins/**` 时自动校验 id 规则、schema、SHA-256、内置冲突与 README 索引。
 - `.github/workflows/pages.yml`：push `docs/**` 或手动触发时，用
   `actions/deploy-pages` 发布 `docs/`。
 

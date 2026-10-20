@@ -32,7 +32,10 @@ from tkinter import filedialog, font as tkfont, messagebox, simpledialog
 
 from PIL import (ExifTags, Image, ImageDraw, ImageEnhance, ImageFile,
                  ImageFilter, ImageOps, ImageStat, ImageTk, ImageChops)
-
+try:
+    from PIL import ImageCms
+except Exception:                 # 极简 Pillow 构建可能没有 ImageCms
+    ImageCms = None
 # messagebox 的标题/正文不适合做成控件，_apply_lang 覆盖不到；这里套一层翻译壳。
 # 传进来的仍是中文原文，显示前过 _tr / _trf（带 % 的运行时文案）。
 _TK_MESSAGEBOX = messagebox
@@ -869,6 +872,23 @@ LANG_TABLE = {
         "性能档位：%s": "Performance profile: %s",
         # 9.8.0 专注模式帮助
         "专注模式（Tab）：收起工具条、状态栏和右侧面板，只留画布。": "Focus mode (Tab): hides the toolbar, status bar and side panel, leaving only the canvas.",
+        # 9.9.0 全分辨率异步/ICC
+        "正在载入全分辨率…（Esc 取消）": "Loading full resolution… (Esc to cancel)",
+        "已取消载入全分辨率": "Full-resolution load cancelled",
+        "图片过大（%.0f MP），已跳过": "Image too large (%.0f MP), skipped",
+        "原图 %d × %d（%.0f MP）\n预计需要约 %.0f MB 内存，继续？": "Original %d × %d (%.0f MP)\nThis needs about %.0f MB of memory. Continue?",
+        "  色彩空间  %s%s": "  Color space  %s%s",
+        "（已转 sRGB）": " (converted to sRGB)",
+        # 9.9.0 更新检查/首次提示
+        "F5 全分辨率 · Tab 专注模式 · 拖动右栏调宽": "F5 full resolution · Tab focus mode · drag the panel edge to resize",
+        "正在检查更新…": "Checking for updates…",
+        "检查更新": "Check for updates",
+        "检查更新…": "Check for updates…",
+        "检查更新失败：%s": "Update check failed: %s",
+        "检查更新失败：服务器没有返回版本号。": "Update check failed: the server returned no version.",
+        "发现新版本": "New version available",
+        "发现新版本 %s（当前 %s）。\n\n打开下载页？": "New version %s is available (current %s).\n\nOpen the download page?",
+        "已是最新版本 %s。": "You are up to date (%s).",
     },
     "ja": {
         "文件": "ファイル", "编辑": "編集", "视图": "表示", "工具": "ツール",
@@ -1483,6 +1503,23 @@ LANG_TABLE = {
         "性能档位：%s": "パフォーマンス設定：%s",
         # 9.8.0 专注模式帮助
         "专注模式（Tab）：收起工具条、状态栏和右侧面板，只留画布。": "集中モード（Tab）：ツールバー・ステータスバー・右パネルを隠し、キャンバスだけにします。",
+        # 9.9.0 全分辨率异步/ICC
+        "正在载入全分辨率…（Esc 取消）": "フル解像度を読み込み中…（Esc でキャンセル）",
+        "已取消载入全分辨率": "フル解像度の読み込みを中止しました",
+        "图片过大（%.0f MP），已跳过": "画像が大きすぎるため（%.0f MP）スキップしました",
+        "原图 %d × %d（%.0f MP）\n预计需要约 %.0f MB 内存，继续？": "原寸 %d × %d（%.0f MP）\n約 %.0f MB のメモリが必要です。続行しますか？",
+        "  色彩空间  %s%s": "  色空間  %s%s",
+        "（已转 sRGB）": "（sRGB に変換済み）",
+        # 9.9.0 更新检查/首次提示
+        "F5 全分辨率 · Tab 专注模式 · 拖动右栏调宽": "F5 フル解像度 · Tab 集中モード · 右パネルの端をドラッグで幅変更",
+        "正在检查更新…": "更新を確認中…",
+        "检查更新": "更新を確認",
+        "检查更新…": "更新を確認…",
+        "检查更新失败：%s": "更新の確認に失敗：%s",
+        "检查更新失败：服务器没有返回版本号。": "更新の確認に失敗：サーバーがバージョンを返しませんでした。",
+        "发现新版本": "新しいバージョンがあります",
+        "发现新版本 %s（当前 %s）。\n\n打开下载页？": "新しいバージョン %s があります（現在 %s）。\n\nダウンロードページを開きますか？",
+        "已是最新版本 %s。": "最新バージョンです（%s）。",
     },
 }
 
@@ -1668,6 +1705,8 @@ DEBUG_DECODE = os.environ.get("PRISM_DEBUG_DECODE") == "1"
 FAST_RESAMPLE = Image.Resampling.BILINEAR   # 拖动时的临时采样
 SAFE_PIXELS = 120 * 1000 * 1000  # 超过这个像素数先降到安全尺寸
 AUTO_DRAFT_PIXELS = 50 * 1000 * 1000  # 超过就先按代理尺寸解码，F5 再载全分辨率
+FULL_CONFIRM_PIXELS = 80 * 1000 * 1000  # F5 取原图前，超过这个像素量先确认内存
+EXPORT_MAX_PIXELS = 150 * 1000 * 1000   # 批量导出跳过超过这个像素量的单图
 
 
 def _proxy_for(img, limit):
@@ -1685,6 +1724,64 @@ def _proxy_for(img, limit):
         return _fast_downscale(img, (nw, nh)), nw / float(w)
     except Exception:
         return None, 1.0
+
+
+def _icc_description(icc):
+    if not icc or ImageCms is None:
+        return "sRGB"
+    try:
+        prof = ImageCms.ImageCmsProfile(io.BytesIO(icc))
+        return (ImageCms.getProfileDescription(prof) or "ICC").strip()
+    except Exception:
+        return "ICC"
+
+
+def _to_srgb(img, icc):
+    """把带 ICC 的图转到 sRGB，返回 (img, 源描述, 是否转换)。
+
+    不做色彩管理时，Display P3 / AdobeRGB 的图会被当成 sRGB 直接显示，
+    肤色和绿色最容易偏；这里先统一到 sRGB，导出再写 sRGB profile。
+    """
+    name = _icc_description(icc) if icc else "sRGB"
+    if not icc or ImageCms is None or "srgb" in name.lower():
+        return img, name, False
+    try:
+        src = ImageCms.ImageCmsProfile(io.BytesIO(icc))
+        dst = ImageCms.createProfile("sRGB")
+        alpha = None
+        base = img
+        if img.mode in ("RGBA", "LA") or (img.mode == "P" and
+                                          "transparency" in (img.info or {})):
+            base = img.convert("RGBA")
+            alpha = base.getchannel("A")
+        elif img.mode not in ("RGB", "L", "CMYK"):
+            base = img.convert("RGB")
+        out = ImageCms.profileToProfile(base, src, dst,
+                                        renderingIntent=0, outputMode="RGB")
+        if alpha is not None:
+            out.putalpha(alpha)
+        return out, name, True
+    except Exception:
+        return img, name, False
+
+
+_SRGB_ICC = None
+
+
+def _srgb_icc_bytes():
+    """导出用：sRGB profile 字节；没有 ImageCms 时返回 None。"""
+    global _SRGB_ICC
+    if _SRGB_ICC is not None:
+        return _SRGB_ICC or None
+    if ImageCms is None:
+        _SRGB_ICC = b""
+        return None
+    try:
+        _SRGB_ICC = ImageCms.ImageCmsProfile(
+            ImageCms.createProfile("sRGB")).tobytes()
+    except Exception:
+        _SRGB_ICC = b""
+    return _SRGB_ICC or None
 
 
 def _fast_downscale(img, size, quality=True):
@@ -2677,7 +2774,8 @@ class ImageDoc(object):
                  "file_size", "mtime", "alpha", "_frames", "_index",
                  "raw_preview", "orig_size", "draft_ratio", "exif_bytes",
                  "oversize", "auto_drafted", "proxy_img", "proxy_ratio",
-                 "file_bytes", "is_preview", "slow_ms", )
+                 "file_bytes", "is_preview", "slow_ms",
+                 "icc_source", "icc_converted", )
 
     def __init__(self, path, data, img):
         self.path = path
@@ -2711,6 +2809,8 @@ class ImageDoc(object):
         self.proxy_ratio = 1.0
         self.auto_drafted = False
         self.is_preview = False
+        self.icc_source = "sRGB"
+        self.icc_converted = False
         self.slow_ms = 0.0
 
     @classmethod
@@ -2799,6 +2899,13 @@ class ImageDoc(object):
                     exif_bytes = None
         except Exception:
             orient = 1
+        # ICC 在 EXIF 之后、转正之前处理：profileToProfile 会丢 EXIF，
+        # 而 exif_transpose 只动像素方向，不影响色彩空间。
+        icc_source = "sRGB"
+        icc_converted = False
+        icc = (img.info or {}).get("icc_profile")
+        if icc:
+            img, icc_source, icc_converted = _to_srgb(img, icc)
         if orient and orient != 1:
             try:
                 img = ImageOps.exif_transpose(img)
@@ -2809,6 +2916,8 @@ class ImageDoc(object):
         doc.auto_drafted = auto_drafted
         doc.raw_preview = raw
         doc.exif_bytes = exif_bytes
+        doc.icc_source = icc_source
+        doc.icc_converted = icc_converted
         if orig_size:
             doc.orig_size = orig_size
         # 用长边算比例：EXIF 转正会交换宽高，用宽度会算错
@@ -4020,6 +4129,7 @@ class QPEApp(_BASE):
         super(QPEApp, self).__init__()
         # 配色要在建界面之前定下来，否则控件会先按默认色建出来
         self.fast_skip_fx = False
+        self.tips_seen = False
         self.low_mem = bool(globals().get("LOW_MEM_ARG", False))
         self.perf_profile = globals().get("PERF_PROFILE", "fast-slider")
         self.focus_mode = False
@@ -4554,6 +4664,7 @@ class QPEApp(_BASE):
 
         m_help = self._menubutton(parent, "帮助")
         self._menu_item(m_help, "快捷键与说明", self.show_help)
+        self._menu_item(m_help, "检查更新…", self.check_updates)
         self._menu_item(m_help, "关于 %s %s" % (APP_NAME, APP_VERSION),
                         self.show_about)
 
@@ -5087,6 +5198,14 @@ class QPEApp(_BASE):
         self._render()
         self._start_anim()
         self._retarget()
+        if (not getattr(self, "tips_seen", False)
+                and self.doc is not None):
+            self.tips_seen = True
+            try:
+                self._save_setting("tips_seen", True)
+            except Exception:
+                pass
+            self._flash("F5 全分辨率 · Tab 专注模式 · 拖动右栏调宽", 6000)
 
     def _pump(self):
         self.pump_job = None
@@ -5167,30 +5286,37 @@ class QPEApp(_BASE):
                 self.error = None
         if path == self.pending_full:
             self.pending_full = None
-            if not isinstance(doc, Exception):
-                # 只是同一张图换成全分辨率版，不能动用户的编辑状态；
-                # 坐标和缩放同步换算，画面才不会跳。
-                old = self.doc
-                r = getattr(old, "draft_ratio", 1.0) if old is not None else 1.0
-                if getattr(self, "actual_after_full", False):
-                    self.actual_after_full = False
-                    self.scale = 1.0
-                    self.zoom_mode = "free"
-                    self.cx = None
-                    self.cy = None
-                elif 0 < r < 1.0:
-                    self.scale = max(MIN_SCALE, min(MAX_SCALE, self.scale * r))
-                    if self.cx is not None:
-                        self.cx *= r
-                    if self.cy is not None:
-                        self.cy *= r
-                self.cache[path] = doc
-                self.doc = doc
-                self.geom_key = None
-                self.tile_cache.clear()
-                self.preview_key = None
-                self.hsv_src = None
-                self._after_load()
+            self.full_loading = None
+            self._set_full_btn_busy(False)
+            if isinstance(doc, Exception):
+                self._flash("载入全分辨率失败：%s" % str(doc)[:60], 4000)
+                self._update_status()
+                return
+            # 只是同一张图换成全分辨率版，不能动用户的编辑状态；
+            # 坐标和缩放同步换算，画面才不会跳。
+            old = self.doc
+            r = getattr(old, "draft_ratio", 1.0) if old is not None else 1.0
+            if getattr(self, "actual_after_full", False):
+                self.actual_after_full = False
+                self.scale = 1.0
+                self.zoom_mode = "free"
+                self.cx = None
+                self.cy = None
+            elif 0 < r < 1.0:
+                self.scale = max(MIN_SCALE, min(MAX_SCALE, self.scale * r))
+                if self.cx is not None:
+                    self.cx *= r
+                if self.cy is not None:
+                    self.cy *= r
+            self.cache[path] = doc
+            self.doc = doc
+            self.geom_key = None
+            self.tile_cache.clear()
+            self.preview_key = None
+            self.hsv_src = None
+            self._after_load()
+            self._update_status()
+            self._flash("已载入全分辨率 %dx%d" % doc.img.size, 2400)
             return
         if path != self.loading:
             return
@@ -7079,6 +7205,7 @@ class QPEApp(_BASE):
                         else "打开一张图片开始浏览")
                 self._set_text(_tr(hint) + _tr(
                     "\n\nCtrl+O 打开文件    Ctrl+Shift+O 打开文件夹"
+                    "\n\nF5 全分辨率 · Tab 专注模式 · 拖动右栏调宽"
                     "\n\n按 F1 查看全部快捷键"))
             elif self.error is not None:
                 self._set_text(_trf("无法打开这个文件\n\n%s" % self.error))
@@ -11236,7 +11363,7 @@ def run(img, **params):
                                      max(1, int(round(h * r)))), quality=False)
 
     def load_full_resolution(self):
-        """把当前大图按原始分辨率重新解码一次（超大图默认只载代理尺寸）。"""
+        """把当前大图按原始分辨率重新解码一次（后台线程，不冻结界面）。"""
         doc = getattr(self, "doc", None)
         if doc is None:
             return
@@ -11247,27 +11374,33 @@ def run(img, **params):
             self._flash("当前已经是全分辨率", 1800)
             return
         path = doc.path
-        self._flash("正在载入全分辨率…", 9000)
-        self.update_idletasks()
-        try:
-            fresh = ImageDoc.load(path, 0, force_full=True)
-        except Exception as exc:
-            self._flash("载入全分辨率失败：%s" % str(exc)[:60], 4000)
+        if getattr(self, "full_loading", None) == path:
+            self._flash("正在载入全分辨率…（Esc 取消）", 2000)
             return
+        orig = getattr(doc, "orig_size", None) or doc.size
+        px = int(orig[0]) * int(orig[1])
+        if px > FULL_CONFIRM_PIXELS:
+            mb = px * 3 * 2 / 1048576.0
+            if not messagebox.askyesno(
+                    "载入全分辨率",
+                    "原图 %d × %d（%.0f MP）\n预计需要约 %.0f MB 内存，继续？"
+                    % (orig[0], orig[1], px / 1e6, mb),
+                    parent=self, default="no"):
+                return
+        self.full_loading = path
+        self.pending_full = path
+        self.actual_after_full = False
+        self.loader.request_full(path)
+        self._set_full_btn_busy(True)
+        self._flash("正在载入全分辨率…（Esc 取消）", 9000)
+
+    def _set_full_btn_busy(self, busy):
         try:
-            fresh.auto_drafted = False
-            fresh.oversize = getattr(doc, "oversize", False)
-            self.doc = fresh
-            self.geom_key = None
-            self.tile_cache.clear()
-            self.preview_key = None
-            self.preview_img = None
-            self._mark_fast()
-            self._render()
-            self._update_status()
-            self._flash("已载入全分辨率 %dx%d" % fresh.img.size, 2400)
-        except Exception as exc:
-            self._flash("切换失败：%s" % str(exc)[:60], 4000)
+            self.full_btn.configure(
+                text=_tr("载入中…") if busy else _tr("全分辨率"),
+                state="disabled" if busy else "normal")
+        except Exception:
+            pass
 
     def _plugin_proxy_async(self, img, on_ready, fallback=None):
         """在后台线程生成插件代理图，主线程回调。
@@ -11556,6 +11689,7 @@ def run(img, **params):
             self.wm_alpha = max(5.0, min(100.0, float(d.get("wm_alpha", 65))))
             self.clip_warn = bool(d.get("clip_warn", False))
             self.fast_skip_fx = bool(d.get("fast_skip_fx", False))
+            self.tips_seen = bool(d.get("tips_seen", False))
             prof = str(d.get("perf_profile", "") or "")
             # 命令行显式指定时以命令行为准
             cli_prof = any(a == "--perf-profile" or a.startswith("--perf-profile=")
@@ -11645,6 +11779,7 @@ def run(img, **params):
                          "low_mem": bool(getattr(self, "low_mem", False)),
                          "plugin_params": getattr(self, "plug_params", {}),
                          "fast_skip_fx": bool(getattr(self, "fast_skip_fx", False)),
+                         "tips_seen": bool(getattr(self, "tips_seen", False)),
                          "perf_profile": getattr(self, "perf_profile",
                                                  "fast-slider"),
                          "panel_w": int(getattr(self, "panel_width", px(238)))})
@@ -12524,22 +12659,39 @@ def run(img, **params):
         if os.path.exists(target) and not self.b_overwrite:
             self.b_fail.append((name, "已存在，跳过"))
         else:
-            try:
-                doc = ImageDoc.load(path, force_full=True)
-                adj = copy.deepcopy(self.adj) if self.b_use_adj \
-                    else self._default_adj()
-                locs = copy.deepcopy(self.locals) if self.b_use_adj else []
-                geom = list(self.geom) if self.b_use_adj else []
-                im = self.flatten_doc(doc, adj, geom, locs, self.b_maxlong)
-                params = {}
-                if self.b_fmt_name in ("JPEG", "WebP"):
-                    params["quality"] = self.b_quality
-                if self.b_fmt_name == "JPEG" and im.mode != "RGB":
-                    im = im.convert("RGB")
-                im.save(target, **params)
-                self.b_ok += 1
-            except Exception as exc:
-                self.b_fail.append((name, str(exc)))
+            # 先读头部尺寸，避免对 1.5 亿像素以上的图直接全解码把内存打爆
+            pw = ph = 0
+            if os.path.splitext(path)[1].lower() not in RAW_EXTS:
+                try:
+                    with Image.open(path) as probe:
+                        pw, ph = probe.size
+                except Exception:
+                    pass
+            if pw * ph > EXPORT_MAX_PIXELS:
+                self.b_fail.append(
+                    (name, "图片过大（%.0f MP），已跳过" % (pw * ph / 1e6)))
+            else:
+                try:
+                    doc = ImageDoc.load(path, force_full=True)
+                    adj = copy.deepcopy(self.adj) if self.b_use_adj \
+                        else self._default_adj()
+                    locs = copy.deepcopy(self.locals) if self.b_use_adj else []
+                    geom = list(self.geom) if self.b_use_adj else []
+                    im = self.flatten_doc(doc, adj, geom, locs, self.b_maxlong)
+                    params = {}
+                    if self.b_fmt_name in ("JPEG", "WebP"):
+                        params["quality"] = self.b_quality
+                    if self.b_fmt_name == "JPEG" and im.mode != "RGB":
+                        im = im.convert("RGB")
+                    if self.b_ext.lower() in (".jpg", ".jpeg", ".png", ".webp",
+                                              ".tif", ".tiff"):
+                        icc = _srgb_icc_bytes()
+                        if icc:
+                            params["icc_profile"] = icc
+                    im.save(target, **params)
+                    self.b_ok += 1
+                except Exception as exc:
+                    self.b_fail.append((name, str(exc)))
         self.b_i += 1
         total = len(self.b_files)
         c = self.b_bar
@@ -12870,6 +13022,10 @@ def run(img, **params):
                     params["exif"] = exif
             elif fmt == ".webp":
                 params["quality"] = 92
+            if fmt in (".jpg", ".jpeg", ".png", ".webp", ".tif", ".tiff"):
+                icc = _srgb_icc_bytes()
+                if icc:
+                    params["icc_profile"] = icc
             im.save(path, **params)
         except Exception as exc:
             messagebox.showerror("保存失败", str(exc), parent=self)
@@ -12878,7 +13034,14 @@ def run(img, **params):
         self.after(2600, self._update_status)
 
     def _cancel_modes(self):
-        """Esc 统一取消：先退裁剪/吸管/建滤镜，再退幻灯片等。"""
+        """Esc 统一取消：先退全分辨率载入/裁剪/吸管/建滤镜，再退幻灯片等。"""
+        if getattr(self, "full_loading", None):
+            self.pending_full = None
+            self.full_loading = None
+            self._set_full_btn_busy(False)
+            self._flash("已取消载入全分辨率", 1800)
+            self._update_status()
+            return
         if self.picker_mode or self.local_mode or self.crop_mode:
             if self.crop_mode:
                 self.cancel_crop()
@@ -13022,6 +13185,9 @@ def run(img, **params):
         if (size[0], size[1]) != doc.size:
             L.append("  原始尺寸  %d × %d" % doc.size)
         L.append("  色彩模式  %s" % doc.mode)
+        L.append("  色彩空间  %s%s" % (
+            getattr(doc, "icc_source", "sRGB"),
+            "（已转 sRGB）" if getattr(doc, "icc_converted", False) else ""))
         if doc.n_frames > 1:
             L.append("  帧数      %d" % doc.n_frames)
         L.append("  透明通道  %s" % ("有" if doc.alpha else "无"))
@@ -13121,6 +13287,51 @@ def run(img, **params):
         x = self.winfo_rootx() + (self.winfo_width() - win.winfo_width()) // 2
         y = self.winfo_rooty() + (self.winfo_height() - win.winfo_height()) // 3
         win.geometry("+%d+%d" % (max(0, x), max(0, y)))
+
+    def check_updates(self):
+        """手动检查更新：只在点击时联网，不后台轮询、不自动下载。"""
+        self._flash("正在检查更新…", 2500)
+
+        def work():
+            req = urllib.request.Request(
+                "https://api.github.com/repos/11ly322/Prism/releases/latest",
+                headers={"User-Agent": "Prism/" + APP_VERSION,
+                         "Accept": "application/vnd.github+json"})
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                return json.loads(resp.read().decode("utf-8"))
+
+        def done(data, err):
+            if err is not None:
+                messagebox.showerror(
+                    "检查更新", "检查更新失败：%s" % str(err)[:120],
+                    parent=self)
+                return
+            tag = str((data or {}).get("tag_name") or "").lstrip("vV")
+            if not tag:
+                messagebox.showerror("检查更新", "检查更新失败：服务器没有返回版本号。",
+                                     parent=self)
+                return
+            try:
+                newer = (tuple(int(x) for x in tag.split("."))
+                         > tuple(int(x) for x in APP_VERSION.split(".")))
+            except Exception:
+                newer = tag != APP_VERSION
+            if newer:
+                if messagebox.askyesno(
+                        "发现新版本",
+                        "发现新版本 %s（当前 %s）。\n\n打开下载页？"
+                        % (tag, APP_VERSION), parent=self):
+                    import webbrowser
+                    try:
+                        webbrowser.open(
+                            "https://github.com/11ly322/Prism/releases/latest")
+                    except Exception:
+                        pass
+            else:
+                messagebox.showinfo(
+                    "检查更新", "已是最新版本 %s。" % APP_VERSION, parent=self)
+
+        self._async_call(work, done)
 
     def _open_site(self):
         import webbrowser

@@ -19,6 +19,11 @@ main{max-width:900px;margin:0 auto;padding:34px 22px 70px}
 nav.lang{display:flex;gap:8px;font-size:13px;margin-bottom:24px;flex-wrap:wrap}
 nav.lang a,nav.lang strong{display:inline-block;padding:3px 10px;border:1px solid var(--line);border-radius:999px;text-decoration:none;color:var(--dim);font-weight:400}
 nav.lang strong{color:var(--fg);border-color:var(--fg)}
+nav.toc{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:baseline;margin:0 0 26px;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:var(--card);font-size:13px}
+nav.toc b{font-size:12px;color:var(--dim);font-weight:600;margin-right:4px}
+nav.toc a{color:var(--fg);text-decoration:none;border-bottom:1px dotted var(--line)}
+nav.toc a:hover{border-bottom-style:solid}
+h2{scroll-margin-top:70px}
 h1{font-size:31px;line-height:1.28;margin:0 0 20px;letter-spacing:-.01em}
 h2{font-size:23px;margin:38px 0 10px;padding-top:8px;border-top:1px solid var(--line)}
 h3{font-size:18px;margin:24px 0 8px}
@@ -50,26 +55,26 @@ footer{border-top:1px solid var(--line);margin-top:40px}
 <a href="https://github.com/11ly322/Prism">GitHub</a>
 </nav></div></header>
 <main>
-<nav class="lang"><strong>中文</strong> · <a href="plugin-guide.en.html">English</a> · <a href="plugin-guide.ja.html">日本語</a></nav>
+<nav class="lang"><strong>中文</strong> · <a href="plugin-guide.en.html">English</a> · <a href="plugin-guide.ja.html">日本語</a></nav><nav class="toc"><b>目录</b><a href="#sec-1">自带插件（随程序提供）</a><a href="#sec-2">官方清单（插件市场可一键安装）</a><a href="#sec-3">安装插件</a><a href="#sec-4">发布插件到市场</a><a href="#sec-5">参数会被记住（9.4.0）</a><a href="#sec-6">开发流程</a><a href="#sec-7">三种控件</a><a href="#sec-8">PLUGIN 字段</a><a href="#sec-9">第三方插件怎么放进来</a><a href="#sec-10">复用函数</a></nav>
 <h1>Prism 插件索引</h1>
 <p>12 个自带插件 + 一份官方可安装清单。清单 <code>index.json</code> 同时是应用内「插件市场」的数据源； 下面的两块表格由 <code>tools/make_plugin_index.py</code> 从<strong>插件源码 + index.json</strong>生成，不要手改表格内容 （改完跑一次脚本，或用 <code>--check</code> 看是否最新）。</p>
-<h2>自带插件（随程序提供）</h2>
+<h2 id="sec-1">自带插件（随程序提供）</h2>
 <p>&lt;!-- BEGIN GENERATED builtin --&gt;</p>
 <table><thead><tr><th>id</th><th>名称 / 版本</th><th>参数（控件 · 范围 · 默认）</th><th>说明</th><th>联网</th><th>写文件</th><th>源码</th></tr></thead><tbody><tr><td>crop169</td><td>16比9裁剪 2.0</td><td>select 目标比例（16:9 / 9:16 / 4:3 / 1:1） · select 对齐（居中 / 偏上 / 偏下）</td><td>按目标比例居中裁剪，做视频封面和 PPT 配图</td><td>否</td><td>否</td><td><code>16比9裁剪.py</code></td></tr><tr><td>god_rays</td><td>丁达尔光 1.0</td><td>slider 取光门槛 50–98（86） · slider 光束长度 20–220（110） · slider 角度 -60–60（14） · slider 强度 10–100（55）</td><td>把高光沿一个方向拖成光束，模拟逆光丁达尔效应</td><td>否</td><td>否</td><td><code>丁达尔光.py</code></td></tr><tr><td>pixelate</td><td>像素化 2.0</td><td>slider 方块大小 4–160（24） · select 取样方式（平均 / 放大镜） · checkbox 画方块边</td><td>马赛克。可调方块大小、取样方式与描边</td><td>否</td><td>否</td><td><code>像素化.py</code></td></tr><tr><td>watermark</td><td>加文字 2.1</td><td>text 署名文字 · slider 字号占比 1–8（3.2） · slider 边距占比 0–8（2） · checkbox 描边</td><td>右下角加一行署名，文字内容可自定义</td><td>否</td><td>否</td><td><code>加文字.py</code></td></tr><tr><td>avatar</td><td>圆形头像 2.0</td><td>slider 输出边长 128–1024（512） · slider 留白比例 0–30（0） · select 背景（透明 / 白色 / 黑色）</td><td>圆形蒙版头像。可调留白、背景色与输出尺寸</td><td>否</td><td>否</td><td><code>圆形头像.py</code></td></tr><tr><td>sepia</td><td>复古胶片 2.0</td><td>slider 褐色强度 0–100（70） · slider 对比度 50–150（96） · slider 暗角 0–100（35）</td><td>暖褐色调。可调强度、对比与暗角</td><td>否</td><td>否</td><td><code>复古胶片.py</code></td></tr><tr><td>glitch</td><td>故障艺术 1.0</td><td>slider 通道错位 0–30（8） · slider 切片数量 0–40（12） · slider 随机种子 0–99（7） · checkbox 扫描线</td><td>RGB 通道错位与横向切片位移，做数字故障效果</td><td>否</td><td>否</td><td><code>故障艺术.py</code></td></tr><tr><td>border</td><td>白边框 2.0</td><td>slider 边框宽度 1–20（4） · select 颜色（白色 / 黑色 / 米白） · checkbox 内侧细线</td><td>四周加边框。可调宽度、颜色与内侧细线</td><td>否</td><td>否</td><td><code>白边框.py</code></td></tr><tr><td>tilt_shift</td><td>移轴微缩 1.0</td><td>slider 清晰带 4–80（26） · slider 虚化强度 1–30（12） · slider 饱和提升 0–100（45） · select 清晰带位置（居中 / 偏上 / 偏下）</td><td>横向清晰带 + 上下渐进虚化，做微缩模型效果</td><td>否</td><td>否</td><td><code>移轴微缩.py</code></td></tr><tr><td>autolevel</td><td>自动色阶 2.0</td><td>slider 裁切比例 0–5（0.4） · slider 强度 0–100（100）</td><td>把直方图拉满，去掉灰蒙蒙的感觉</td><td>否</td><td>否</td><td><code>自动色阶.py</code></td></tr><tr><td>sharpen</td><td>锐化 2.0</td><td>slider 半径 0.5–5（1.4） · slider 强度 %% 10–300（90） · slider 阈值 0–20（3）</td><td>USM 锐化。可调半径、强度与阈值</td><td>否</td><td>否</td><td><code>锐化.py</code></td></tr><tr><td>bw</td><td>黑白 2.0</td><td>slider 对比增强 0–100（20）</td><td>最简示例：一个插件最小可以多短。可调对比增强</td><td>否</td><td>否</td><td><code>黑白.py</code></td></tr></tbody></table>
 <p>&lt;!-- END GENERATED builtin --&gt;</p>
 <p>参数默认值以源码 <code>PARAMS</code> 为准。改完保存，Prism 约 1.5 秒自动热重载。</p>
-<h2>官方清单（插件市场可一键安装）</h2>
+<h2 id="sec-2">官方清单（插件市场可一键安装）</h2>
 <p>&lt;!-- BEGIN GENERATED catalog --&gt;</p>
 <table><thead><tr><th>id</th><th>名称 / 版本</th><th>参数摘要</th><th>说明</th><th>SHA-256（前 12 位）</th><th>安装文件</th></tr></thead><tbody><tr><td>grad-nd</td><td>渐变减光 1.0</td><td>slider 减光强度 0–100（45） · select 压暗一侧（顶部 / 底部） · slider 过渡宽度 5–100（45）</td><td>从画面一侧平滑压暗，模拟中灰渐变镜；常用来压天空</td><td><code>5796a8bafe9b…</code></td><td><code>demo-grad-nd.py</code></td></tr><tr><td>soft-glow</td><td>柔光 1.0</td><td>slider 强度 0–100（45） · slider 半径 1–40（18） · slider 高光门槛 0–100（55）</td><td>高光溢出 + 轻微模糊叠加，人像与逆光更柔和</td><td><code>e189b41e226d…</code></td><td><code>soft-glow.py</code></td></tr><tr><td>duotone</td><td>双色调 1.0</td><td>select 暗部颜色（深蓝 / 暗红 / 墨绿 / 紫夜 / 黑） · select 亮部颜色（米白 / 浅橙 / 天蓝 / 薄荷 / 白） · slider 强度 0–100（100）</td><td>明度映射到暗部/亮部两种颜色，做海报与封面配色</td><td><code>624d6e22a743…</code></td><td><code>duotone.py</code></td></tr></tbody></table>
 <p>&lt;!-- END GENERATED catalog --&gt;</p>
 <p>发布时复制到 <code>docs/plugins/index.json</code>）。 schema 见 <a href="plugin-api.html">docs/plugin-api.md</a>。 并在窗口里标明「离线缓存」。</p>
 <ul><li>应用内入口：插件窗口 →「插件市场」。可浏览、看「已安装 / 可更新 / 未安装」状态，一键安装或更新。</li><li>清单地址：<code>https://11ly322.github.io/Prism/plugins/index.json</code>（仓库内源码 <code>plugins/index.json</code>，</li><li>每个条目都带 SHA-256。下载后<strong>只解析 AST、不执行代码</strong>，确认框里显示作者与能力声明，确认后才写盘。</li><li>想用自己的清单：设环境变量 <code>PRISM_PLUGIN_CATALOG</code> 指向你的 <code>index.json</code>。</li><li>在线清单拉不到时，应用会用上次成功拉取的缓存（<code>plugin_catalog.json</code>，与设置文件同目录），</li></ul>
-<h2>安装插件</h2>
+<h2 id="sec-3">安装插件</h2>
 <p>三种方式，效果一样：</p>
 <ol><li><strong>插件市场</strong>（9.5.0）：插件窗口 →「插件市场」→ 选一个 →「安装」/「更新」。</li><li><strong>从网址安装</strong>：插件窗口 →「从网址安装…」→ 填 <code>.py</code> 的 http(s) 直链，可再填 SHA-256。</li><li><strong>放进目录</strong>：把 <code>.py</code> 丢进插件目录（插件窗口顶部显示完整路径），点「重新扫描」或等 1.5 秒热重载。</li></ol>
 <p>临时停用：把 <code>xxx.py</code> 改名成 <code>xxx.py.disabled</code>，插件窗口会显示成「启用 xxx」按钮。</p>
 <p>安装只解决「下载到的东西没被改过」（SHA-256），<strong>不解决作者可信不可信</strong>。 插件声明的 <code>network</code> / <code>writes_files</code> 会在确认框里显示，但那只是作者自己填的声明。</p>
-<h2>发布插件到市场</h2>
+<h2 id="sec-4">发布插件到市场</h2>
 <p>官方市场读 <code>plugins/index.json</code>。从写插件到用户能在市场里看到，一共六步：</p>
 <p><code>PLUGIN</code> 里 <code>id</code> 唯一、<code>api: 2</code>，<code>network</code> / <code>writes_files</code> 如实填写； <code>PARAMS</code> 用 <code>slider</code> / <code>select</code> / <code>checkbox</code> / <code>text</code>。 用 <code>--plugin-dev</code> 启动可以看 <code>logs/plugins.log</code> 里的加载/执行耗时。</p>
 <ol><li><strong>写插件</strong>：单文件放 <code>docs/plugins/&lt;文件名&gt;.py</code>，文件名用 ASCII。</li><li><strong>本机自测</strong>：把 <code>.py</code> 放进插件目录（插件窗口顶部有完整路径），运行、调参、另存；</li><li><strong>算 SHA-256</strong>（必须与文件逐字节一致）：</li></ol>
@@ -98,19 +103,19 @@ footer{border-top:1px solid var(--line);margin-top:40px}
 <p><strong>自己维护一份市场（不进官方仓库）</strong>：</p>
 <ul><li>把同样格式的 <code>index.json</code> 放到任意 http(s) 静态托管（每个条目仍必须带 SHA-256）；</li><li>用户在<strong>启动 Prism 之前</strong>设置环境变量 <code>PRISM_PLUGIN_CATALOG</code> 指向它；</li><li>不需要改代码，也不需要重新打包。</li></ul>
 <p>安全底线：清单本身不执行任何代码；安装时只解析 AST、强制比对 SHA-256， 确认后才写盘。</p>
-<h2>参数会被记住（9.4.0）</h2>
+<h2 id="sec-5">参数会被记住（9.4.0）</h2>
 <p>每个插件的参数按 <code>id</code> 存在设置文件里（<code>plugin_params</code>）。下次运行同一个插件时自动恢复上次的值， 包括重启 Prism 之后。点结果窗口的「恢复默认」会清掉这份记忆。</p>
 <ul><li>插件改了参数范围：超范围的值会被夹到新范围内。</li><li>插件删了某个选项：失效的选项回落到新的默认值。</li><li>插件换了 <code>id</code>：等于一个新插件，旧记忆不会套上去。</li></ul>
-<h2>开发流程</h2>
+<h2 id="sec-6">开发流程</h2>
 <ol><li>复制 <code>_template.py</code> 为 <code>myplugin.py</code>（文件名不要以下划线开头，那是给框架文件留的）</li><li>改 <code>PLUGIN</code> / <code>PARAMS</code> / <code>run</code></li><li>保存，Prism 约 1.5 秒自动重载（插件窗口也能点「重载插件」）</li><li>出错不会崩主程序：写 <code>logs/plugins.log</code>，原图回退</li></ol>
-<h2>三种控件</h2>
+<h2 id="sec-7">三种控件</h2>
 <table><thead><tr><th>type</th><th>必填字段</th><th>传给 run 的类型</th><th>旧写法（仍兼容）</th></tr></thead><tbody><tr><td>slider</td><td>min / max / default，可选 step</td><td>float</td><td>省略 type 或写 range</td></tr><tr><td>select</td><td>options / default</td><td>str</td><td>type=choice + choices</td></tr><tr><td>checkbox</td><td>default</td><td>bool</td><td>type=bool</td></tr><tr><td>text</td><td>default（可为空串）</td><td>str</td><td>无（8.3.0 新增）</td></tr></tbody></table>
-<h2>PLUGIN 字段</h2>
+<h2 id="sec-8">PLUGIN 字段</h2>
 <table><thead><tr><th>字段</th><th>必填</th><th>说明</th></tr></thead><tbody><tr><td>id</td><td>是</td><td>唯一标识；参数记忆、安装文件名、市场清单都用它。建议 ASCII 字母数字与 <code>-</code> <code>_</code></td></tr><tr><td>name</td><td>是</td><td>列表里显示的名字</td></tr><tr><td>version</td><td>建议</td><td>显示在名字后面；市场用它判断是否可更新</td></tr><tr><td>api</td><td>建议</td><td>当前支持 1、2；<code>2</code> 是 <code>run(img, **params)</code> 写法</td></tr><tr><td>author</td><td>建议</td><td>hover 提示里显示</td></tr><tr><td>description</td><td>建议</td><td>hover 提示里显示</td></tr><tr><td>network</td><td>建议</td><td>是否联网，如实填写</td></tr><tr><td>writes_files</td><td>建议</td><td>是否写文件，如实填写</td></tr></tbody></table>
-<h2>第三方插件怎么放进来</h2>
+<h2 id="sec-9">第三方插件怎么放进来</h2>
 <p>补上 <code>source</code>、<code>url</code>、<code>sha256</code> 与 zh/en/ja 三语名与说明；<code>make_plugin_index.py --check</code> 必须通过。</p>
 <ul><li>单文件、只依赖 Pillow 与 numpy（Prism 已带），不要起线程、不要改 Prism 的内部状态。</li><li>文件名用 ASCII，<code>id</code> 唯一；不要以 <code>_</code> 开头。</li><li>自己的插件请放用户插件目录（插件窗口顶部有完整路径），不要改安装目录里的自带插件。</li><li>想收进官方清单：提 PR 在 <code>plugins/index.json</code> 加一项，并把源码放到 <code>docs/plugins/</code>，</li><li>带联网 / 写文件副作用的插件必须在 <code>PLUGIN</code> 里如实声明。</li></ul>
-<h2>复用函数</h2>
+<h2 id="sec-10">复用函数</h2>
 <p><code>_utils.py</code> 提供 <code>preview_then_export</code> / <code>downscale_if_needed</code> / <code>upscale_back</code> / <code>preserve_alpha</code> / <code>split_alpha</code> / <code>to_rgb</code> / <code>clamp_params</code>，不是框架，复制走也行。 <code>preview_then_export(func, img)</code> 最省事：降采样 → 跑 func → 放大回原尺寸 → 贴回 alpha。 导入前需要把插件目录加进 <code>sys.path</code>（见该文件头注释）。</p>
 </main>
 <footer><div class="ft-in">Prism · MIT License · <a href="https://github.com/11ly322/Prism">GitHub</a></div></footer>

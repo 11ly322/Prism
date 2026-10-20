@@ -19,6 +19,11 @@ main{max-width:900px;margin:0 auto;padding:34px 22px 70px}
 nav.lang{display:flex;gap:8px;font-size:13px;margin-bottom:24px;flex-wrap:wrap}
 nav.lang a,nav.lang strong{display:inline-block;padding:3px 10px;border:1px solid var(--line);border-radius:999px;text-decoration:none;color:var(--dim);font-weight:400}
 nav.lang strong{color:var(--fg);border-color:var(--fg)}
+nav.toc{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:baseline;margin:0 0 26px;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:var(--card);font-size:13px}
+nav.toc b{font-size:12px;color:var(--dim);font-weight:600;margin-right:4px}
+nav.toc a{color:var(--fg);text-decoration:none;border-bottom:1px dotted var(--line)}
+nav.toc a:hover{border-bottom-style:solid}
+h2{scroll-margin-top:70px}
 h1{font-size:31px;line-height:1.28;margin:0 0 20px;letter-spacing:-.01em}
 h2{font-size:23px;margin:38px 0 10px;padding-top:8px;border-top:1px solid var(--line)}
 h3{font-size:18px;margin:24px 0 8px}
@@ -50,20 +55,20 @@ footer{border-top:1px solid var(--line);margin-top:40px}
 <a href="https://github.com/11ly322/Prism">GitHub</a>
 </nav></div></header>
 <main>
-<nav class="lang"><a href="plugin-api.html">中文</a> · <a href="plugin-api.en.html">English</a> · <strong>日本語</strong></nav>
+<nav class="lang"><a href="plugin-api.html">中文</a> · <a href="plugin-api.en.html">English</a> · <strong>日本語</strong></nav><nav class="toc"><b>目次</b><a href="#sec-1">最小プラグイン</a><a href="#sec-2">シグネチャ</a><a href="#sec-3">画像契約（重要）</a><a href="#sec-4">PARAMS フィールド</a><a href="#sec-5">PLUGIN フィールド</a><a href="#sec-6">パラメータの記憶（9.4.0）</a><a href="#sec-7">インストールと配布</a><a href="#sec-8">ホットリロードと開発モード</a><a href="#sec-9">エラーログの形式</a><a href="#sec-10">バージョン互換性の方針</a><a href="#sec-11">有効化 / 無効化</a><a href="#sec-12">ハード制約</a><a href="#sec-13">同梱プラグイン</a></nav>
 <h1>プラグイン API（api = 2）</h1>
-<h2>最小プラグイン</h2>
+<h2 id="sec-1">最小プラグイン</h2>
 <pre><code>PLUGIN = {&quot;id&quot;: &quot;bw&quot;, &quot;name&quot;: &quot;黑白&quot;, &quot;version&quot;: &quot;2.0&quot;, &quot;api&quot;: 2,
           &quot;author&quot;: &quot;Prism&quot;, &quot;description&quot;: &quot;转黑白&quot;}
 
 
 def run(img, **params):
     return img.convert(&quot;L&quot;).convert(&quot;RGB&quot;)</code></pre>
-<h2>シグネチャ</h2>
+<h2 id="sec-2">シグネチャ</h2>
 <pre><code>def run(img, **params) -&gt; PIL.Image</code></pre>
 <p>渡されなかったキーは default で補われます。</p>
 <ul><li>img：PIL.Image。RGB / RGBA / L のいずれかです。<strong>その場で変更しないでください</strong>。</li><li>params：キーは PARAMS の key で、値は型に応じて変換済みです（slider=float、select=str、checkbox=bool）。</li><li>戻り値：新しい PIL.Image です。サイズもモードも変更できます。</li><li>メインスレッドで呼び出されます。sleep、ネットワークリクエスト、スレッドの開始は行わないでください。</li><li>例外はそのまま送出してください。loader が捕捉してログを書き込み、元の画像にフォールバックします。本体はクラッシュしません。<strong>例外を握りつぶして None を返さないでください</strong>。</li></ul>
-<h2>画像契約（重要）</h2>
+<h2 id="sec-3">画像契約（重要）</h2>
 <table><thead><tr><th>シナリオ</th><th>run が受け取るもの</th></tr></thead><tbody><tr><td>プラグインの初回実行</td><td><strong>プロキシ画像</strong>：現在の画像にすべての調整を適用した結果で、長辺は 2048 以下（小さい画像は縮小しない）</td></tr><tr><td>結果ウィンドウでパラメータをドラッグ</td><td>同じプロキシ画像で、変更のたびに再計算されます</td></tr><tr><td>「名前を付けて保存…」をクリック</td><td><strong>元の解像度</strong>でパイプライン全体を再計算し、現在のパラメータでプラグインをもう一度実行します</td></tr></tbody></table>
 <p>したがって：</p>
 <ul><li>プレビューは常に秒単位で終わり、40MP の画像でも固まりません。書き出し結果とプレビューは同じパラメータを使うため、見たままが得られます。</li><li>それでも、プラグイン内で独自にダウンサンプリングすることをお勧めします。プロキシ画像の上限は 2048 ですが、2048 の画像を毎回ピクセル単位で処理するとスライダーが重くなります。次の書き方をそのまま使えます：</li></ul>
@@ -76,7 +81,7 @@ def run(img, **params):
           return small.convert(&quot;L&quot;).convert(&quot;RGB&quot;)
       return preview_then_export(work, img)</code></pre>
 <ul><li>preview_then_export は、ダウンサンプリング、元のサイズへの拡大、RGBA の alpha の貼り戻しを自身で処理します。</li><li>手動で制御したい場合は downscale_if_needed / upscale_back を使ってください。ロジックは上記と同じです。</li></ul>
-<h2>PARAMS フィールド</h2>
+<h2 id="sec-4">PARAMS フィールド</h2>
 <table><thead><tr><th>フィールド</th><th>必須</th><th>説明</th></tr></thead><tbody><tr><td>key</td><td>はい</td><td>パラメータ名。run の kwargs のキーでもあります</td></tr><tr><td>label</td><td>はい</td><td>画面のラベル。文字列または {zh,en,ja}（9.6.0）</td></tr><tr><td>type</td><td>いいえ</td><td>slider（デフォルト）/ select / checkbox / text</td></tr><tr><td>min / max</td><td>slider では必須</td><td>値の範囲</td></tr><tr><td>step</td><td>いいえ</td><td>ステップ幅。デフォルトは 1</td></tr><tr><td>default</td><td>はい</td><td>デフォルト値</td></tr><tr><td>options</td><td>select では必須</td><td>選択肢のリスト（旧 choices にも対応）。要素は文字列または {value,label} で、label は三言語可</td></tr><tr><td>default</td><td>text</td><td>文字列。空文字列も可</td></tr></tbody></table>
 <p>3 種類のコントロール：</p>
 <pre><code>PARAMS = [
@@ -88,16 +93,16 @@ def run(img, **params):
     {&quot;key&quot;: &quot;caption&quot;, &quot;label&quot;: &quot;说明文字&quot;, &quot;type&quot;: &quot;text&quot;, &quot;default&quot;: &quot;&quot;},
 ]</code></pre>
 <p>後方互換：type を省略するか range と書くと slider と同じです。type=choice + choices は select、 type=bool は checkbox と同じです。古いプラグインは変更不要です。text は 8.3.0 で追加され、値は 文字列です。</p>
-<h2>PLUGIN フィールド</h2>
+<h2 id="sec-5">PLUGIN フィールド</h2>
 <table><thead><tr><th>フィールド</th><th>必須</th><th>説明</th></tr></thead><tbody><tr><td>id</td><td>はい</td><td>一意の識別子。小文字・数字・<code>-</code>・<code>_</code> で、<code>_</code> で始められません（インストール時のファイル名にも使用）</td></tr><tr><td>name</td><td>はい</td><td>表示名。文字列または {zh,en,ja}</td></tr><tr><td>version</td><td>はい</td><td>プラグイン自身のバージョン</td></tr><tr><td>api</td><td>はい</td><td>インターフェースバージョン。現在は 2 である必要があります</td></tr><tr><td>author</td><td>はい</td><td>作者</td></tr><tr><td>description</td><td>推奨</td><td>プラグインウィンドウに表示される 1 行の説明。文字列または {zh,en,ja}</td></tr><tr><td>network</td><td>任意</td><td>機能宣言：ネットワークを使うかどうか（デフォルト False）</td></tr><tr><td>writes_files</td><td>任意</td><td>機能宣言：ファイルを書き込むかどうか（デフォルト False）</td></tr></tbody></table>
 <h3>三言語テキスト（9.6.0）</h3>
 <p><code>name</code> / <code>description</code> / <code>PARAMS.label</code> は文字列のほか、 <code>{&quot;zh&quot;: &quot;...&quot;, &quot;en&quot;: &quot;...&quot;, &quot;ja&quot;: &quot;...&quot;}</code> の形でも書けます。現在の言語が無い場合は 中国語にフォールバックします。文字列だけを書いたサードパーティ製プラグインはそのまま表示されます。 <code>options</code> を <code>{value, label}</code> で書くと、画面には label を表示し、<code>run()</code> には value が渡されます。 文字列だけの場合は値そのものが表示されます。</p>
 <p>network / writes_files はプラグインウィンドウに表示され、透明性を高めるためだけのものです。 <strong>強制力のある制約ではありません</strong> —— プラグインは引き続き完全な権限で動作します。</p>
-<h2>パラメータの記憶（9.4.0）</h2>
+<h2 id="sec-6">パラメータの記憶（9.4.0）</h2>
 <p>Prism は PLUGIN.id ごとに、各プラグインが最後に使ったパラメータを記憶し、<code>Prism_settings.json</code> の <code>plugin_params</code> に保存します。再起動後も残り、次に同じプラグインを実行すると自動的に復元 されます。</p>
 <ul><li>範囲外の古い値は新しい min/max にクランプされます。</li><li>削除された選択肢は新しい default にフォールバックします。</li><li>id を変えると別のプラグイン扱いになり、古いパラメータは適用されません。</li><li>結果ウィンドウの「初期値に戻す」で、このプラグインの記憶が消去されます。</li></ul>
 <p>このためにプラグイン側でコードを書く必要はありません。PARAMS で宣言したデフォルト値は、初回 実行時の値のままです。</p>
-<h2>インストールと配布</h2>
+<h2 id="sec-7">インストールと配布</h2>
 <h3>プラグインマーケット（9.5.0）</h3>
 <p>プラグインウィンドウ →「プラグインマーケット」：一覧は公式カタログ <code>plugins/index.json</code> から 取得され、「インストール済み / 更新可能 / 未インストール」を確認できます。ボタンを押すとその ままインストールまたは更新できます。</p>
 <p><code>PRISM_PLUGIN_CATALOG</code> で独自のカタログ（自前のマーケット / イントラネットミラー / テスト）を 指定できます。 設定ファイルと同じディレクトリ）が自動的に使われ、ウィンドウに「オフラインキャッシュ」と表示 されます。 解析 → SHA-256 を検証 → 確認 → ディスクに書き込み。更新は元のファイル名に書き戻すため、同じ id が 2 つできることはありません。 （<code>1.10 &gt; 1.9</code>）。</p>
@@ -130,22 +135,22 @@ def run(img, **params):
 <p>です。 <code>api</code> は対応範囲内である必要があります。 して初めてプラグインディレクトリに書き込まれます。 のファイルが既にある場合は、上書きするかどうかをもう一度確認します。</p>
 <ol><li>バックグラウンドスレッドでダウンロードします。単一ファイルの上限は 2 MB、タイムアウトは 15 秒</li><li><strong>AST のみを解析し、コードは実行しません</strong>：<code>PLUGIN</code> のリテラル辞書と <code>run()</code> が必要で、</li><li>SHA-256 を入力した場合は必ず照合します。一致しなければそのまま拒否します。</li><li>確認ダイアログ（名前 / バージョン / 作者 / ネットワーク / ファイル書き込み）が表示され、確認</li><li>ファイル名は <code>PLUGIN.id</code> をサニタイズしたもの（ASCII 英数字と <code>-</code> <code>_</code> のみを残す）です。同名</li></ol>
 <p>そのため <code>id</code> には小文字・数字・<code>-</code>・<code>_</code> のみを使うことをお勧めします。ログ上の識別子と、 インストール後のファイル名の両方になるためです。 SHA-256 はファイルが改変されていないことだけを示し、作者が信頼できることまでは示しません。 インストール前にはご自身で判断してください。</p>
-<h2>ホットリロードと開発モード</h2>
+<h2 id="sec-8">ホットリロードと開発モード</h2>
 <p>変更があれば再読み込みしてプラグインウィンドウを更新します。プラグインウィンドウの 「再読み込み」ボタンから手動で実行することもできます。 「プラグイン X の実行時間 Nms」と表示されます。例外時はプラグイン名 + 例外の種類 + 先頭行の 情報を表示します。</p>
 <ul><li>ホットリロードはデフォルトで有効です。プラグインディレクトリの mtime を 1.5 秒ごとに確認し、</li><li>起動オプション --plugin-dev：ログに各プラグインの読み込み時間と実行時間が記録され、画面に</li></ul>
-<h2>エラーログの形式</h2>
+<h2 id="sec-9">エラーログの形式</h2>
 <p>logs/plugins.log（Prism_settings.json と同じ階層）に統一して書き込まれます：</p>
 <pre><code>[2026-10-18 14:02:11] plugin=skin_smooth api=2 run failed: ValueError: 参数 &#x27;强度&#x27; 超出范围 (got 120, max 100)</code></pre>
 <p>フィールドの順序：時刻、プラグイン id、api バージョン、フェーズ（load / run / reload）、例外の 種類、先頭行の情報。--plugin-dev では完全な traceback も追加で出力されます。</p>
-<h2>バージョン互換性の方針</h2>
+<h2 id="sec-10">バージョン互換性の方針</h2>
 <p>が、既存フィールドの意味は変わりません。 維持します。 スキップされ、プラグインウィンドウに「プラグイン X は API N が必要ですが、現在は M です」と 表示されます。クラッシュせず、traceback も出力されません。</p>
 <ul><li>API は<strong>追加のみで変更はしません</strong>。新しいフィールドや新しいコントロール種別を追加できます</li><li>破壊的変更では<strong>メジャーバージョン</strong>（api 3）を上げ、api 2 は少なくとも 1 リリースサイクル</li><li>Prism は、api が自身の対応範囲内にあるプラグインだけを読み込みます。それより高いものは</li></ul>
-<h2>有効化 / 無効化</h2>
+<h2 id="sec-11">有効化 / 無効化</h2>
 <p>plugin.py を plugin.py.disabled にリネームすると無効になり、元に戻すと有効になります。プラグイン ウィンドウには無効化された項目が一覧表示されます。</p>
-<h2>ハード制約</h2>
+<h2 id="sec-12">ハード制約</h2>
 <p>画像をアップロードしてはなりません。本当にネットワークが必要なプラグインは PLUGIN.network に 正しく宣言する必要があり、インストール確認ダイアログにその宣言が表示されます。 書き込む必要があるプラグインは PLUGIN.writes_files に正しく宣言する必要があります。</p>
 <ul><li>ネットワークを使わない：デフォルトではネットワークリクエストを発行してはならず、ユーザーの</li><li>元の画像のパス以外にファイルを書き込まない（ログは Prism 自身が書き込みます）。ファイルを</li><li>ユーザーが許可していないディレクトリを読み取らない。</li><li>呼び出し元が渡した img オブジェクトを変更しない。</li></ul>
-<h2>同梱プラグイン</h2>
+<h2 id="sec-13">同梱プラグイン</h2>
 <p>12 個のプラグインの id・パラメータ・ソースは plugins/README.ja.md を参照してください。テンプレート は plugins/_template.py、小ツールは plugins/_utils.py です。インストール例のプラグイン grad-nd の ソースは docs/plugins/demo-grad-nd.py にあります。</p>
 </main>
 <footer><div class="ft-in">Prism · MIT License · <a href="https://github.com/11ly322/Prism">GitHub</a></div></footer>

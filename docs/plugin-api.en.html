@@ -19,6 +19,11 @@ main{max-width:900px;margin:0 auto;padding:34px 22px 70px}
 nav.lang{display:flex;gap:8px;font-size:13px;margin-bottom:24px;flex-wrap:wrap}
 nav.lang a,nav.lang strong{display:inline-block;padding:3px 10px;border:1px solid var(--line);border-radius:999px;text-decoration:none;color:var(--dim);font-weight:400}
 nav.lang strong{color:var(--fg);border-color:var(--fg)}
+nav.toc{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:baseline;margin:0 0 26px;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:var(--card);font-size:13px}
+nav.toc b{font-size:12px;color:var(--dim);font-weight:600;margin-right:4px}
+nav.toc a{color:var(--fg);text-decoration:none;border-bottom:1px dotted var(--line)}
+nav.toc a:hover{border-bottom-style:solid}
+h2{scroll-margin-top:70px}
 h1{font-size:31px;line-height:1.28;margin:0 0 20px;letter-spacing:-.01em}
 h2{font-size:23px;margin:38px 0 10px;padding-top:8px;border-top:1px solid var(--line)}
 h3{font-size:18px;margin:24px 0 8px}
@@ -50,20 +55,20 @@ footer{border-top:1px solid var(--line);margin-top:40px}
 <a href="https://github.com/11ly322/Prism">GitHub</a>
 </nav></div></header>
 <main>
-<nav class="lang"><a href="plugin-api.html">中文</a> · <strong>English</strong> · <a href="plugin-api.ja.html">日本語</a></nav>
+<nav class="lang"><a href="plugin-api.html">中文</a> · <strong>English</strong> · <a href="plugin-api.ja.html">日本語</a></nav><nav class="toc"><b>Contents</b><a href="#sec-1">Minimal plugin</a><a href="#sec-2">Signature</a><a href="#sec-3">Image contract (important)</a><a href="#sec-4">PARAMS fields</a><a href="#sec-5">PLUGIN fields</a><a href="#sec-6">Parameter memory (9.4.0)</a><a href="#sec-7">Installation and distribution</a><a href="#sec-8">Hot reload and dev mode</a><a href="#sec-9">Error log format</a><a href="#sec-10">Version compatibility policy</a><a href="#sec-11">Enabling / disabling</a><a href="#sec-12">Hard constraints</a><a href="#sec-13">Bundled plugins</a></nav>
 <h1>Plugin API (api = 2)</h1>
-<h2>Minimal plugin</h2>
+<h2 id="sec-1">Minimal plugin</h2>
 <pre><code>PLUGIN = {&quot;id&quot;: &quot;bw&quot;, &quot;name&quot;: &quot;黑白&quot;, &quot;version&quot;: &quot;2.0&quot;, &quot;api&quot;: 2,
           &quot;author&quot;: &quot;Prism&quot;, &quot;description&quot;: &quot;转黑白&quot;}
 
 
 def run(img, **params):
     return img.convert(&quot;L&quot;).convert(&quot;RGB&quot;)</code></pre>
-<h2>Signature</h2>
+<h2 id="sec-2">Signature</h2>
 <pre><code>def run(img, **params) -&gt; PIL.Image</code></pre>
 <p>checkbox=bool), and keys that were not passed are filled in from default. image; the main program does not crash. <strong>Do not swallow exceptions and return None</strong>.</p>
 <ul><li>img: a PIL.Image, possibly RGB / RGBA / L. <strong>Do not modify it in place</strong>.</li><li>params: keys are PARAMS keys; values are already converted by type (slider=float, select=str,</li><li>Return value: a new PIL.Image; both size and mode may change.</li><li>Called on the main thread: do not sleep, do not make network requests, do not start threads.</li><li>Raise exceptions directly: the loader catches them, writes the log and falls back to the original</li></ul>
-<h2>Image contract (important)</h2>
+<h2 id="sec-3">Image contract (important)</h2>
 <table><thead><tr><th>Scenario</th><th>What run receives</th></tr></thead><tbody><tr><td>First run of the plugin</td><td><strong>Proxy image</strong>: the current image with all adjustments applied, long edge no more than 2048 (small images are not scaled)</td></tr><tr><td>Dragging parameters in the result window</td><td>The same proxy image, recomputed on every change</td></tr><tr><td>Clicking &quot;Save as…&quot;</td><td>Recompute the whole pipeline at <strong>full resolution</strong>, then run the plugin once with the current parameters</td></tr></tbody></table>
 <p>Therefore:</p>
 <p>the preview use the same set of parameters, so what you see is what you get. processing a 2048 image pixel by pixel over and over will still slow the slider down. You can use the following code directly:</p>
@@ -78,7 +83,7 @@ def run(img, **params):
       return preview_then_export(work, img)</code></pre>
 <p>alpha back itself.</p>
 <ul><li>preview_then_export handles downsampling, upscaling back to the original size, and pasting the RGBA</li><li>To control it by hand, use downscale_if_needed / upscale_back; the logic is the same as above.</li></ul>
-<h2>PARAMS fields</h2>
+<h2 id="sec-4">PARAMS fields</h2>
 <table><thead><tr><th>Field</th><th>Required</th><th>Description</th></tr></thead><tbody><tr><td>key</td><td>Yes</td><td>Parameter name; also the key for kwargs in run</td></tr><tr><td>label</td><td>Yes</td><td>UI label; a string or {zh,en,ja} (9.6.0)</td></tr><tr><td>type</td><td>No</td><td>slider (default) / select / checkbox / text</td></tr><tr><td>min / max</td><td>Required for slider</td><td>Value range</td></tr><tr><td>step</td><td>No</td><td>Step size, default 1</td></tr><tr><td>default</td><td>Yes</td><td>Default value</td></tr><tr><td>options</td><td>Required for select</td><td>Option list (the old choices is also accepted). Items may be strings or {value,label}; label may be localized</td></tr><tr><td>default</td><td>text</td><td>String, may be an empty string</td></tr></tbody></table>
 <p>Three kinds of controls:</p>
 <pre><code>PARAMS = [
@@ -90,16 +95,16 @@ def run(img, **params):
     {&quot;key&quot;: &quot;caption&quot;, &quot;label&quot;: &quot;说明文字&quot;, &quot;type&quot;: &quot;text&quot;, &quot;default&quot;: &quot;&quot;},
 ]</code></pre>
 <p>Backward compatibility: omitting type or writing range equals slider; type=choice + choices equals select; type=bool equals checkbox. Old plugins need no changes. text is new in 8.3.0, and its value is a string.</p>
-<h2>PLUGIN fields</h2>
+<h2 id="sec-5">PLUGIN fields</h2>
 <table><thead><tr><th>Field</th><th>Required</th><th>Description</th></tr></thead><tbody><tr><td>id</td><td>Yes</td><td>Unique identifier: lowercase letters/digits/<code>-</code>/<code>_</code>, must not start with <code>_</code> (also used as the install filename)</td></tr><tr><td>name</td><td>Yes</td><td>Display name; a string or {zh,en,ja}</td></tr><tr><td>version</td><td>Yes</td><td>The plugin&#x27;s own version</td></tr><tr><td>api</td><td>Yes</td><td>Interface version; must currently be 2</td></tr><tr><td>author</td><td>Yes</td><td>Author</td></tr><tr><td>description</td><td>Recommended</td><td>One-line description shown in the plugin window; a string or {zh,en,ja}</td></tr><tr><td>network</td><td>Optional</td><td>Capability declaration: whether it accesses the network (default False)</td></tr><tr><td>writes_files</td><td>Optional</td><td>Capability declaration: whether it writes files (default False)</td></tr></tbody></table>
 <h3>Localized text (9.6.0)</h3>
 <p><code>name</code>, <code>description</code> and <code>PARAMS.label</code> may be plain strings, or objects like <code>{&quot;zh&quot;: &quot;...&quot;, &quot;en&quot;: &quot;...&quot;, &quot;ja&quot;: &quot;...&quot;}</code>. A missing language falls back to Chinese. Third-party plugins that only provide a string keep showing it as-is. With <code>options</code> written as <code>{value, label}</code>, the UI shows the label while <code>run()</code> still receives the value; plain strings display the value itself.</p>
 <p>network / writes_files are shown in the plugin window purely to improve transparency; <strong>they are not enforced constraints</strong> — plugins still run with full permissions.</p>
-<h2>Parameter memory (9.4.0)</h2>
+<h2 id="sec-6">Parameter memory (9.4.0)</h2>
 <p>Prism remembers the parameters each plugin used last time, by PLUGIN.id, in <code>plugin_params</code> inside <code>Prism_settings.json</code>; they survive a restart. The next run of the same plugin restores them automatically.</p>
 <ul><li>Old values outside the range are clamped to the new min/max.</li><li>Removed options fall back to the new default.</li><li>A changed id means a different plugin; the old parameters are not applied.</li><li>&quot;Restore defaults&quot; in the result window clears this plugin&#x27;s memory.</li></ul>
 <p>Plugins need to write no code for this; the defaults declared in PARAMS are still the values used on the first run.</p>
-<h2>Installation and distribution</h2>
+<h2 id="sec-7">Installation and distribution</h2>
 <h3>Plugin marketplace (9.5.0)</h3>
 <p>Plugin window → &quot;Plugin marketplace&quot;: the list comes from the official catalog <code>plugins/index.json</code>, which shows &quot;Installed / Update available / Not installed&quot;; clicking the button installs or updates directly.</p>
 <p>variable <code>PRISM_PLUGIN_CATALOG</code> can point to your own catalog (self-hosted marketplace / intranet mirror / testing). (<code>plugin_catalog.json</code>, in the same directory as the settings file), and the window labels it &quot;offline cache&quot;. verify SHA-256 → confirm → write to disk. Updates are written back to the original filename, so the same id never appears twice. (<code>1.10 &gt; 1.9</code>).</p>
@@ -132,22 +137,22 @@ def run(img, **params):
 <p><code>run()</code>, and <code>api</code> must be within the supported range. confirm is the plugin written to the plugin directory. file with the same name already exists, you are asked once more whether to overwrite it.</p>
 <ol><li>Downloaded on a background thread; single-file limit 2 MB, 15-second timeout.</li><li><strong>Only the AST is parsed; no code is executed</strong>: there must be a <code>PLUGIN</code> literal dict and a</li><li>If a SHA-256 was entered, it is compared strictly; a mismatch is rejected outright.</li><li>A confirmation dialog appears (name / version / author / network / file writes); only after you</li><li>The filename is the sanitized <code>PLUGIN.id</code> (only ASCII letters, digits and <code>-</code> <code>_</code> are kept); if a</li></ol>
 <p>Therefore <code>id</code> should use only lowercase letters, digits, <code>-</code> and <code>_</code>: it is both the identifier in logs and the installed filename. SHA-256 only proves the file has not been modified; it cannot prove the author is trustworthy. You still have to judge for yourself before installing.</p>
-<h2>Hot reload and dev mode</h2>
+<h2 id="sec-8">Hot reload and dev mode</h2>
 <p>change reloads the plugins and refreshes the plugin window. The plugin window also has a &quot;Reload plugins&quot; button to trigger it manually. &quot;plugin X took Nms&quot;, and on error it shows the plugin name + exception type + first line of the message.</p>
 <ul><li>Hot reload is on by default: the plugin directory&#x27;s mtime is checked every 1.5 seconds, and any</li><li>Startup flag --plugin-dev: the log records each plugin&#x27;s load time and execution time, the UI shows</li></ul>
-<h2>Error log format</h2>
+<h2 id="sec-9">Error log format</h2>
 <p>Written uniformly to logs/plugins.log (in the same directory as Prism_settings.json):</p>
 <pre><code>[2026-10-18 14:02:11] plugin=skin_smooth api=2 run failed: ValueError: 参数 &#x27;强度&#x27; 超出范围 (got 120, max 100)</code></pre>
 <p>Field order: time, plugin id, api version, stage (load / run / reload), exception type, first line of the message. Under --plugin-dev, the full traceback is appended as well.</p>
-<h2>Version compatibility policy</h2>
+<h2 id="sec-10">Version compatibility policy</h2>
 <p>the semantics of existing fields stay the same. cycle. plugin window shows &quot;plugin X requires API N, current is M&quot;, with no crash and no traceback spam.</p>
 <ul><li>The API <strong>only grows, and is never changed</strong>: new fields and new control types can be added, and</li><li>Breaking changes bump the <strong>major version</strong> (api 3), and api 2 is kept for at least one release</li><li>Prism loads only plugins whose api equals the range it supports; higher ones are skipped, and the</li></ul>
-<h2>Enabling / disabling</h2>
+<h2 id="sec-11">Enabling / disabling</h2>
 <p>Rename plugin.py to plugin.py.disabled to disable it, and rename it back to enable it. The plugin window lists disabled items.</p>
-<h2>Hard constraints</h2>
+<h2 id="sec-12">Hard constraints</h2>
 <p>genuinely needs the network must declare so truthfully in PLUGIN.network, and the install confirmation dialog shows this declaration to the user. plugin that needs to write files must declare so truthfully in PLUGIN.writes_files.</p>
 <ul><li>No network: by default a plugin must not make network requests or upload user images. A plugin that</li><li>Do not write any files outside the original image&#x27;s path (logs are written by Prism itself). A</li><li>Do not read directories the user has not authorized.</li><li>Do not modify the img object passed in by the caller.</li></ul>
-<h2>Bundled plugins</h2>
+<h2 id="sec-13">Bundled plugins</h2>
 <p>The ids, parameters and source of the 12 plugins are in plugins/README.en.md; the template is plugins/_template.py; the helper utilities are plugins/_utils.py. The source of the example installable plugin grad-nd is in docs/plugins/demo-grad-nd.py.</p>
 </main>
 <footer><div class="ft-in">Prism · MIT License · <a href="https://github.com/11ly322/Prism">GitHub</a></div></footer>

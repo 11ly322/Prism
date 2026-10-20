@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en" data-ver="9.13.0">
 <head>
 <meta charset="utf-8">
@@ -97,6 +97,7 @@
   code{font-family:Consolas,"SF Mono",monospace;font-size:12.5px;color:var(--code);word-break:break-all}
   /* ---------- 界面实拍 ---------- */
   .ui{display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:20px}
+  .ui.one{grid-template-columns:1fr}
   .ui figure{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#0f1114}
   .ui img{display:block;width:100%;height:auto}
   .ui figcaption{padding:11px 13px;font-size:12.5px;color:var(--dim);border-top:1px solid var(--line)}
@@ -273,6 +274,7 @@
         <a href="#plugins">12 built in</a>
       </div>
     </div>
+    <div class="mi"><a href="#bigscreen">Large screen</a></div>
     <div class="mi"><a href="../plugin-guide.en.html">Docs</a>
       <div class="sub">
         <a href="../plugin-guide.en.html">Plugin guide</a>
@@ -285,6 +287,7 @@
         <span class="gh">Windows</span>
         <a href="https://github.com/11ly322/Prism/releases/download/v9.13.0/Prism-Setup-9.13.0.exe" download><span style="display:inline-block;margin-left:6px;padding:1px 6px;border-radius:6px;font-size:11px;background:#2f7d32;color:#fff">Full</span>Full version <i>40.1 MB</i></a>
         <a href="https://github.com/11ly322/Prism/releases/download/v9.13.0/Prism-Viewer-Setup-9.13.0.exe" download>Viewer (installer) <i>40.0 MB</i></a>
+        <a href="https://github.com/11ly322/Prism/releases/download/v9.13.0/Prism-BigScreen-Setup-9.13.0.exe" download>Large screen <i>40.0 MB</i></a>
         <span class="gh">Other platforms</span>
         <a href="https://github.com/11ly322/Prism/releases/download/v9.13.0/Prism-macOS-9.13.0.zip" download><span style="display:inline-block;margin-left:6px;padding:1px 6px;border-radius:6px;font-size:11px;background:#8a6d1f;color:#fff">Source preview</span>macOS <i>Run from source</i></a>
         <a href="https://github.com/11ly322/Prism/releases/download/v9.13.0/Prism-Linux-9.13.0.zip" download><span style="display:inline-block;margin-left:6px;padding:1px 6px;border-radius:6px;font-size:11px;background:#8a6d1f;color:#fff">Source preview</span>Linux <i>Run from source</i></a>
@@ -385,6 +388,28 @@
     </div>
   </section>
 
+  </details>
+
+  <details class="blk" open>
+    <summary>Large-screen / kiosk edition</summary>
+  <section id="bigscreen">
+    <h2>Large-screen / kiosk edition</h2>
+    <p class="lead">Viewer only, no shortcuts, toolbar at the bottom. Everything is a big button — built for showrooms, meeting rooms, touch screens and long-running displays.</p>
+    <div class="ui one">
+      <figure>
+        <img src="../shots/ui-bigscreen.webp" alt="Large-screen interface" loading="lazy" decoding="async" width="1600" height="975">
+        <figcaption><b>Big bottom toolbar</b>Open, folder, prev/next, fit, 1:1, zoom, rotate, slideshow, grid, fullscreen, exit; no editing panel.</figcaption>
+      </figure>
+    </div>
+    <table>
+      <tr><td>Viewer only</td><td>No editing panel, no plugins, no color grading</td></tr>
+      <tr><td>No shortcuts</td><td>No F5 / Tab / Ctrl+O bindings; every action is a button</td></tr>
+      <tr><td>Large buttons</td><td>Bottom toolbar sized for touch and viewing from a distance</td></tr>
+      <tr><td>Starts maximized</td><td>Fullscreen toggles from the bottom-bar button</td></tr>
+      <tr><td>Installer</td><td>Same self-extracting exe as the full edition; install or extract in place</td></tr>
+    </table>
+    <p style="margin-top:22px"><a class="btn" href="https://github.com/11ly322/Prism/releases/download/v9.13.0/Prism-BigScreen-Setup-9.13.0.exe" download>Download large-screen edition</a></p>
+  </section>
   </details>
 
   <details class="blk" open>
@@ -509,6 +534,10 @@
     <details>
       <summary>Full version vs viewer</summary>
       <p>The viewer has no editing panel — only browsing, zoom, rotation, slideshow, filmstrip and grid, in a smaller package. Format support and rendering speed are identical.</p>
+    </details>
+    <details>
+      <summary>Large screen vs viewer</summary>
+      <p>The large-screen edition is also viewer-only, but with a bottom toolbar, bigger buttons, no app shortcuts and a maximized start; it suits showrooms, meeting rooms, touch screens and long-running displays. The viewer keeps the top toolbar and shortcuts for everyday desktop use.</p>
     </details>
     <details>
       <summary>Why not system fullscreen</summary>

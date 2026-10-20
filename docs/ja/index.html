@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ja" data-ver="9.13.0">
 <head>
 <meta charset="utf-8">
@@ -97,6 +97,7 @@
   code{font-family:Consolas,"SF Mono",monospace;font-size:12.5px;color:var(--code);word-break:break-all}
   /* ---------- 界面实拍 ---------- */
   .ui{display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:20px}
+  .ui.one{grid-template-columns:1fr}
   .ui figure{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#0f1114}
   .ui img{display:block;width:100%;height:auto}
   .ui figcaption{padding:11px 13px;font-size:12.5px;color:var(--dim);border-top:1px solid var(--line)}
@@ -273,6 +274,7 @@
         <a href="#plugins">12 個同梱</a>
       </div>
     </div>
+    <div class="mi"><a href="#bigscreen">大画面版</a></div>
     <div class="mi"><a href="../plugin-guide.ja.html">ドキュメント</a>
       <div class="sub">
         <a href="../plugin-guide.ja.html">プラグインガイド</a>
@@ -285,6 +287,7 @@
         <span class="gh">Windows</span>
         <a href="https://github.com/11ly322/Prism/releases/download/v9.13.0/Prism-Setup-9.13.0.exe" download><span style="display:inline-block;margin-left:6px;padding:1px 6px;border-radius:6px;font-size:11px;background:#2f7d32;color:#fff">フル</span>フル版 <i>40.1 MB</i></a>
         <a href="https://github.com/11ly322/Prism/releases/download/v9.13.0/Prism-Viewer-Setup-9.13.0.exe" download>ビューア（インストーラ） <i>40.0 MB</i></a>
+        <a href="https://github.com/11ly322/Prism/releases/download/v9.13.0/Prism-BigScreen-Setup-9.13.0.exe" download>大画面版 <i>40.0 MB</i></a>
         <span class="gh">その他</span>
         <a href="https://github.com/11ly322/Prism/releases/download/v9.13.0/Prism-macOS-9.13.0.zip" download><span style="display:inline-block;margin-left:6px;padding:1px 6px;border-radius:6px;font-size:11px;background:#8a6d1f;color:#fff">ソース版</span>macOS <i>ソースから実行</i></a>
         <a href="https://github.com/11ly322/Prism/releases/download/v9.13.0/Prism-Linux-9.13.0.zip" download><span style="display:inline-block;margin-left:6px;padding:1px 6px;border-radius:6px;font-size:11px;background:#8a6d1f;color:#fff">ソース版</span>Linux <i>ソースから実行</i></a>
@@ -385,6 +388,28 @@
     </div>
   </section>
 
+  </details>
+
+  <details class="blk" open>
+    <summary>大画面 / 展示版</summary>
+  <section id="bigscreen">
+    <h2>大画面 / 展示版</h2>
+    <p class="lead">閲覧専用・ショートカットなし・ツールバーは下部。すべて大きなボタンで操作でき、展示場・会議室・タッチ大画面・長時間表示に向きます。</p>
+    <div class="ui one">
+      <figure>
+        <img src="../shots/ui-bigscreen.webp" alt="大画面版の画面" loading="lazy" decoding="async" width="1600" height="975">
+        <figcaption><b>下部の大きなツールバー</b>開く・フォルダー・前後・フィット・1:1・ズーム・回転・スライドショー・グリッド・全画面・終了。編集パネルはありません。</figcaption>
+      </figure>
+    </div>
+    <table>
+      <tr><td>ビューアのみ</td><td>編集パネル・プラグイン・色調整なし</td></tr>
+      <tr><td>ショートカットなし</td><td>F5 / Tab / Ctrl+O などを割り当てず、すべてボタンで操作</td></tr>
+      <tr><td>大きなボタン</td><td>下部ツールバー。タッチと遠距離からの操作に適したサイズ</td></tr>
+      <tr><td>起動時に最大化</td><td>全画面は下部の「全画面」ボタンで切替</td></tr>
+      <tr><td>インストーラー</td><td>フル版と同じ自己解凍 exe。インストールまたはその場で解凍できます</td></tr>
+    </table>
+    <p style="margin-top:22px"><a class="btn" href="https://github.com/11ly322/Prism/releases/download/v9.13.0/Prism-BigScreen-Setup-9.13.0.exe" download>大画面版をダウンロード</a></p>
+  </section>
   </details>
 
   <details class="blk" open>
@@ -509,6 +534,10 @@
     <details>
       <summary>フル版とビューアの違い</summary>
       <p>ビューアには編集パネルがなく、閲覧・ズーム・回転・スライドショー・フィルムストリップ・グリッドのみ。サイズは小さく、対応形式と描画速度は同じです。</p>
+    </details>
+    <details>
+      <summary>大画面版とビューアの違い</summary>
+      <p>大画面版も閲覧専用ですが、ツールバーは下部・ボタンはより大きく・アプリのショートカットなし・起動時に最大化。展示場・会議室・タッチ画面・長時間表示向けです。ビューアは上部ツールバーとショートカットを残し、日常のデスクトップ向けです。</p>
     </details>
     <details>
       <summary>システム全画面を使わない理由</summary>

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN" data-ver="9.13.0">
 <head>
 <meta charset="utf-8">
@@ -97,6 +97,7 @@
   code{font-family:Consolas,"SF Mono",monospace;font-size:12.5px;color:var(--code);word-break:break-all}
   /* ---------- 界面实拍 ---------- */
   .ui{display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:20px}
+  .ui.one{grid-template-columns:1fr}
   .ui figure{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#0f1114}
   .ui img{display:block;width:100%;height:auto}
   .ui figcaption{padding:11px 13px;font-size:12.5px;color:var(--dim);border-top:1px solid var(--line)}
@@ -273,6 +274,7 @@
         <a href="#plugins">自带 12 个</a>
       </div>
     </div>
+    <div class="mi"><a href="#bigscreen">大屏版</a></div>
     <div class="mi"><a href="plugin-guide.html">文档</a>
       <div class="sub">
         <a href="plugin-guide.html">插件指南</a>
@@ -285,6 +287,7 @@
         <span class="gh">Windows</span>
         <a href="https://github.com/11ly322/Prism/releases/download/v9.13.0/Prism-Setup-9.13.0.exe" download><span style="display:inline-block;margin-left:6px;padding:1px 6px;border-radius:6px;font-size:11px;background:#2f7d32;color:#fff">完整支持</span>完整版 <i>40.1 MB</i></a>
         <a href="https://github.com/11ly322/Prism/releases/download/v9.13.0/Prism-Viewer-Setup-9.13.0.exe" download>看图版（安装包） <i>40.0 MB</i></a>
+        <a href="https://github.com/11ly322/Prism/releases/download/v9.13.0/Prism-BigScreen-Setup-9.13.0.exe" download>大屏版 <i>40.0 MB</i></a>
         <span class="gh">其它平台</span>
         <a href="https://github.com/11ly322/Prism/releases/download/v9.13.0/Prism-macOS-9.13.0.zip" download><span style="display:inline-block;margin-left:6px;padding:1px 6px;border-radius:6px;font-size:11px;background:#8a6d1f;color:#fff">源码预览</span>macOS <i>源码运行</i></a>
         <a href="https://github.com/11ly322/Prism/releases/download/v9.13.0/Prism-Linux-9.13.0.zip" download><span style="display:inline-block;margin-left:6px;padding:1px 6px;border-radius:6px;font-size:11px;background:#8a6d1f;color:#fff">源码预览</span>Linux <i>源码运行</i></a>
@@ -385,6 +388,28 @@
     </div>
   </section>
 
+  </details>
+
+  <details class="blk" open>
+    <summary>大屏 / 展陈版</summary>
+  <section id="bigscreen">
+    <h2>大屏 / 展陈版</h2>
+    <p class="lead">纯看图、无快捷键、工具栏在底部。所有操作都用大按钮完成，适合展厅、会议室、触摸大屏和长时间展示。</p>
+    <div class="ui one">
+      <figure>
+        <img src="shots/ui-bigscreen.webp" alt="大屏版界面" loading="lazy" decoding="async" width="1600" height="975">
+        <figcaption><b>底部大按钮</b>打开、文件夹、翻页、适应、1:1、缩放、旋转、幻灯片、网格、全屏、退出；没有修图面板。</figcaption>
+      </figure>
+    </div>
+    <table>
+      <tr><td>纯看图</td><td>没有修图面板、没有插件、没有调色功能</td></tr>
+      <tr><td>无快捷键</td><td>不绑定 F5 / Tab / Ctrl+O 等；所有操作点按钮</td></tr>
+      <tr><td>大按钮</td><td>底部工具栏，适合触摸与远距离操作</td></tr>
+      <tr><td>启动即最大化</td><td>全屏由底栏「全屏」按钮切换</td></tr>
+      <tr><td>安装器</td><td>与完整版相同的自解压 exe，可选安装或就地解压</td></tr>
+    </table>
+    <p style="margin-top:22px"><a class="btn" href="https://github.com/11ly322/Prism/releases/download/v9.13.0/Prism-BigScreen-Setup-9.13.0.exe" download>下载大屏版</a></p>
+  </section>
   </details>
 
   <details class="blk" open>
@@ -509,6 +534,10 @@
     <details>
       <summary>完整版和看图版有什么区别</summary>
       <p>看图版没有修图面板，只保留浏览、缩放、旋转、幻灯片、胶片条与网格，体积更小；其余格式支持与渲染性能完全一致。</p>
+    </details>
+    <details>
+      <summary>大屏版和看图版有什么区别</summary>
+      <p>大屏版也是纯看图，但工具栏在底部、按钮更大、没有应用快捷键，启动即最大化；适合展厅、会议室、触摸屏和长时间展示。看图版保留顶部工具栏与快捷键，适合日常桌面使用。</p>
     </details>
     <details>
       <summary>为什么没有系统级全屏</summary>

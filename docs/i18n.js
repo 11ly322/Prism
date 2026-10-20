@@ -267,7 +267,25 @@ window.PRISM_I18N = {
 "收起": "Collapse",
 "跳到主要内容": "Skip to content",
 "中文": "中文",
-"日本語": "日本語"
+"日本語": "日本語",
+"大屏版": "Large screen",
+"大屏版界面": "Large-screen interface",
+"大屏 / 展陈版": "Large-screen / kiosk edition",
+"纯看图、无快捷键、工具栏在底部。所有操作都用大按钮完成，适合展厅、会议室、触摸大屏和长时间展示。": "Viewer only, no shortcuts, toolbar at the bottom. Everything is a big button — built for showrooms, meeting rooms, touch screens and long-running displays.",
+"底部大按钮": "Big bottom toolbar",
+"打开、文件夹、翻页、适应、1:1、缩放、旋转、幻灯片、网格、全屏、退出；没有修图面板。": "Open, folder, prev/next, fit, 1:1, zoom, rotate, slideshow, grid, fullscreen, exit; no editing panel.",
+"没有修图面板、没有插件、没有调色功能": "No editing panel, no plugins, no color grading",
+"无快捷键": "No shortcuts",
+"不绑定 F5 / Tab / Ctrl+O 等；所有操作点按钮": "No F5 / Tab / Ctrl+O bindings; every action is a button",
+"大按钮": "Large buttons",
+"底部工具栏，适合触摸与远距离操作": "Bottom toolbar sized for touch and viewing from a distance",
+"启动即最大化": "Starts maximized",
+"全屏由底栏「全屏」按钮切换": "Fullscreen toggles from the bottom-bar button",
+"大屏版和看图版有什么区别": "Large screen vs viewer",
+"大屏版也是纯看图，但工具栏在底部、按钮更大、没有应用快捷键，启动即最大化；适合展厅、会议室、触摸屏和长时间展示。看图版保留顶部工具栏与快捷键，适合日常桌面使用。": "The large-screen edition is also viewer-only, but with a bottom toolbar, bigger buttons, no app shortcuts and a maximized start; it suits showrooms, meeting rooms, touch screens and long-running displays. The viewer keeps the top toolbar and shortcuts for everyday desktop use.",
+"安装器": "Installer",
+"与完整版相同的自解压 exe，可选安装或就地解压": "Same self-extracting exe as the full edition; install or extract in place",
+"下载大屏版": "Download large-screen edition"
 },
 "ja": {
 "Prism — 简约图片查看器": "Prism — ミニマルな画像ビューア",
@@ -536,7 +554,25 @@ window.PRISM_I18N = {
 "收起": "閉じる",
 "跳到主要内容": "本文へスキップ",
 "中文": "中文",
-"日本語": "日本語"
+"日本語": "日本語",
+"大屏版": "大画面版",
+"大屏版界面": "大画面版の画面",
+"大屏 / 展陈版": "大画面 / 展示版",
+"纯看图、无快捷键、工具栏在底部。所有操作都用大按钮完成，适合展厅、会议室、触摸大屏和长时间展示。": "閲覧専用・ショートカットなし・ツールバーは下部。すべて大きなボタンで操作でき、展示場・会議室・タッチ大画面・長時間表示に向きます。",
+"底部大按钮": "下部の大きなツールバー",
+"打开、文件夹、翻页、适应、1:1、缩放、旋转、幻灯片、网格、全屏、退出；没有修图面板。": "開く・フォルダー・前後・フィット・1:1・ズーム・回転・スライドショー・グリッド・全画面・終了。編集パネルはありません。",
+"没有修图面板、没有插件、没有调色功能": "編集パネル・プラグイン・色調整なし",
+"无快捷键": "ショートカットなし",
+"不绑定 F5 / Tab / Ctrl+O 等；所有操作点按钮": "F5 / Tab / Ctrl+O などを割り当てず、すべてボタンで操作",
+"大按钮": "大きなボタン",
+"底部工具栏，适合触摸与远距离操作": "下部ツールバー。タッチと遠距離からの操作に適したサイズ",
+"启动即最大化": "起動時に最大化",
+"全屏由底栏「全屏」按钮切换": "全画面は下部の「全画面」ボタンで切替",
+"大屏版和看图版有什么区别": "大画面版とビューアの違い",
+"大屏版也是纯看图，但工具栏在底部、按钮更大、没有应用快捷键，启动即最大化；适合展厅、会议室、触摸屏和长时间展示。看图版保留顶部工具栏与快捷键，适合日常桌面使用。": "大画面版も閲覧専用ですが、ツールバーは下部・ボタンはより大きく・アプリのショートカットなし・起動時に最大化。展示場・会議室・タッチ画面・長時間表示向けです。ビューアは上部ツールバーとショートカットを残し、日常のデスクトップ向けです。",
+"安装器": "インストーラー",
+"与完整版相同的自解压 exe，可选安装或就地解压": "フル版と同じ自己解凍 exe。インストールまたはその場で解凍できます",
+"下载大屏版": "大画面版をダウンロード"
 }
 };
 window.PRISM_LANGS = [["zh", "中文"], ["en", "EN"], ["ja", "日本語"]];

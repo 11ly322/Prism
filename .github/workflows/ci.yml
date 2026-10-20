@@ -46,6 +46,24 @@ jobs:
       - name: Version consistency
         run: python check_versions.py
 
+  static-macos:
+    runs-on: macos-latest
+    env:
+      PYTHONUTF8: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Plugin catalog
+        run: python tools/pluginprcheck.py
+      - name: Trilingual docs
+        run: python tools/docscheck.py
+      - name: Docs HTML
+        run: python tools/make_docs_html.py --check
+      - name: Version consistency
+        run: python check_versions.py
+
   gui:
     runs-on: windows-latest
     continue-on-error: true

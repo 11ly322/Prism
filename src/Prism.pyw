@@ -78,7 +78,7 @@ IS_WIN = sys.platform.startswith("win")
 K = "Command" if IS_MAC else "Control"
 
 APP_NAME = "Prism"
-APP_VERSION = "9.13.0"
+APP_VERSION = "9.13.1"
 APP_BUILD = "2025-12.9"
 # ---------------------------------------------------------------- 运行模式
 # 同一份源码编出三个版本：
@@ -206,7 +206,8 @@ CHECK_B = "#232323"
 
 _THEME_ROLES = ("BG", "BAR_BG", "BAR_HOVER", "FG", "FG_DIM", "FG_HI",
                 "ACCENT", "BTN", "DEEP", "DEEP2", "TROUGH", "HEAD",
-                "HEAD2", "RULE", "KNOB", "ON")
+                "HEAD2", "RULE", "KNOB", "ON", "PANEL", "CARD",
+                "CARD_LINE", "CHECK_A", "CHECK_B")
 
 _THEME_DARK = {
     "BG": "#121212", "BAR_BG": "#1c1c1c", "BAR_HOVER": "#2c2c2c",
@@ -214,7 +215,8 @@ _THEME_DARK = {
     "ACCENT": "#4c9aff", "BTN": "#262626", "DEEP": "#151515",
     "DEEP2": "#1b1b1b", "TROUGH": "#2f2f2f", "HEAD": "#242424",
     "HEAD2": "#1d1d1d", "RULE": "#2e2e2e", "KNOB": "#d0d0d0",
-    "ON": "#101010",
+    "ON": "#101010", "PANEL": "#141414", "CARD": "#1c1c1c",
+    "CARD_LINE": "#2a2a2a", "CHECK_A": "#191919", "CHECK_B": "#232323",
 }
 
 THEMES = {
@@ -226,7 +228,8 @@ THEMES = {
         "ACCENT": "#ffd400", "BTN": "#1a1a1a", "DEEP": "#0a0a0a",
         "DEEP2": "#0f0f0f", "TROUGH": "#4a4a4a", "HEAD": "#111111",
         "HEAD2": "#0c0c0c", "RULE": "#5a5a5a", "KNOB": "#ffffff",
-        "ON": "#000000",
+        "ON": "#000000", "PANEL": "#000000", "CARD": "#0a0a0a",
+        "CARD_LINE": "#3a3a3a", "CHECK_A": "#0a0a0a", "CHECK_B": "#1a1a1a",
     },
     # 浅色：白底深字
     "light": {
@@ -235,7 +238,8 @@ THEMES = {
         "ACCENT": "#1a6fe0", "BTN": "#ececec", "DEEP": "#ffffff",
         "DEEP2": "#f7f7f7", "TROUGH": "#cfcfcf", "HEAD": "#ededed",
         "HEAD2": "#f5f5f5", "RULE": "#c8c8c8", "KNOB": "#5a5a5a",
-        "ON": "#ffffff",
+        "ON": "#ffffff", "PANEL": "#ebebeb", "CARD": "#fbfbfb",
+        "CARD_LINE": "#d6d6d6", "CHECK_A": "#ffffff", "CHECK_B": "#e8e8e8",
     },
     # 高对比 + 白色描边：黑底白字黄强调，每个控件加 1 像素白边
     "outline": {
@@ -244,7 +248,8 @@ THEMES = {
         "ACCENT": "#ffe100", "BTN": "#000000", "DEEP": "#000000",
         "DEEP2": "#000000", "TROUGH": "#585858", "HEAD": "#000000",
         "HEAD2": "#000000", "RULE": "#ffffff", "KNOB": "#ffffff",
-        "ON": "#000000",
+        "ON": "#000000", "PANEL": "#000000", "CARD": "#000000",
+        "CARD_LINE": "#ffffff", "CHECK_A": "#000000", "CHECK_B": "#1a1a1a",
         "outline": "#ffffff",
     },
     # 炭橙：炭灰底 + 橙色强调
@@ -254,7 +259,8 @@ THEMES = {
         "ACCENT": "#ff8c1a", "BTN": "#242426", "DEEP": "#131315",
         "DEEP2": "#171719", "TROUGH": "#3a3a3d", "HEAD": "#202022",
         "HEAD2": "#1a1a1c", "RULE": "#3a3a3d", "KNOB": "#ff8c1a",
-        "ON": "#101010",
+        "ON": "#101010", "PANEL": "#0b0b0d", "CARD": "#1b1b1d",
+        "CARD_LINE": "#333338", "CHECK_A": "#151517", "CHECK_B": "#202024",
     },
 }
 
@@ -409,6 +415,13 @@ def _apply_palette(name):
     g["KNOB_BG"] = p["KNOB"]
     g["RULE_BG"] = p["RULE"]
     g["ON_BG"] = p["ON"]
+    g["PANEL_BG"] = p["PANEL"]
+    g["CARD_BG"] = p["CARD"]
+    g["CARD_LINE"] = p["CARD_LINE"]
+    g["CHECK_A"] = p["CHECK_A"]
+    g["CHECK_B"] = p["CHECK_B"]
+    bg = p["BG"]
+    g["BG_RGB"] = (int(bg[1:3], 16), int(bg[3:5], 16), int(bg[5:7], 16))
     _CURRENT_THEME[0] = name
     return p
 
@@ -3552,7 +3565,12 @@ class QPEApp(_BASE):
         self.bar_hidden = set()
         self.bar_laid_out = True
         self.bar = tk.Frame(self, bg=BAR_BG, height=px(86))
-        self.bar.pack(side="bottom", fill="x")
+        _status = getattr(self, "status", None)
+        if _status is not None and _status.winfo_exists():
+            # 语言切换会重建工具条；必须重新插到状态栏下方，否则会跑到上面
+            self.bar.pack(side="bottom", fill="x", before=_status)
+        else:
+            self.bar.pack(side="bottom", fill="x")
         self.bar.pack_propagate(False)
         big = (self.ui_font[0], -int(px(15)), "bold")
 
@@ -3612,7 +3630,13 @@ class QPEApp(_BASE):
         self.bar_hidden = set()
         self.bar_laid_out = False
         self.bar = tk.Frame(self, bg=BAR_BG, height=px(36))
-        self.bar.pack(side="top", fill="x")
+        _body = getattr(self, "body", None)
+        if _body is not None and _body.winfo_exists():
+            # 重建时必须放回 body 之前；直接 pack(top) 会排到 body 后面，
+            # 视觉上工具条就掉到窗口底部了（浅色主题切换时最容易看到）。
+            self.bar.pack(side="top", fill="x", before=_body)
+        else:
+            self.bar.pack(side="top", fill="x")
         self.bar.pack_propagate(False)
 
         # 缩放比例优先靠右占位，窗口变窄时先压缩按钮而不是压扁它
@@ -6692,7 +6716,7 @@ class QPEApp(_BASE):
                              fg=FG if opened else FG_DIM, anchor="w",
                              cursor="hand2")
         title_lbl.pack(side="left", padx=(px(1), px(SPACE_LG)))
-        rule = tk.Frame(head, bg="#2e2e2e", height=max(1, px(1)))
+        rule = tk.Frame(head, bg=CARD_LINE, height=max(1, px(1)))
         rule.pack(side="left", fill="x", expand=True, pady=(px(1), 0))
         body = tk.Frame(parent, bg=CARD_BG)
         state = {"open": opened, "ran": False}
@@ -6709,7 +6733,7 @@ class QPEApp(_BASE):
             on = state["open"]
             mark.configure(fg=ACCENT if on else FG_DIM)
             title_lbl.configure(fg=FG if on else FG_DIM)
-            rule.configure(bg="#3a3a3a" if on else BTN_BG)
+            rule.configure(bg=RULE_BG if on else BTN_BG)
 
         def toggle(_e=None):
             state["open"] = not state["open"]
@@ -6990,11 +7014,11 @@ class QPEApp(_BASE):
                 pts.extend((i / float(n - 1) * w, h - (v ** 0.5) * (h - 2)))
             if len(pts) >= 4:
                 c.create_polygon(*([0, h] + pts + [w, h]),
-                                 fill="#2b2b2b", outline="")
-        c.create_line(0, h, w, 0, fill="#333333", dash=(2, 3))
+                                 fill=BTN_BG, outline="")
+        c.create_line(0, h, w, 0, fill=RULE_BG, dash=(2, 3))
         # 其它通道画成淡色参考线
-        for key, col in (("curve", "#3a3a3a"), ("curve_r", "#4a2a2a"),
-                         ("curve_g", "#2a4a2a"), ("curve_b", "#2a3a4a")):
+        for key, col in (("curve", FG_DIM), ("curve_r", "#c05050"),
+                         ("curve_g", "#3f9f62"), ("curve_b", "#4a7fc0")):
             if key == {"rgb": "curve", "r": "curve_r", "g": "curve_g",
                        "b": "curve_b"}[self.curve_channel]:
                 continue
@@ -7019,7 +7043,7 @@ class QPEApp(_BASE):
             x = cx / 255.0 * w
             y = h - cy / 255.0 * h
             r = px(4)
-            c.create_oval(x - r, y - r, x + r, y + r, fill="#ffffff",
+            c.create_oval(x - r, y - r, x + r, y + r, fill=FG_HI,
                           outline=ACCENT)
 
     def _curve_press(self, event):
@@ -7080,7 +7104,7 @@ class QPEApp(_BASE):
         except Exception:
             return
         cv.delete("all")
-        cv.create_line(0, h, w, 0, fill="#333333", dash=(2, 3))
+        cv.create_line(0, h, w, 0, fill=RULE_BG, dash=(2, 3))
         lut = _mono_curve([list(p) for p in pts])
         coords = []
         for v in range(0, 256, 4):
@@ -7099,11 +7123,11 @@ class QPEApp(_BASE):
             on = [list(p) for p in CURVE_PRESETS[key]] == cur
             holder = self.curve_preset_keys.get(key)
             if holder is not None and holder.winfo_exists():
-                holder.configure(bg="#12324f" if on else "#1c1c1c")
+                holder.configure(bg=TROUGH_BG if on else CARD_BG)
                 for w in holder.winfo_children():
                     try:
                         if w is cv:
-                            w.configure(bg="#12324f" if on else "#1c1c1c")
+                            w.configure(bg=TROUGH_BG if on else CARD_BG)
                     except Exception:
                         pass
 
@@ -9095,6 +9119,24 @@ class QPEApp(_BASE):
                         widget.configure(**{opt: new})
                     except Exception:
                         pass
+            if isinstance(widget, tk.Canvas):
+                # 自绘图标按钮的背景圆角是 canvas item，不会跟着 widget bg 变
+                try:
+                    for item in widget.find_withtag("rbg"):
+                        widget.itemconfigure(item, fill=BAR_BG)
+                except Exception:
+                    pass
+            if isinstance(widget, _QpeRoundButton):
+                # bg/fg 已由上面的 configure 写进 _bg/_fg；这里只补 hover 缓存
+                try:
+                    for attr in ("_hover_bg", "_hover_fg"):
+                        old_c = str(getattr(widget, attr, "")).lower()
+                        new_c = delta.get(old_c)
+                        if new_c:
+                            setattr(widget, attr, new_c)
+                    widget._draw()
+                except Exception:
+                    pass
             if isinstance(widget, _QpeSlider):
                 try:
                     widget._redraw()
@@ -10729,6 +10771,17 @@ def run(img, **params):
             self.save_settings()
         try:
             self._render()
+        except Exception:
+            pass
+        try:
+            if self.curve_can is not None and self.curve_can.winfo_exists():
+                self._draw_curve()
+                self._refresh_curve_thumbs()
+        except Exception:
+            pass
+        try:
+            if self.hist_can is not None and self.hist_can.winfo_exists():
+                self._schedule_histogram()
         except Exception:
             pass
         self._flash(_tr("已切换主题：%s") % _tr(THEME_NAMES[name]))

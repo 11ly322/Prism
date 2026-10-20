@@ -31,6 +31,7 @@ SUITES = [
     ("导入冒烟", "tools/importcheck.py", [], True, 120),
     ("界面/性能", "tools/uicheck.py", [], True, 240),
     ("大屏版", "tools/bigscreencheck.py", [], True, 120),
+    ("主题", "tools/themecheck.py", [], True, 180),
     ("ICC", "tools/icccheck.py", [], True, 60),
     ("ICC 真profile", "tools/iccprofilecheck.py", [], True, 60),
     ("批量导出", "tools/batchcheck.py", [], True, 120),

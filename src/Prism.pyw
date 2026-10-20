@@ -65,7 +65,7 @@ IS_WIN = sys.platform.startswith("win")
 K = "Command" if IS_MAC else "Control"
 
 APP_NAME = "Prism"
-APP_VERSION = "9.7.0"
+APP_VERSION = "9.8.0"
 APP_BUILD = "2025-12.9"
 # ---------------------------------------------------------------- 运行模式
 # 同一份源码编出两个版本：
@@ -744,7 +744,7 @@ LANG_TABLE = {
         "「调色准」也不是 —— 预览和导出走同一套渲染管，": "\"Accurate color\" is not a slogan either: preview and export share the same rendering pipeline,",
         "实测平均逐像素差 0.000。你看到的就是你存下的。": "with a measured average per-pixel difference of 0.000. What you see is what you save.",
         "  没有 Electron、没有浏览器内核、不联网、不需要管理员权限": "  No Electron, no browser engine, no network, no admin rights",
-        "性能档位（命令行）：--perf-profile fast-slider 拖动最快（默认）、": "Performance profiles (command line): --perf-profile fast-slider is fastest while dragging (default),",
+        "性能档位（设置 → 性能）：拖动优先、首帧优先、自动；": "Performance profiles (Settings → Performance): drag-first, first-frame-first, auto;",
         "PhotoImage 更新方式。另有 --proxy N 与 --low-mem。": "PhotoImage update mode. Also --proxy N and --low-mem.",
         "格式：JPEG · PNG · WebP · TIFF · BMP · GIF · ICO，": "Formats: JPEG · PNG · WebP · TIFF · BMP · GIF · ICO,",
         "以及尼康 NEF 等 RAW 的内嵌预览（不需要 RAW 解码库）。": "plus embedded previews from RAW files such as Nikon NEF (no RAW decoder library needed).",
@@ -852,6 +852,23 @@ LANG_TABLE = {
         "搜索": "Search",
         "共 %d / %d 个插件": "%d / %d plugins",
         "没有匹配的插件": "No matching plugins",
+        # 9.7.1 全分辨率入口
+        "全分辨率": "Full resolution",
+        # 9.8.0 性能档位/专注模式
+        "性能": "Performance",
+        "档位切换立即生效；大图默认只解代理尺寸，状态栏「全分辨率」可随时取回原图。": "Switching takes effect immediately. Large images load at proxy size; use Full resolution in the status bar to fetch the original.",
+        "拖动优先（最跟手）": "Drag-first (smoothest)",
+        "滑杆拖动时优先降档，松手后补全": "Lower resolution while dragging, refine on release",
+        "首帧优先（打开更快）": "First-frame-first (faster open)",
+        "大图先出小预览，再解低档": "Show a small preview first, then decode at the lower draft size",
+        "自动": "Auto",
+        "按文件大小在两段式与单段式之间选": "Choose two-stage or single-stage decoding by file size",
+        "低内存模式（代理图更小，适合超大图）": "Low-memory mode (smaller proxy, for huge images)",
+        "专注模式": "Focus mode",
+        "按 Tab 退出专注模式": "Press Tab to exit focus mode",
+        "性能档位：%s": "Performance profile: %s",
+        # 9.8.0 专注模式帮助
+        "专注模式（Tab）：收起工具条、状态栏和右侧面板，只留画布。": "Focus mode (Tab): hides the toolbar, status bar and side panel, leaving only the canvas.",
     },
     "ja": {
         "文件": "ファイル", "编辑": "編集", "视图": "表示", "工具": "ツール",
@@ -1341,7 +1358,7 @@ LANG_TABLE = {
         "「调色准」也不是 —— 预览和导出走同一套渲染管，": "「色が正確」もスローガンではありません。プレビューと書き出しは同じレンダリングパイプラインを使っており、",
         "实测平均逐像素差 0.000。你看到的就是你存下的。": "実測の平均ピクセル差は 0.000 です。見たままが保存されます。",
         "  没有 Electron、没有浏览器内核、不联网、不需要管理员权限": "  Electron なし、ブラウザエンジンなし、ネット接続なし、管理者権限不要",
-        "性能档位（命令行）：--perf-profile fast-slider 拖动最快（默认）、": "性能プロファイル（コマンドライン）：--perf-profile fast-slider はドラッグ時に最速（デフォルト）、",
+        "性能档位（设置 → 性能）：拖动优先、首帧优先、自动；": "パフォーマンス設定（設定 → パフォーマンス）：ドラッグ優先・初回表示優先・自動；",
         "PhotoImage 更新方式。另有 --proxy N 与 --low-mem。": "PhotoImage 更新方式。ほかに --proxy N と --low-mem。",
         "格式：JPEG · PNG · WebP · TIFF · BMP · GIF · ICO，": "形式：JPEG · PNG · WebP · TIFF · BMP · GIF · ICO、",
         "以及尼康 NEF 等 RAW 的内嵌预览（不需要 RAW 解码库）。": "およびニコン NEF などの RAW の埋め込みプレビュー（RAW デコーダーライブラリ不要）。",
@@ -1449,6 +1466,23 @@ LANG_TABLE = {
         "搜索": "検索",
         "共 %d / %d 个插件": "%d / %d 個のプラグイン",
         "没有匹配的插件": "一致するプラグインがありません",
+        # 9.7.1 全分辨率入口
+        "全分辨率": "フル解像度",
+        # 9.8.0 性能档位/专注模式
+        "性能": "パフォーマンス",
+        "档位切换立即生效；大图默认只解代理尺寸，状态栏「全分辨率」可随时取回原图。": "切り替えは即時反映。大きな画像はプロキシサイズで読み込み、ステータスバーの「フル解像度」で原寸を取得できます。",
+        "拖动优先（最跟手）": "ドラッグ優先（最速）",
+        "滑杆拖动时优先降档，松手后补全": "ドラッグ中は解像度を下げ、離したら高品質に戻す",
+        "首帧优先（打开更快）": "初回表示優先（開くのが速い）",
+        "大图先出小预览，再解低档": "まず小さなプレビューを出し、その後ドラフトサイズでデコード",
+        "自动": "自動",
+        "按文件大小在两段式与单段式之间选": "ファイルサイズに応じて 2 段階/1 段階を選択",
+        "低内存模式（代理图更小，适合超大图）": "低メモリモード（プロキシを小さく、巨大画像向け）",
+        "专注模式": "集中モード",
+        "按 Tab 退出专注模式": "Tab で集中モードを終了",
+        "性能档位：%s": "パフォーマンス設定：%s",
+        # 9.8.0 专注模式帮助
+        "专注模式（Tab）：收起工具条、状态栏和右侧面板，只留画布。": "集中モード（Tab）：ツールバー・ステータスバー・右パネルを隠し、キャンバスだけにします。",
     },
 }
 
@@ -2680,7 +2714,7 @@ class ImageDoc(object):
         self.slow_ms = 0.0
 
     @classmethod
-    def load(cls, path, draft_to=0):
+    def load(cls, path, draft_to=0, force_full=False):
         # 非 RAW 不再把整个文件读进内存：直接从路径解码。
         # 一张 40MP JPEG 通常 10~30MB，read()+BytesIO 等于多占一份内存、
         # 多一次整块拷贝；doc.data 之前只在内存估算里用到。
@@ -2720,7 +2754,8 @@ class ImageDoc(object):
                     finally:
                         Image.MAX_IMAGE_PIXELS = old_max
                 orig_size = img.size          # 必须在 draft 之前记下来
-                if not draft_to and orig_size[0] * orig_size[1] > AUTO_DRAFT_PIXELS:
+                if (not draft_to and not force_full
+                        and orig_size[0] * orig_size[1] > AUTO_DRAFT_PIXELS):
                     # 超大图（>5000 万像素）打开时先解成代理尺寸，
                     # 避免一打开就吃掉几百 MB；需要全分辨率时按 F5 再来一次。
                     try:
@@ -2779,6 +2814,12 @@ class ImageDoc(object):
         # 用长边算比例：EXIF 转正会交换宽高，用宽度会算错
         if doc.orig_size and max(doc.orig_size) > 0:
             doc.draft_ratio = max(doc.size) / float(max(doc.orig_size))
+        # draft_to 是画布尺寸优化，也会把 >5000 万像素的图降档；
+        # 这种情况同样允许 F5 取回原图，否则菜单会误报「已经是全分辨率」。
+        if (orig_size and not doc.auto_drafted
+                and orig_size[0] * orig_size[1] > AUTO_DRAFT_PIXELS
+                and doc.draft_ratio < 0.999):
+            doc.auto_drafted = True
         return doc
 
     def mem_bytes(self):
@@ -3188,8 +3229,8 @@ class Loader(object):
             if p and p not in [i[0] for i in items]:
                 # 大图先解一张很小的预览：首帧不用等完整 draft 解码
                 if preview_to and p == primary:
-                    items.append((p, preview_to, 0, True))
-                items.append((p, draft_to, proxy_limit))
+                    items.append((p, preview_to, 0, True, False))
+                items.append((p, draft_to, proxy_limit, False, False))
         self._wanted = frozenset(it[0] for it in items)
         try:
             while True:
@@ -3207,7 +3248,7 @@ class Loader(object):
         except queue.Empty:
             pass
         self._wanted = frozenset([path])
-        self.q.put((path, 0, 0))
+        self.q.put((path, 0, 0, False, True))
 
     def _run(self):
         while True:
@@ -3216,11 +3257,12 @@ class Loader(object):
                 return
             path, draft_to, proxy_limit = item[0], item[1], item[2]
             is_preview = len(item) > 3 and item[3]
+            force_full = len(item) > 4 and item[4]
             if self._wanted and path not in self._wanted:
                 continue
             t_dec0 = time.perf_counter()
             try:
-                doc = ImageDoc.load(path, draft_to)
+                doc = ImageDoc.load(path, draft_to, force_full=force_full)
                 if globals().get("DEBUG_DECODE") and not is_preview:
                     _plugin_log("decode draft_to=%s -> %s (%.0f ms)"
                                 % (draft_to, getattr(doc, "img").size,
@@ -3979,6 +4021,9 @@ class QPEApp(_BASE):
         # 配色要在建界面之前定下来，否则控件会先按默认色建出来
         self.fast_skip_fx = False
         self.low_mem = bool(globals().get("LOW_MEM_ARG", False))
+        self.perf_profile = globals().get("PERF_PROFILE", "fast-slider")
+        self.focus_mode = False
+        self.panel_width = px(238)
         self.beauty_off = False       # 按住 B 时临时关闭美颜，用于对比
         self.hist_sel = None
         self.hist_data = None
@@ -4502,6 +4547,7 @@ class QPEApp(_BASE):
                         "F11")
         self._menu_item(m_view, "载入全分辨率", self.load_full_resolution,
                         "F5")
+        self._menu_item(m_view, "专注模式", self.toggle_focus_mode, "Tab")
         self._menu_item(m_view, "低内存模式", self.toggle_low_mem)
         self._menu_item(m_tools, "插件…", self.show_plugins)
         self._menu_item(m_tools, "设置…", self.show_settings)
@@ -4666,6 +4712,13 @@ class QPEApp(_BASE):
         self.name_lbl = tk.Label(self.status, text="", font=self.ui_font,
                                  bg=BAR_BG, fg=FG, anchor="w")
         self.name_lbl.pack(side="left", padx=px(12))
+        # 降档图在状态栏给一个显式入口，不用记 F5，也不用翻「视图」菜单
+        self.full_btn = tk.Button(
+            self.status, text="全分辨率", font=self.ui_font_s,
+            command=self.load_full_resolution, bg=ACCENT, fg=ON_BG,
+            activebackground=BAR_HOVER, activeforeground=FG_HI,
+            relief="flat", bd=0, highlightthickness=0, padx=px(8),
+            pady=0, cursor="hand2", takefocus=0)
         self.meta_lbl = tk.Label(self.status, text="", font=self.ui_font,
                                  bg=BAR_BG, fg=FG_DIM, anchor="e")
         self.meta_lbl.pack(side="right", padx=px(12))
@@ -4781,6 +4834,7 @@ class QPEApp(_BASE):
         b("<space>", lambda e: self.step(1))
         b("<BackSpace>", lambda e: self.step(-1))
         b("<F5>", lambda e: self.load_full_resolution())
+        b("<Tab>", self._toggle_focus_key)
         b("<F11>", lambda e: self.toggle_fullscreen())
         b("<Escape>", lambda e: self._exit_fullscreen())
         b("<f>", lambda e: self.fit_window())
@@ -6851,6 +6905,81 @@ class QPEApp(_BASE):
                     % ("开" if self.low_mem else "关",
                        PREVIEW_MAX_LOWMEM if self.low_mem else PREVIEW_MAX), 3000)
 
+    def set_perf_profile(self, profile, persist=True):
+        """切换性能档位：拖动优先 / 首帧优先 / 自动。运行中立即生效。"""
+        global PERF_PROFILE
+        if profile not in ("fast-slider", "fast-first", "auto"):
+            return
+        self.perf_profile = profile
+        PERF_PROFILE = profile
+        self.preview_key = None
+        self.preview_img = None
+        if persist:
+            try:
+                self._save_setting("perf_profile", profile)
+            except Exception:
+                pass
+        self._mark_fast()
+        self._render()
+        self._flash(_trf("性能档位：%s") % _tr({
+            "fast-slider": "拖动优先（最跟手）",
+            "fast-first": "首帧优先（打开更快）",
+            "auto": "自动",
+        }[profile]), 2400)
+
+    def _toggle_focus_key(self, event=None):
+        """Tab 切换专注模式；输入框里保留 Tab 的原始用途。"""
+        w = self.focus_get()
+        if isinstance(w, (tk.Entry, tk.Text, ttk.Combobox, tk.Spinbox)):
+            return None
+        self.toggle_focus_mode()
+        return "break"
+
+    def toggle_focus_mode(self, show=None):
+        """极简暗房：收起工具条、状态栏和右侧面板，只留画布。"""
+        want = (not getattr(self, "focus_mode", False)) if show is None \
+            else bool(show)
+        if want == getattr(self, "focus_mode", False):
+            return
+        self.focus_mode = want
+        if want:
+            self._focus_panel_was = bool(self.panel_shown)
+            if self.panel_shown:
+                self.toggle_panel(False)
+            self.bar.pack_forget()
+            self.status.pack_forget()
+            self._focus_hint()
+        else:
+            try:
+                if getattr(self, "_focus_tip", None) is not None:
+                    self._focus_tip.destroy()
+            except Exception:
+                pass
+            self._focus_tip = None
+            self.bar.pack(side="top", fill="x", before=self.body)
+            self.status.pack(side="bottom", fill="x", before=self.body)
+            if getattr(self, "_focus_panel_was", False):
+                self.toggle_panel(True)
+        self._mark_fast()
+        self._render()
+        self._update_status()
+
+    def _focus_hint(self):
+        try:
+            if getattr(self, "_focus_tip", None) is not None:
+                self._focus_tip.destroy()
+        except Exception:
+            pass
+        try:
+            tip = tk.Label(self, text=_tr("按 Tab 退出专注模式"),
+                           bg=BG, fg=FG_DIM, font=self.ui_font,
+                           padx=px(12), pady=px(6))
+            tip.place(relx=0.5, y=px(14), anchor="n")
+            self._focus_tip = tip
+            self.after(2400, tip.destroy)
+        except Exception:
+            self._focus_tip = None
+
     def toggle_fullscreen(self):
         """无边框最大化，Esc 退出。出错自动回退窗口最大化。"""
         if getattr(self, "_fs_on", False):
@@ -7234,6 +7363,15 @@ class QPEApp(_BASE):
         if full != getattr(self, "_last_name_txt", None):
             self.name_lbl.configure(text=full)
             self._last_name_txt = full
+        try:
+            want_full = (doc is not None
+                         and getattr(doc, "draft_ratio", 1.0) < 0.999)
+            if want_full and not self.full_btn.winfo_ismapped():
+                self.full_btn.pack(side="left", padx=(px(4), 0), pady=px(2))
+            elif not want_full and self.full_btn.winfo_ismapped():
+                self.full_btn.pack_forget()
+        except Exception:
+            pass
         if meta != getattr(self, "_last_meta_txt", None):
             self.meta_lbl.configure(text=meta)
             self._last_meta_txt = meta
@@ -7902,9 +8040,17 @@ class QPEApp(_BASE):
 
     def _build_panel(self):
         self.sliders = []
-        self.panel = tk.Frame(self.body, bg=BAR_BG, width=px(238),
+        self.panel = tk.Frame(self.body, bg=BAR_BG,
+                              width=int(getattr(self, "panel_width", px(238))),
                               height=px(600))
         self.panel.pack_propagate(False)
+        # 面板左缘的拖拽条：拖动改宽度，双击恢复默认
+        self.panel_grip = tk.Frame(self.body, bg=RULE_BG, width=px(5),
+                                   cursor="sb_h_double_arrow")
+        self.panel_grip.bind("<ButtonPress-1>", self._panel_drag_start)
+        self.panel_grip.bind("<B1-Motion>", self._panel_drag_move)
+        self.panel_grip.bind("<ButtonRelease-1>", self._panel_drag_end)
+        self.panel_grip.bind("<Double-Button-1>", self._panel_drag_reset)
         self.pcan = tk.Canvas(self.panel, bg=BAR_BG, highlightthickness=0, bd=0,
                               yscrollincrement=px(22))
         self.psb = tk.Scrollbar(self.panel, orient="vertical",
@@ -9044,6 +9190,37 @@ class QPEApp(_BASE):
         except Exception:
             pass
 
+    def _panel_drag_start(self, event):
+        self._panel_drag = (event.x_root, self.panel.winfo_width())
+
+    def _panel_drag_move(self, event):
+        state = getattr(self, "_panel_drag", None)
+        if not state:
+            return
+        x0, w0 = state
+        limit = max(px(200), min(px(560), int(self.winfo_width() * 0.45)))
+        new = max(px(200), min(limit, w0 + (x0 - event.x_root)))
+        self.panel.configure(width=new)
+        self.panel_width = new
+
+    def _panel_drag_end(self, event):
+        self._panel_drag = None
+        try:
+            self.save_settings()
+        except Exception:
+            pass
+
+    def _panel_drag_reset(self, event=None):
+        self.panel_width = px(238)
+        try:
+            self.panel.configure(width=self.panel_width)
+        except Exception:
+            pass
+        try:
+            self.save_settings()
+        except Exception:
+            pass
+
     def toggle_panel(self, show=None):
         if VIEWER_ONLY:            # 看图版没有修图面板
             return
@@ -9053,8 +9230,17 @@ class QPEApp(_BASE):
         self.panel_shown = want
         if want:
             self.panel.pack(side="right", fill="y", before=self.canvas)
+            try:
+                self.panel_grip.pack(side="right", fill="y",
+                                     before=self.canvas)
+            except Exception:
+                pass
         else:
             self.panel.pack_forget()
+            try:
+                self.panel_grip.pack_forget()
+            except Exception:
+                pass
         self._sync_panel_btn()
         self.after(40, self._render)
         if want:
@@ -9849,8 +10035,30 @@ class QPEApp(_BASE):
 
         tk.Frame(wrap, bg=RULE_BG, height=max(1, px(1))).pack(
             fill="x", pady=(px(12), px(10)))
-        tk.Label(wrap, text="提示", font=self.ui_font_b, bg=BAR_BG, fg=FG,
+        tk.Label(wrap, text="性能", font=self.ui_font_b, bg=BAR_BG, fg=FG,
                  anchor="w").pack(fill="x")
+        tk.Label(wrap, text="档位切换立即生效；大图默认只解代理尺寸，状态栏「全分辨率」可随时取回原图。",
+                 font=self.ui_font_s, bg=BAR_BG, fg=FG_DIM, anchor="w",
+                 justify="left", wraplength=px(370)).pack(
+                     fill="x", pady=(0, px(4)))
+        perf_var = tk.StringVar(value=getattr(self, "perf_profile",
+                                               "fast-slider"))
+        for code, label, desc in (
+                ("fast-slider", "拖动优先（最跟手）", "滑杆拖动时优先降档，松手后补全"),
+                ("fast-first", "首帧优先（打开更快）", "大图先出小预览，再解低档"),
+                ("auto", "自动", "按文件大小在两段式与单段式之间选")):
+            row = tk.Frame(wrap, bg=BAR_BG)
+            row.pack(fill="x", pady=(px(1), 0))
+            tk.Radiobutton(
+                row, text=label, value=code, variable=perf_var,
+                command=lambda c=code: self.set_perf_profile(c),
+                font=self.ui_font, bg=BAR_BG, fg=FG,
+                activebackground=BAR_BG, activeforeground=FG_HI,
+                selectcolor=DEEP_BG, anchor="w", bd=0,
+                highlightthickness=0, cursor="hand2").pack(side="left")
+            tk.Label(row, text=desc, font=self.ui_font_s, bg=BAR_BG,
+                     fg=FG_DIM, anchor="w").pack(side="left", padx=(px(10), 0))
+
         fx_var = tk.IntVar(value=1 if self.fast_skip_fx else 0)
 
         def on_fx():
@@ -9864,8 +10072,26 @@ class QPEApp(_BASE):
             command=on_fx, font=self.ui_font, bg=BAR_BG, fg=FG,
             activebackground=BAR_BG, activeforeground=FG_HI,
             selectcolor=DEEP_BG, anchor="w", bd=0, highlightthickness=0,
+            cursor="hand2").pack(fill="x", pady=(px(4), 0))
+
+        lm_var = tk.IntVar(value=1 if self.low_mem else 0)
+
+        def on_lm():
+            want = bool(lm_var.get())
+            if want != bool(self.low_mem):
+                self.toggle_low_mem()
+
+        tk.Checkbutton(
+            wrap, text="低内存模式（代理图更小，适合超大图）", variable=lm_var,
+            command=on_lm, font=self.ui_font, bg=BAR_BG, fg=FG,
+            activebackground=BAR_BG, activeforeground=FG_HI,
+            selectcolor=DEEP_BG, anchor="w", bd=0, highlightthickness=0,
             cursor="hand2").pack(fill="x", pady=(px(2), 0))
 
+        tk.Frame(wrap, bg=RULE_BG, height=max(1, px(1))).pack(
+            fill="x", pady=(px(12), px(10)))
+        tk.Label(wrap, text="提示", font=self.ui_font_b, bg=BAR_BG, fg=FG,
+                 anchor="w").pack(fill="x")
         clip_var = tk.IntVar(value=1 if self.clip_warn else 0)
 
         def on_clip():
@@ -9877,7 +10103,7 @@ class QPEApp(_BASE):
             command=on_clip, font=self.ui_font, bg=BAR_BG, fg=FG,
             activebackground=BAR_BG, activeforeground=FG_HI,
             selectcolor=DEEP_BG, anchor="w", bd=0, highlightthickness=0,
-            cursor="hand2").pack(fill="x", pady=(px(4), 0))
+            cursor="hand2").pack(fill="x", pady=(px(2), 0))
 
         tk.Frame(wrap, bg=RULE_BG, height=max(1, px(1))).pack(
             fill="x", pady=(px(12), px(10)))
@@ -11014,14 +11240,17 @@ def run(img, **params):
         doc = getattr(self, "doc", None)
         if doc is None:
             return
-        if not getattr(doc, "auto_drafted", False):
+        ratio = getattr(doc, "draft_ratio", 1.0)
+        # 只要当前显示的是降档图，就允许取回原图；auto_drafted 只用于提示，
+        # 不能作为唯一条件（画布 draft 也会降档，但旧逻辑会误报已全分辨率）。
+        if (not getattr(doc, "auto_drafted", False)) and ratio >= 0.999:
             self._flash("当前已经是全分辨率", 1800)
             return
         path = doc.path
         self._flash("正在载入全分辨率…", 9000)
         self.update_idletasks()
         try:
-            fresh = ImageDoc.load(path, 0)
+            fresh = ImageDoc.load(path, 0, force_full=True)
         except Exception as exc:
             self._flash("载入全分辨率失败：%s" % str(exc)[:60], 4000)
             return
@@ -11327,6 +11556,16 @@ def run(img, **params):
             self.wm_alpha = max(5.0, min(100.0, float(d.get("wm_alpha", 65))))
             self.clip_warn = bool(d.get("clip_warn", False))
             self.fast_skip_fx = bool(d.get("fast_skip_fx", False))
+            prof = str(d.get("perf_profile", "") or "")
+            # 命令行显式指定时以命令行为准
+            cli_prof = any(a == "--perf-profile" or a.startswith("--perf-profile=")
+                           for a in sys.argv)
+            if prof in ("fast-slider", "fast-first", "auto") and not cli_prof:
+                self.perf_profile = prof
+                globals()["PERF_PROFILE"] = prof
+            pw = d.get("panel_w")
+            if isinstance(pw, (int, float)):
+                self.panel_width = max(px(200), min(px(560), int(pw)))
             # 命令行 --low-mem 优先，其余情况恢复上次的选择
             if not globals().get("LOW_MEM_ARG", False):
                 self.low_mem = bool(d.get("low_mem", getattr(self, "low_mem", False)))
@@ -11405,7 +11644,10 @@ def run(img, **params):
                          "lang": getattr(self, "lang", "zh"),
                          "low_mem": bool(getattr(self, "low_mem", False)),
                          "plugin_params": getattr(self, "plug_params", {}),
-                         "fast_skip_fx": bool(getattr(self, "fast_skip_fx", False))})
+                         "fast_skip_fx": bool(getattr(self, "fast_skip_fx", False)),
+                         "perf_profile": getattr(self, "perf_profile",
+                                                 "fast-slider"),
+                         "panel_w": int(getattr(self, "panel_width", px(238)))})
             with open(path, "w", encoding="utf-8") as fh:
                 json.dump(data, fh, ensure_ascii=False, indent=1)
         except Exception:
@@ -12283,7 +12525,7 @@ def run(img, **params):
             self.b_fail.append((name, "已存在，跳过"))
         else:
             try:
-                doc = ImageDoc.load(path)
+                doc = ImageDoc.load(path, force_full=True)
                 adj = copy.deepcopy(self.adj) if self.b_use_adj \
                     else self._default_adj()
                 locs = copy.deepcopy(self.locals) if self.b_use_adj else []
@@ -12859,9 +13101,9 @@ def run(img, **params):
             "  没有 Electron、没有浏览器内核、不联网、不需要管理员权限")
         para(facts)
 
-        para("性能档位（命令行）：--perf-profile fast-slider 拖动最快（默认）、"
-             "fast-first 首帧最快、auto 自动；加后缀 -paste / -new 可强制 "
-             "PhotoImage 更新方式。另有 --proxy N 与 --low-mem。", dim=False)
+        para("性能档位（设置 → 性能）：拖动优先、首帧优先、自动；", dim=False)
+        para("专注模式（Tab）：收起工具条、状态栏和右侧面板，只留画布。",
+             dim=False)
         para("格式：JPEG · PNG · WebP · TIFF · BMP · GIF · ICO，"
              "以及尼康 NEF 等 RAW 的内嵌预览（不需要 RAW 解码库）。",
              dim=False)
@@ -13125,6 +13367,9 @@ HELP_TEXT = """快捷键
   水平平移          Shift+滚轮
   幻灯片            S（右键点「幻灯片」按钮可改间隔）
   暂停动图          P
+全分辨率          F5 / 状态栏按钮：大图默认代理，取回原图
+专注模式          Tab：收起工具条、状态栏和面板，只留画布
+性能档位          设置 → 性能：拖动优先 / 首帧优先 / 自动
   图片信息          I
     复制文件路径      Ctrl+C
   删除文件          Delete
@@ -13209,6 +13454,9 @@ HELP_TEXT_EN = """Shortcuts
   Pan horizontally  Shift+wheel
   Slideshow         S (right-click the "Slideshow" button to change the interval)
   Pause animation   P
+  Full resolution   F5 or status-bar button: load the original (large images use a proxy)
+  Focus mode        Tab: hide toolbar, status bar and panel; press again to restore
+  Performance       Settings → Performance: drag-first / first-frame-first / auto
   Image info        I
     Copy file path  Ctrl+C
   Delete file       Delete
@@ -13291,6 +13539,9 @@ HELP_TEXT_JA = """ショートカット
   水平パン            Shift+ホイール
   スライドショー      S（「スライドショー」ボタンを右クリックで間隔を変更）
   アニメーション停止  P
+  フル解像度        F5 / ステータスバーのボタン：原寸を読み込む
+  集中モード        Tab：ツールバー・ステータスバー・パネルを隠す
+  パフォーマンス    設定 → パフォーマンス：ドラッグ優先 / 初回表示優先 / 自動
   画像情報            I
     ファイルパスをコピー  Ctrl+C
   ファイルを削除      Delete

@@ -12,7 +12,7 @@
 
 <div align="center">
 
-![version](https://img.shields.io/badge/version-9.7.0-3d7dff?style=flat-square)
+![version](https://img.shields.io/badge/version-9.8.0-3d7dff?style=flat-square)
 ![platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-2b2f36?style=flat-square)
 ![python](https://img.shields.io/badge/python-3.9%2B-3776ab?style=flat-square&logo=python&logoColor=white)
 ![license](https://img.shields.io/badge/license-MIT-3ddc84?style=flat-square)
@@ -61,10 +61,10 @@ Prism 服务两种场景 ——
 
 | 平台 | 文件 | 说明 |
 | :--- | :--- | :--- |
-| Windows | `Prism-Setup-9.7.0.exe` | 安装包 · 含修图面板与插件 · 40.1 MB |
-| Windows | `Prism-Viewer-9.7.0.zip` | 纯看图版 · 便携免安装 · 30.1 MB |
-| macOS | `Prism-macOS-9.7.0.zip` | 源码运行 · 需 Python 3 + Pillow · 216 KB |
-| Linux | `Prism-Linux-9.7.0.zip` | 源码运行 · 带 `.desktop` · 216 KB |
+| Windows | `Prism-Setup-9.8.0.exe` | 安装包 · 含修图面板与插件 · 40.1 MB |
+| Windows | `Prism-Viewer-9.8.0.zip` | 纯看图版 · 便携免安装 · 30.1 MB |
+| macOS | `Prism-macOS-9.8.0.zip` | 源码运行 · 需 Python 3 + Pillow · 220 KB |
+| Linux | `Prism-Linux-9.8.0.zip` | 源码运行 · 带 `.desktop` · 220 KB |
 
 <div align="center">
 
@@ -282,6 +282,11 @@ api 必须是 2（旧的 1 仍能加载）。版本更高的插件会被跳过�
   数值固定 6 字符宽，右边缘成一列。
 - **开关有状态**：工具栏「面板」按钮在侧栏打开时高亮，不再看不出开/关。
 - **插件列表两列**：12 个插件按两列卡片排布，信息密度与可读性平衡。
+- **面板可拖宽**（9.8.0）：拖右栏左缘调宽度，双击恢复默认，宽度自动记住。
+- **专注模式**（9.8.0）：按 Tab 收起工具条、状态栏和右侧面板，只留画布；
+  再按 Tab 恢复，适合暗房式看图。
+- **设置重排**（9.8.0）：语言 / 主题 / 性能 / 提示 / 配置分组，性能档位与低内存
+  不再藏在命令行。
 
 改造前后的截图存放在 `design/before/` 与 `design/after/`。
 
@@ -328,7 +333,7 @@ api 必须是 2（旧的 1 仍能加载）。版本更高的插件会被跳过�
 
 ### 低内存模式
 
-菜单「视图 → 低内存模式」，或命令行 --low-mem。开启后：
+菜单「视图 → 低内存模式」、设置 → 性能，或命令行 --low-mem。开启后：
 
 - 代理图长边从 3400 降到 **2048**（内存与缩放耗时都下降）
 - 瓦片缓存从 3 张减到 2 张
@@ -342,7 +347,7 @@ api 必须是 2（旧的 1 仍能加载）。版本更高的插件会被跳过�
 
 ### 性能档位
 
-启动参数 `--perf-profile`，按用途在「首帧快」与「拖动快」之间选：
+设置 → 性能里直接选（立即生效、自动记住）；也仍支持启动参数 `--perf-profile`：
 
 | 档位 | 首帧 | 拖动 | 适合 |
 | :--- | ---: | ---: | :--- |
@@ -352,6 +357,8 @@ api 必须是 2（旧的 1 仍能加载）。版本更高的插件会被跳过�
 
 （实测数据：真实 18MB / 4000 万像素、2 核限制、3 轮中位。）
 
+命令行显式传 `--perf-profile` 时以命令行为准，不会被设置文件覆盖。
+
 后缀可强制 PhotoImage 更新方式：`--perf-profile fast-first-new`、
 `--perf-profile fast-slider-paste`。不加后缀时按核数自动（≤4 核用 paste）。
 
@@ -360,6 +367,15 @@ api 必须是 2（旧的 1 仍能加载）。版本更高的插件会被跳过�
 - `--proxy N`：代理图长边（默认 3400，低内存 2048）
 - `--low-mem`：低内存模式
 - `PRISM_DEBUG_DECODE=1`：把每次解码的请求尺寸与实际解出尺寸写进 logs/plugins.log
+
+### 全分辨率（9.8.0）
+
+- 超过 **5000 万像素**的图默认按代理尺寸打开，避免一开图就吃几百 MB。
+- 状态栏会出现「全分辨率」按钮，也可以按 **F5** 或「视图 → 载入全分辨率」。
+- 9.8.0 修复：以前只有「自动降档」标记才允许取回，画布 draft 降档的图会被
+  误报「已经是全分辨率」；现在只要当前不是原尺寸就能取回。
+- 放大到 **1:1** 时也会自动在后台取回原图；取回后按钮自动消失。
+- 批量导出始终读原图，不会把代理尺寸写进成品。
 
 ### 代理图与导出
 

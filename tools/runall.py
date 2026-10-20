@@ -28,6 +28,7 @@ SUITES = [
     ("市场界面", "tools/marketcheck.py", [], True, 180),
     ("三语界面", "tools/langcheck.py", [], True, 240),
     ("导入冒烟", "tools/importcheck.py", [], True, 120),
+    ("界面/性能", "tools/uicheck.py", [], True, 240),
     ("补充功能", "tools/newcheck.py", [], False, 300),
     ("自检", "tools/selfcheck.py", [], False, 420),
     ("美颜", "tools/beautycheck.py", [], False, 420),

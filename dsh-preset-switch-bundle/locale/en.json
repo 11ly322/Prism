@@ -1,6 +1,0 @@
-{
-  "meta": {
-    "title": "Preset Switch",
-    "description": "Switch the running session's agent preset from a ⇄ mode button beside the access-mode control, or with /preset <id>."
-  }
-}

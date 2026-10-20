@@ -140,7 +140,37 @@ def main():
            str(saved.get("perf_profile")))
         app.set_perf_profile("fast-slider")
 
-        # 6) 设置窗口
+        # 6) 全分辨率计时反馈
+        app.full_loading = app.doc.path
+        app.full_started = time.time() - 1.3
+        app._full_tick()
+        ok("全分辨率显示已用时间", "1." in app.full_btn.cget("text"),
+           app.full_btn.cget("text"))
+        app.full_loading = None
+        app._stop_full_timer()
+        app._set_full_btn_busy(False)
+
+        # 7) 软打样（有系统 profile 才测，CI 的 Linux/macOS 会跳过）
+        prof = ""
+        if os.name == "nt":
+            import glob
+            base = os.path.join(os.environ.get("WINDIR", r"C:\Windows"),
+                                "System32", "spool", "drivers", "color")
+            for p in glob.glob(os.path.join(base, "*.[iI][cC][cCmM]")):
+                if "adobergb" in os.path.basename(p).lower():
+                    prof = p
+                    break
+        if prof:
+            ok("软打样能启用", bool(app.set_soft_proof_profile(prof)),
+               app.soft_proof_name)
+            ok("软打样状态已记录", bool(app.soft_proof
+                                        and app.soft_proof_transforms))
+            app.toggle_soft_proof(False)
+            ok("软打样能关闭", not app.soft_proof)
+        else:
+            print("  SKIP 软打样（没有系统 AdobeRGB profile）")
+
+        # 7) 设置窗口
         app.show_settings()
         for _ in range(20):
             app.update(); time.sleep(0.01)

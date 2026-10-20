@@ -645,6 +645,27 @@ LANG_TABLE = {
         "（空）": "(empty)",
         "清空最近打开": "Clear recent files",
         "文件已不存在：%s": "File no longer exists: %s",
+        # 9.11.0 批量异步/进度
+        "载入中 %ss…": "Loading… %ss",
+        "%d / %d · 正在解码 %s": "%d / %d · decoding %s",
+        "%d / %d · 正在保存 %s": "%d / %d · saving %s",
+        "渲染失败": "Render failed",
+        # 9.11.0 软打样
+        "软打样（预览）": "Soft proof (preview)",
+        "未选择 ICC": "No ICC selected",
+        "启用软打样（只影响预览，不影响导出）": "Enable soft proof (preview only, export unchanged)",
+        "选择 ICC 配置文件…": "Choose ICC profile…",
+        "选择 ICC 配置文件": "Choose ICC profile",
+        "软打样": "Soft proof",
+        "软打样失败：%s": "Soft proof failed: %s",
+        "软打样已启用：%s": "Soft proof enabled: %s",
+        "软打样：%s": "Soft proof: %s",
+        "开": "on",
+        "关": "off",
+        # 9.11.0 软打样补充
+        "当前 Pillow 缺少 ImageCms": "This Pillow build lacks ImageCms",
+        "ICC 配置文件": "ICC profiles",
+        "  软打样    %s（仅预览）": "  Soft proof  %s (preview only)",
     },
     "ja": {
         "文件": "ファイル", "编辑": "編集", "视图": "表示", "工具": "ツール",
@@ -1281,6 +1302,27 @@ LANG_TABLE = {
         "（空）": "（なし）",
         "清空最近打开": "最近使ったファイルを消去",
         "文件已不存在：%s": "ファイルが見つかりません：%s",
+        # 9.11.0 批量异步/进度
+        "载入中 %ss…": "読み込み中… %ss",
+        "%d / %d · 正在解码 %s": "%d / %d · デコード中 %s",
+        "%d / %d · 正在保存 %s": "%d / %d · 保存中 %s",
+        "渲染失败": "レンダリングに失敗しました",
+        # 9.11.0 软打样
+        "软打样（预览）": "ソフトプルーフ（プレビュー）",
+        "未选择 ICC": "ICC 未選択",
+        "启用软打样（只影响预览，不影响导出）": "ソフトプルーフを有効化（プレビューのみ、書き出しは不変）",
+        "选择 ICC 配置文件…": "ICC プロファイルを選択…",
+        "选择 ICC 配置文件": "ICC プロファイルを選択",
+        "软打样": "ソフトプルーフ",
+        "软打样失败：%s": "ソフトプルーフに失敗：%s",
+        "软打样已启用：%s": "ソフトプルーフを有効化：%s",
+        "软打样：%s": "ソフトプルーフ：%s",
+        "开": "オン",
+        "关": "オフ",
+        # 9.11.0 软打样补充
+        "当前 Pillow 缺少 ImageCms": "この Pillow には ImageCms がありません",
+        "ICC 配置文件": "ICC プロファイル",
+        "  软打样    %s（仅预览）": "  ソフトプルーフ  %s（プレビューのみ）",
     },
 }
 
@@ -1304,6 +1346,7 @@ HELP_TEXT = """快捷键
 全分辨率          F5 / 状态栏按钮：大图默认代理，取回原图
 最近打开          文件 → 最近打开：最近 10 张，点一下直接开
 色彩管理          载入按 ICC 转 sRGB 预览，导出写入 sRGB profile
+软打样            设置 → 软打样：选 ICC 目标，预览印刷效果（不影响导出）
 专注模式          Tab：收起工具条、状态栏和面板，只留画布
 性能档位          设置 → 性能：拖动优先 / 首帧优先 / 自动
   图片信息          I
@@ -1392,6 +1435,7 @@ HELP_TEXT_EN = """Shortcuts
   Full resolution   F5 or status-bar button: load the original (large images use a proxy)
   Recent files      File → Recent files: the last 10 images, one click to reopen
   Color management  ICC profiles are converted to sRGB on load; exports embed sRGB
+  Soft proof        Settings → Soft proof: pick a target ICC to preview print output (export unaffected)
   Focus mode        Tab: hide toolbar, status bar and panel; press again to restore
   Performance       Settings → Performance: drag-first / first-frame-first / auto
   Image info        I
@@ -1479,6 +1523,7 @@ HELP_TEXT_JA = """ショートカット
   フル解像度        F5 / ステータスバーのボタン：原寸を読み込む
   最近のファイル    ファイル → 最近使ったファイル：直近 10 枚をワンクリックで開く
   カラー管理        ICC を sRGB に変換して表示し、書き出し時に sRGB を埋め込みます
+  ソフトプルーフ    設定 → ソフトプルーフ：印刷用 ICC を選んで仕上がりを確認（書き出しは不変）
   集中モード        Tab：ツールバー・ステータスバー・パネルを隠す
   パフォーマンス    設定 → パフォーマンス：ドラッグ優先 / 初回表示優先 / 自動
   画像情報            I

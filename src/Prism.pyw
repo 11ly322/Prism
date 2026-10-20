@@ -68,7 +68,7 @@ IS_WIN = sys.platform.startswith("win")
 K = "Command" if IS_MAC else "Control"
 
 APP_NAME = "Prism"
-APP_VERSION = "9.10.0"
+APP_VERSION = "9.11.0"
 APP_BUILD = "2025-12.9"
 # ---------------------------------------------------------------- 运行模式
 # 同一份源码编出两个版本：
@@ -520,6 +520,24 @@ def _srgb_icc_bytes():
     except Exception:
         _SRGB_ICC = b""
     return _SRGB_ICC or None
+
+
+def _build_soft_proof(profile_path):
+    """sRGB -> 目标 profile -> sRGB，返回两个变换和 profile 名。"""
+    if ImageCms is None:
+        raise RuntimeError("当前 Pillow 缺少 ImageCms")
+    icc = open(profile_path, "rb").read()
+    dst = ImageCms.ImageCmsProfile(io.BytesIO(icc))
+    src = ImageCms.createProfile("sRGB")
+    flags = getattr(getattr(ImageCms, "Flags", None),
+                    "BLACKPOINTCOMPENSATION", 0)
+    t1 = ImageCms.buildTransformFromOpenProfiles(
+        src, dst, "RGB", "RGB", renderingIntent=1, flags=flags)
+    t2 = ImageCms.buildTransformFromOpenProfiles(
+        dst, src, "RGB", "RGB", renderingIntent=1, flags=flags)
+    name = (ImageCms.getProfileDescription(dst) or "ICC").strip()
+    return t1, t2, name
+
 
 
 def _fast_downscale(img, size, quality=True):
@@ -2873,6 +2891,10 @@ class QPEApp(_BASE):
         self.perf_profile = globals().get("PERF_PROFILE", "fast-slider")
         self.focus_mode = False
         self.panel_width = px(238)
+        self.soft_proof = False
+        self.soft_proof_path = ""
+        self.soft_proof_name = ""
+        self.soft_proof_transforms = None
         self.beauty_off = False       # 按住 B 时临时关闭美颜，用于对比
         self.hist_sel = None
         self.hist_data = None
@@ -2938,6 +2960,7 @@ class QPEApp(_BASE):
         self.b_maxlong = 0
         self.b_use_adj = True
         self.b_overwrite = False
+        self.b_busy = False
 
         self.frame_i = 0
         self.geom = []                  # 几何操作栈 ("rot",deg)/("flip","h|v")/("crop",box)
@@ -2968,6 +2991,9 @@ class QPEApp(_BASE):
         self.cache_budget = 320 * 1024 * 1024
         self.draft_to = (0, 0)
         self.pending_full = None
+        self.full_loading = None
+        self.full_started = 0.0
+        self.full_tick_job = None
         self.actual_after_full = False
         self.loader = Loader()
 
@@ -3927,6 +3953,7 @@ class QPEApp(_BASE):
                 and self.full_loading != path):
             self.pending_full = None
             self.full_loading = None
+            self._stop_full_timer()
             self._set_full_btn_busy(False)
         doc = self.cache.get(path)
         self.error = None
@@ -4093,6 +4120,7 @@ class QPEApp(_BASE):
         if path == self.pending_full:
             self.pending_full = None
             self.full_loading = None
+            self._stop_full_timer()
             self._set_full_btn_busy(False)
             if isinstance(doc, Exception):
                 self._flash("载入全分辨率失败：%s" % str(doc)[:60], 4000)
@@ -5859,6 +5887,63 @@ class QPEApp(_BASE):
             "auto": "自动",
         }[profile]), 2400)
 
+    def _apply_soft_proof(self, img):
+        pair = getattr(self, "soft_proof_transforms", None)
+        if not pair or ImageCms is None:
+            return img
+        try:
+            if img.mode != "RGB":
+                img = img.convert("RGB")
+            out = ImageCms.applyTransform(img, pair[0])
+            out = ImageCms.applyTransform(out, pair[1])
+            return out
+        except Exception:
+            return img
+
+    def set_soft_proof_profile(self, path, enable=True, persist=True):
+        try:
+            t1, t2, name = _build_soft_proof(path)
+        except Exception as exc:
+            messagebox.showerror(
+                "软打样", "软打样失败：%s" % str(exc)[:120], parent=self)
+            return False
+        self.soft_proof_transforms = (t1, t2)
+        self.soft_proof_name = name
+        self.soft_proof_path = os.path.abspath(path)
+        self.soft_proof = bool(enable)
+        if persist:
+            try:
+                self.save_settings()
+            except Exception:
+                pass
+        self._mark_fast()
+        self._render()
+        self._flash(_trf("软打样已启用：%s") % name, 2600)
+        return True
+
+    def choose_soft_proof_profile(self):
+        path = filedialog.askopenfilename(
+            parent=self, title="选择 ICC 配置文件",
+            filetypes=[("ICC 配置文件", "*.icc *.icm"), ("所有文件", "*.*")])
+        if path:
+            self.set_soft_proof_profile(path)
+
+    def toggle_soft_proof(self, on=None):
+        want = (not getattr(self, "soft_proof", False)) if on is None \
+            else bool(on)
+        if want and not getattr(self, "soft_proof_transforms", None):
+            self.choose_soft_proof_profile()
+            if not getattr(self, "soft_proof_transforms", None):
+                return
+        self.soft_proof = want
+        try:
+            self.save_settings()
+        except Exception:
+            pass
+        self._mark_fast()
+        self._render()
+        self._flash(_trf("软打样：%s") % _tr("开" if want else "关"), 2000)
+
     def _toggle_focus_key(self, event=None):
         """Tab 切换专注模式；输入框里保留 Tab 的原始用途。"""
         w = self.focus_get()
@@ -6154,6 +6239,8 @@ class QPEApp(_BASE):
                 tile = self._apply_vignette(tile, self.adj["vignette"])
         if self._watermark() and not skip_fx:
             tile = self._apply_watermark(tile)
+        if getattr(self, "soft_proof", False) and not fast:
+            tile = self._apply_soft_proof(tile)
         if fast:
             dt = (time.perf_counter() - render_t0) * 1000.0
             self.last_frame_ms = dt
@@ -9029,6 +9116,41 @@ class QPEApp(_BASE):
 
         tk.Frame(wrap, bg=RULE_BG, height=max(1, px(1))).pack(
             fill="x", pady=(px(12), px(10)))
+        tk.Label(wrap, text="软打样（预览）", font=self.ui_font_b, bg=BAR_BG,
+                 fg=FG, anchor="w").pack(fill="x")
+        sp_var = tk.IntVar(value=1 if self.soft_proof else 0)
+        sp_lbl = tk.Label(wrap, text=(self.soft_proof_name or "未选择 ICC"),
+                          font=self.ui_font_s, bg=BAR_BG, fg=FG_DIM,
+                          anchor="w")
+
+        def refresh_sp():
+            sp_var.set(1 if self.soft_proof else 0)
+            sp_lbl.configure(text=(self.soft_proof_name or _tr("未选择 ICC")))
+
+        def on_sp():
+            self.toggle_soft_proof(bool(sp_var.get()))
+            refresh_sp()
+
+        tk.Checkbutton(
+            wrap, text="启用软打样（只影响预览，不影响导出）", variable=sp_var,
+            command=on_sp, font=self.ui_font, bg=BAR_BG, fg=FG,
+            activebackground=BAR_BG, activeforeground=FG_HI,
+            selectcolor=DEEP_BG, anchor="w", bd=0, highlightthickness=0,
+            cursor="hand2").pack(fill="x", pady=(px(2), 0))
+        row = tk.Frame(wrap, bg=BAR_BG)
+        row.pack(fill="x", pady=(px(3), 0))
+        tk.Button(
+            row, text="选择 ICC 配置文件…", font=self.ui_font_s,
+            command=lambda: (self.choose_soft_proof_profile(),
+                             refresh_sp()),
+            bg=BTN_BG, fg=FG, activebackground=BAR_HOVER,
+            activeforeground=FG_HI, relief="flat", bd=0,
+            highlightthickness=0, padx=px(8), pady=px(2),
+            cursor="hand2").pack(side="left")
+        sp_lbl.pack(side="left", padx=(px(8), 0))
+
+        tk.Frame(wrap, bg=RULE_BG, height=max(1, px(1))).pack(
+            fill="x", pady=(px(12), px(10)))
         tk.Label(wrap, text="提示", font=self.ui_font_b, bg=BAR_BG, fg=FG,
                  anchor="w").pack(fill="x")
         clip_var = tk.IntVar(value=1 if self.clip_warn else 0)
@@ -10200,10 +10322,12 @@ def run(img, **params):
                     parent=self, default="no"):
                 return
         self.full_loading = path
+        self.full_started = time.time()
         self.pending_full = path
         self.actual_after_full = False
         self.loader.request_full(path)
         self._set_full_btn_busy(True)
+        self._full_tick()
         self._flash("正在载入全分辨率…（Esc 取消）", 9000)
 
     def _set_full_btn_busy(self, busy):
@@ -10213,6 +10337,28 @@ def run(img, **params):
                 state="disabled" if busy else "normal")
         except Exception:
             pass
+
+    def _full_tick(self):
+        """全分辨率解码没有进度回调，用已用时间给用户一个明确反馈。"""
+        if not getattr(self, "full_loading", None):
+            return
+        try:
+            secs = max(0.0, time.time() - getattr(self, "full_started",
+                                                  time.time()))
+            self.full_btn.configure(
+                text=_trf("载入中 %ss…") % ("%.1f" % secs))
+        except Exception:
+            return
+        self.full_tick_job = self.after(500, self._full_tick)
+
+    def _stop_full_timer(self):
+        job = getattr(self, "full_tick_job", None)
+        self.full_tick_job = None
+        if job is not None:
+            try:
+                self.after_cancel(job)
+            except Exception:
+                pass
 
     def _plugin_proxy_async(self, img, on_ready, fallback=None):
         """在后台线程生成插件代理图，主线程回调。
@@ -10512,6 +10658,18 @@ def run(img, **params):
             pw = d.get("panel_w")
             if isinstance(pw, (int, float)):
                 self.panel_width = max(px(200), min(px(560), int(pw)))
+            sp = str(d.get("soft_proof_profile", "") or "")
+            self.soft_proof = bool(d.get("soft_proof", False))
+            if sp and os.path.isfile(sp):
+                try:
+                    t1, t2, name = _build_soft_proof(sp)
+                    self.soft_proof_transforms = (t1, t2)
+                    self.soft_proof_name = name
+                    self.soft_proof_path = sp
+                except Exception:
+                    self.soft_proof = False
+            else:
+                self.soft_proof = False
             # 命令行 --low-mem 优先，其余情况恢复上次的选择
             if not globals().get("LOW_MEM_ARG", False):
                 self.low_mem = bool(d.get("low_mem", getattr(self, "low_mem", False)))
@@ -10599,6 +10757,9 @@ def run(img, **params):
                          "recent": list(getattr(self, "recent", []))[:10],
                          "perf_profile": getattr(self, "perf_profile",
                                                  "fast-slider"),
+                         "soft_proof": bool(getattr(self, "soft_proof", False)),
+                         "soft_proof_profile": str(getattr(
+                             self, "soft_proof_path", "") or ""),
                          "panel_w": int(getattr(self, "panel_width", px(238)))})
             with open(path, "w", encoding="utf-8") as fh:
                 json.dump(data, fh, ensure_ascii=False, indent=1)
@@ -11448,6 +11609,7 @@ def run(img, **params):
         self.b_ok = 0
         self.b_fail = []
         self.b_stop = False
+        self.b_busy = False
         self.b_go.configure(state="disabled")
         self._batch_tick()
 
@@ -11469,46 +11631,99 @@ def run(img, **params):
         if self.b_i >= len(self.b_files):
             self._batch_finish()
             return
+        if getattr(self, "b_busy", False):
+            return
         path = self.b_files[self.b_i]
         name = os.path.basename(path)
         target = os.path.join(self.b_out_dir,
                               os.path.splitext(name)[0] + self.b_ext)
+        self.b_busy = True
         if os.path.exists(target) and not self.b_overwrite:
             self.b_fail.append((name, "已存在，跳过"))
-        else:
-            # 先读头部尺寸，避免对 1.5 亿像素以上的图直接全解码把内存打爆
-            pw = ph = 0
-            if os.path.splitext(path)[1].lower() not in RAW_EXTS:
-                try:
-                    with Image.open(path) as probe:
-                        pw, ph = probe.size
-                except Exception:
-                    pass
-            if pw * ph > EXPORT_MAX_PIXELS:
-                self.b_fail.append(
-                    (name, "图片过大（%.0f MP），已跳过" % (pw * ph / 1e6)))
+            self._batch_item_done()
+            return
+        # 先读头部尺寸，避免对 1.5 亿像素以上的图直接全解码把内存打爆
+        pw = ph = 0
+        if os.path.splitext(path)[1].lower() not in RAW_EXTS:
+            try:
+                with Image.open(path) as probe:
+                    pw, ph = probe.size
+            except Exception:
+                pass
+        if pw * ph > EXPORT_MAX_PIXELS:
+            self.b_fail.append(
+                (name, "图片过大（%.0f MP），已跳过" % (pw * ph / 1e6)))
+            self._batch_item_done()
+            return
+        adj = copy.deepcopy(self.adj) if self.b_use_adj \
+            else self._default_adj()
+        locs = copy.deepcopy(self.locals) if self.b_use_adj else []
+        geom = list(self.geom) if self.b_use_adj else []
+        params = {}
+        if self.b_fmt_name in ("JPEG", "WebP"):
+            params["quality"] = self.b_quality
+        icc = _srgb_icc_bytes()
+        if icc and self.b_ext.lower() in (".jpg", ".jpeg", ".png", ".webp",
+                                          ".tif", ".tiff"):
+            params["icc_profile"] = icc
+        try:
+            self.b_msg.configure(
+                text=_trf("%d / %d · 正在解码 %s")
+                % (self.b_i + 1, len(self.b_files), name))
+        except Exception:
+            pass
+
+        def loaded(doc, err):
+            self._batch_loaded(doc, err, name, target, adj, locs, geom,
+                               params)
+
+        self._async_call(
+            lambda: ImageDoc.load(path, force_full=True), loaded)
+
+    def _batch_loaded(self, doc, err, name, target, adj, locs, geom, params):
+        """后台解码完成；渲染必须回主线程（会短暂借用 app 状态）。"""
+        if self.batch_win is None or not self.batch_win.winfo_exists():
+            self.b_busy = False
+            return
+        if getattr(self, "b_stop", False):
+            self.b_busy = False
+            self._batch_finish()
+            return
+        if err is not None:
+            self.b_fail.append((name, str(err)))
+            self._batch_item_done()
+            return
+        try:
+            im = self.flatten_doc(doc, adj, geom, locs, self.b_maxlong)
+            if im is None:
+                raise ValueError("渲染失败")
+            if self.b_fmt_name == "JPEG" and im.mode != "RGB":
+                im = im.convert("RGB")
+            self.b_msg.configure(
+                text=_trf("%d / %d · 正在保存 %s")
+                % (self.b_i + 1, len(self.b_files), name))
+        except Exception as exc:
+            self.b_fail.append((name, str(exc)))
+            self._batch_item_done()
+            return
+
+        def saved(_result, save_err):
+            if save_err is not None:
+                self.b_fail.append((name, str(save_err)))
             else:
-                try:
-                    doc = ImageDoc.load(path, force_full=True)
-                    adj = copy.deepcopy(self.adj) if self.b_use_adj \
-                        else self._default_adj()
-                    locs = copy.deepcopy(self.locals) if self.b_use_adj else []
-                    geom = list(self.geom) if self.b_use_adj else []
-                    im = self.flatten_doc(doc, adj, geom, locs, self.b_maxlong)
-                    params = {}
-                    if self.b_fmt_name in ("JPEG", "WebP"):
-                        params["quality"] = self.b_quality
-                    if self.b_fmt_name == "JPEG" and im.mode != "RGB":
-                        im = im.convert("RGB")
-                    if self.b_ext.lower() in (".jpg", ".jpeg", ".png", ".webp",
-                                              ".tif", ".tiff"):
-                        icc = _srgb_icc_bytes()
-                        if icc:
-                            params["icc_profile"] = icc
-                    im.save(target, **params)
-                    self.b_ok += 1
-                except Exception as exc:
-                    self.b_fail.append((name, str(exc)))
+                self.b_ok += 1
+            self._batch_item_done()
+
+        def work():
+            im.save(target, **params)
+            return True
+
+        self._async_call(work, saved)
+
+    def _batch_item_done(self):
+        self.b_busy = False
+        if self.batch_win is None or not self.batch_win.winfo_exists():
+            return
         self.b_i += 1
         total = len(self.b_files)
         c = self.b_bar
@@ -11516,9 +11731,12 @@ def run(img, **params):
         c.delete("all")
         c.create_rectangle(0, 0, int(w * self.b_i / total), px(10),
                            fill=ACCENT, outline="")
-        self.b_msg.configure(text="%d / %d · 成功 %d · 失败 %d · 正在处理 %s"
-                             % (self.b_i, total, self.b_ok, len(self.b_fail), name))
+        if self.batch_win is not None and self.batch_win.winfo_exists():
+            self.b_msg.configure(text="%d / %d · 成功 %d · 失败 %d"
+                                 % (self.b_i, total, self.b_ok,
+                                    len(self.b_fail)))
         self.after(1, self._batch_tick)
+
 
     def _batch_finish(self):
         if self.batch_win is not None and self.batch_win.winfo_exists():
@@ -11855,6 +12073,7 @@ def run(img, **params):
         if getattr(self, "full_loading", None):
             self.pending_full = None
             self.full_loading = None
+            self._stop_full_timer()
             self._set_full_btn_busy(False)
             self._flash("已取消载入全分辨率", 1800)
             self._update_status()
@@ -12005,6 +12224,9 @@ def run(img, **params):
         L.append("  色彩空间  %s%s" % (
             getattr(doc, "icc_source", "sRGB"),
             "（已转 sRGB）" if getattr(doc, "icc_converted", False) else ""))
+        if getattr(self, "soft_proof", False):
+            L.append("  软打样    %s（仅预览）"
+                     % getattr(self, "soft_proof_name", "ICC"))
         if doc.n_frames > 1:
             L.append("  帧数      %d" % doc.n_frames)
         L.append("  透明通道  %s" % ("有" if doc.alpha else "无"))

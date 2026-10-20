@@ -32,6 +32,8 @@ SUITES = [
     ("界面/性能", "tools/uicheck.py", [], True, 240),
     ("ICC", "tools/icccheck.py", [], True, 60),
     ("ICC 真profile", "tools/iccprofilecheck.py", [], True, 60),
+    ("批量导出", "tools/batchcheck.py", [], True, 120),
+    ("软打样", "tools/softproofcheck.py", [], True, 60),
     ("补充功能", "tools/newcheck.py", [], False, 300),
     ("自检", "tools/selfcheck.py", [], False, 420),
     ("美颜", "tools/beautycheck.py", [], False, 420),

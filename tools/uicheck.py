@@ -97,10 +97,12 @@ def main():
         app.clear_recent()
         ok("清空最近打开", app.recent == [], str(app.recent))
 
-        # 4) 专注模式
+        # 4) 专注模式（面板懒构建：打开前应为 None）
+        ok("面板启动不构建", app.panel is None)
         app.toggle_panel(True)
         for _ in range(5):
             app.update(); time.sleep(0.01)
+        ok("首次打开才构建面板", app.panel is not None)
         app.toggle_focus_mode()
         for _ in range(5):
             app.update(); time.sleep(0.01)

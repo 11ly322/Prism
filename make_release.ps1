@@ -256,7 +256,7 @@ try {
             # 链接与文件名里的版本号（用 ${1} 明确分组，避免 $1 与版本号粘连）
             $html = [regex]::Replace($html, 'releases/download/v\d+\.\d+\.\d+/', "releases/download/v$ver/")
             $html = [regex]::Replace($html,
-                '(Prism-(?:Viewer-Setup|Viewer|Portable|macOS|Linux|Setup)-)\d+\.\d+\.\d+(\.(?:exe|zip))',
+                '(Prism-(?:BigScreen-Setup|BigScreen|Viewer-Setup|Viewer|Portable|macOS|Linux|Setup)-)\d+\.\d+\.\d+(\.(?:exe|zip))',
                 '${1}' + $ver + '${2}')
             # 页面上显示的版本号（品牌、meta、页脚）
             $html = [regex]::Replace($html, '<i>\d+\.\d+\.\d+</i>', "<i>$ver</i>")

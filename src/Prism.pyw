@@ -78,18 +78,38 @@ IS_WIN = sys.platform.startswith("win")
 K = "Command" if IS_MAC else "Control"
 
 APP_NAME = "Prism"
-APP_VERSION = "9.11.2"
+APP_VERSION = "9.13.0"
 APP_BUILD = "2025-12.9"
 # ---------------------------------------------------------------- 运行模式
-# 同一份源码编出两个版本：
-#   完整版  -> PRISM 开头的 exe，带修图面板
-#   看图版  -> 文件名里带 viewer 的 exe（如 PrismViewer.exe），只有浏览/缩放/旋转
-# 也可以用 --viewer 参数或 PRISM_VIEWER=1 强制进入看图模式。
+# 同一份源码编出三个版本：
+#   完整版    -> Prism.exe，带修图面板
+#   看图版    -> 文件名带 viewer 的 exe（PrismViewer.exe），只有浏览/缩放/旋转
+#   大屏版    -> 文件名带 bigscreen 的 exe（PrismBigScreen.exe），
+#                纯看图、无快捷键、工具栏在底部、大按钮，适合展陈/大屏
+# 也可用 --viewer / --bigscreen 或 PRISM_VIEWER=1 / PRISM_BIGSCREEN=1 强制。
 VIEWER_ONLY = False
+BIGSCREEN = False
 if "--viewer" in sys.argv or os.environ.get("PRISM_VIEWER") == "1":
+    VIEWER_ONLY = True
+if "--bigscreen" in sys.argv or os.environ.get("PRISM_BIGSCREEN") == "1":
+    BIGSCREEN = True
+_exe_name = os.path.basename(sys.executable).lower()
+if "bigscreen" in _exe_name:
+    BIGSCREEN = True
+if "viewer" in _exe_name:
+    VIEWER_ONLY = True
+if BIGSCREEN:
     VIEWER_ONLY = True
 elif getattr(sys, "frozen", False):
     LOW_MEM_ARG = "--low-mem" in sys.argv
+
+if BIGSCREEN:
+    APP_TITLE = "%s %s - 多媒体大屏" % (APP_NAME, APP_VERSION)
+elif VIEWER_ONLY:
+    APP_TITLE = "%s %s - 纯图片查看器" % (APP_NAME, "Viewer " + APP_VERSION)
+else:
+    APP_TITLE = "%s %s - 简约图片查看器" % (APP_NAME, APP_VERSION)
+
 PLUGIN_DEV = "--plugin-dev" in sys.argv
 PROXY_ARG = 0
 for _i, _a in enumerate(sys.argv):
@@ -103,13 +123,6 @@ for _i, _a in enumerate(sys.argv):
             PROXY_ARG = max(512, min(6000, int(_a.split("=", 1)[1])))
         except Exception:
             PROXY_ARG = 0
-if "viewer" in os.path.basename(sys.executable).lower():
-        VIEWER_ONLY = True
-
-if VIEWER_ONLY:
-    APP_TITLE = "%s %s - 纯图片查看器" % (APP_NAME, "Viewer " + APP_VERSION)
-else:
-    APP_TITLE = "%s %s - 简约图片查看器" % (APP_NAME, APP_VERSION)
 VERSION = "1.0"
 
 # ---------------------------------------------------------------- 可选依赖
@@ -3055,6 +3068,15 @@ class QPEApp(_BASE):
         self.hist_box = None
         self.crop_item = None
         self.sliders = []
+        self.panel = None
+        self.panel_grip = None
+        self.pcan = None
+        self.psb = None
+        self.pwin = None
+        self.ai_status_lbl = None
+        self.ai_bar = None
+        self.ai_progress_lbl = None
+        self._ai_extra_shown = False
         self.last_slider = "调整"
         self.cmp_btn = None
         self.hist_undo_btn = None
@@ -3140,11 +3162,15 @@ class QPEApp(_BASE):
         self._mfont = tkfont.Font(font=self.ui_font)
 
         self._build_ui()
-        self._bind_keys()
+        if BIGSCREEN:
+            # 大屏版没有任何快捷键，只保留窗口关闭协议
+            self.protocol("WM_DELETE_WINDOW", self.on_close)
+        else:
+            self._bind_keys()
         self.load_presets()
         self._refresh_preset_box()
         self._refresh_sort_btn()
-        if self.saved_geom:
+        if self.saved_geom and not BIGSCREEN:
             try:
                 self.geometry(self.saved_geom)
             except Exception:
@@ -3161,6 +3187,18 @@ class QPEApp(_BASE):
         self.alive = True
         self.pump_job = self.after(30, self._pump)
         self.after(120, self._render)
+        if BIGSCREEN:
+            self.after(180, self._bigscreen_start)
+
+    def _bigscreen_start(self):
+        """大屏版启动即最大化；全屏由底栏按钮切换。"""
+        try:
+            self.state("zoomed")
+        except Exception:
+            try:
+                self.attributes("-zoomed", True)
+            except Exception:
+                pass
 
     # ------------------------------------------------------------ 字体
 
@@ -3508,12 +3546,63 @@ class QPEApp(_BASE):
                      height=px(20))
         f.pack(side="left", padx=px(SPACE_SM), pady=px(SPACE_MD))
 
-    def _build_bar(self):
-        """构建（或在切换语言后重建）工具条。
+    def _build_bigscreen_bar(self):
+        """大屏版：底部大按钮工具栏，没有菜单、没有快捷键。"""
+        self.bar_groups = []
+        self.bar_hidden = set()
+        self.bar_laid_out = True
+        self.bar = tk.Frame(self, bg=BAR_BG, height=px(86))
+        self.bar.pack(side="bottom", fill="x")
+        self.bar.pack_propagate(False)
+        big = (self.ui_font[0], -int(px(15)), "bold")
 
-        必须重建而不是只改文字：分组容器的宽度在首次布局时就定了，
-        换成长度不同的译文后 pack 不会重新分配那一格，英文会被裁掉半截。
-        """
+        def add(text, cmd):
+            b = tk.Button(
+                self.bar, text=text, command=cmd, font=big, bg=BTN_BG, fg=FG,
+                activebackground=BAR_HOVER, activeforeground=FG_HI,
+                relief="flat", bd=0, highlightthickness=0, padx=px(14),
+                pady=px(7), cursor="hand2", takefocus=0)
+            b.pack(side="left", padx=px(3), pady=px(11))
+            return b
+
+        def sep():
+            tk.Frame(self.bar, bg=CARD_LINE, width=max(1, px(1)),
+                     height=px(34)).pack(side="left", padx=px(7), pady=px(26))
+
+        add("打开", self.open_dialog)
+        add("文件夹", self.open_folder_dialog)
+        sep()
+        add("◀", lambda: self.step(-1))
+        add("▶", lambda: self.step(1))
+        sep()
+        add("适应", self.fit_window)
+        add("1:1", self.actual_size)
+        add("−", lambda: self.zoom_by(1 / 1.25))
+        add("＋", lambda: self.zoom_by(1.25))
+        add("旋转", lambda: self.rotate(90))
+        sep()
+        self.big_slide_btn = add("幻灯片", self.toggle_slideshow)
+        add("网格", self.toggle_grid)
+        sep()
+        add("全屏", self.toggle_fullscreen)
+
+        tk.Button(
+            self.bar, text="退出", command=self.on_close, font=big, bg=BTN_BG,
+            fg=FG, activebackground=BAR_HOVER, activeforeground=FG_HI,
+            relief="flat", bd=0, highlightthickness=0, padx=px(14),
+            pady=px(7), cursor="hand2", takefocus=0).pack(
+                side="right", padx=(px(3), px(10)), pady=px(11))
+        self.zoom_lbl = tk.Label(
+            self.bar, text="", font=self.ui_font, bg=BAR_BG, fg=FG_DIM,
+            width=6, anchor="e")
+        self.zoom_lbl.pack(side="right", padx=(px(6), px(4)))
+
+    def _build_bar(self):
+        """构建（或在切换语言后重建）工具条。"""
+        if BIGSCREEN:
+            self._build_bigscreen_bar()
+            return
+
         try:
             if getattr(self, "bar", None) is not None:
                 self.bar.destroy()
@@ -3639,7 +3728,7 @@ class QPEApp(_BASE):
         self.canvas.bind("<Motion>", self._on_motion)
 
         self._build_cropbar()
-        self._build_panel()
+        # 面板默认隐藏，首次打开时才构建（启动省 60 ms 左右）
         self._apply_lang()
         self._build_strip()
 
@@ -4043,7 +4132,7 @@ class QPEApp(_BASE):
         self._render()
         self._start_anim()
         self._retarget()
-        if (not getattr(self, "tips_seen", False)
+        if (not BIGSCREEN and not getattr(self, "tips_seen", False)
                 and self.doc is not None):
             self.tips_seen = True
             try:
@@ -6031,7 +6120,8 @@ class QPEApp(_BASE):
             self._fs_on = True
             self._mark_fast()
             self._render()
-            self._flash("全屏（兼容模式）：按 Esc 退出", 2600)
+            self._flash("全屏（兼容模式）：按「全屏」按钮退出" if BIGSCREEN
+                        else "全屏（兼容模式）：按 Esc 退出", 2600)
         except Exception:
             try:
                 self.overrideredirect(False)
@@ -6108,10 +6198,14 @@ class QPEApp(_BASE):
             if not self.files:
                 hint = ("把图片拖到这里" if _DND_OK
                         else "打开一张图片开始浏览")
-                self._set_text(_tr(hint) + _tr(
-                    "\n\nCtrl+O 打开文件    Ctrl+Shift+O 打开文件夹"
-                    "\n\nF5 全分辨率 · Tab 专注模式 · 拖动右栏调宽"
-                    "\n\n按 F1 查看全部快捷键"))
+                if BIGSCREEN:
+                    self._set_text(_tr(hint) + _tr(
+                        "\n\n用底部大按钮打开图片或文件夹"))
+                else:
+                    self._set_text(_tr(hint) + _tr(
+                        "\n\nCtrl+O 打开文件    Ctrl+Shift+O 打开文件夹"
+                        "\n\nF5 全分辨率 · Tab 专注模式 · 拖动右栏调宽"
+                        "\n\n按 F1 查看全部快捷键"))
             elif self.error is not None:
                 self._set_text(_trf("无法打开这个文件\n\n%s" % self.error))
             else:
@@ -7112,6 +7206,8 @@ class QPEApp(_BASE):
         self.hist_can.bind("<Button-1>", self._hist_click)
         self.hist_can.bind("<Button-3>", self._hist_clear)
         self.hist_can.bind("<Leave>", self._hist_clear)
+        # 面板是懒建的：首次 pack 后宽度从 10 变成真实宽度，必须重画
+        self.hist_can.bind("<Configure>", lambda e: self._schedule_histogram())
         self.hist_info = tk.Label(inner, text="", font=self.mono_font,
                                   bg=PANEL_BG, fg=FG_DIM, anchor="w",
                                   justify="left")
@@ -8261,6 +8357,23 @@ class QPEApp(_BASE):
         except Exception:
             pass
 
+    def _ensure_panel(self):
+        """面板默认不建，第一次打开时才建；语言不是中文时补翻一遍。"""
+        if getattr(self, "panel", None) is not None:
+            return
+        self._build_panel()
+        try:
+            if APP_LANG != "zh":
+                self._apply_lang()
+            self._sync_panel()
+            self._refresh_sort_btn()
+            self._refresh_preset_box()
+            self._schedule_histogram()
+            if self.clip_warn and self.clip_btn is not None:
+                self.clip_btn.configure(bg=ACCENT, fg="#101010")
+        except Exception:
+            traceback.print_exc()
+
     def toggle_panel(self, show=None):
         if VIEWER_ONLY:            # 看图版没有修图面板
             return
@@ -8269,6 +8382,7 @@ class QPEApp(_BASE):
             return
         self.panel_shown = want
         if want:
+            self._ensure_panel()
             self.panel.pack(side="right", fill="y", before=self.canvas)
             try:
                 self.panel_grip.pack(side="right", fill="y",

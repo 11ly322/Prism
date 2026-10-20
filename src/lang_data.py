@@ -666,6 +666,13 @@ LANG_TABLE = {
         "当前 Pillow 缺少 ImageCms": "This Pillow build lacks ImageCms",
         "ICC 配置文件": "ICC profiles",
         "  软打样    %s（仅预览）": "  Soft proof  %s (preview only)",
+        # 9.13.0 大屏版
+        "%s %s - 多媒体大屏": "%s %s - Large Screen",
+        "打开": "Open",
+        "文件夹": "Folder",
+        "旋转": "Rotate",
+        "全屏": "Fullscreen",
+        "全屏（兼容模式）：按「全屏」按钮退出": "Fullscreen (compatibility mode): exit with the Fullscreen button",
     },
     "ja": {
         "文件": "ファイル", "编辑": "編集", "视图": "表示", "工具": "ツール",
@@ -1323,6 +1330,13 @@ LANG_TABLE = {
         "当前 Pillow 缺少 ImageCms": "この Pillow には ImageCms がありません",
         "ICC 配置文件": "ICC プロファイル",
         "  软打样    %s（仅预览）": "  ソフトプルーフ  %s（プレビューのみ）",
+        # 9.13.0 大屏版
+        "%s %s - 多媒体大屏": "%s %s - 大画面",
+        "打开": "開く",
+        "文件夹": "フォルダー",
+        "旋转": "回転",
+        "全屏": "全画面",
+        "全屏（兼容模式）：按「全屏」按钮退出": "全画面（互換モード）：全画面ボタンで終了",
     },
 }
 

@@ -256,17 +256,98 @@ def pack_viewer_installer(dist, ver):
     return out
 
 
+def pack_bigscreen(ver):
+    """大屏版：纯看图、无快捷键、底栏大按钮；同样提供 zip + exe 安装器。"""
+    build = os.path.join(ROOT, "_bigscreen_build")
+    shutil.rmtree(build, ignore_errors=True)
+    args = [sys.executable, "-m", "PyInstaller", "--noconfirm", "--clean",
+            "--onedir", "--windowed", "--name", "PrismBigScreen",
+            "--icon", os.path.join(SRC, "Prism.ico"),
+            "--add-data", os.path.join(SRC, "Prism.ico") + os.pathsep + ".",
+            "--add-data", os.path.join(SRC, "Prism.png") + os.pathsep + ".",
+            "--distpath", os.path.join(build, "dist"),
+            "--workpath", os.path.join(build, "w"),
+            "--specpath", build,
+            os.path.join(SRC, "Prism.pyw")]
+    subprocess.run(args, check=True, stdout=subprocess.DEVNULL,
+                   stderr=subprocess.DEVNULL)
+    dist = os.path.join(build, "dist", "PrismBigScreen")
+    exe = os.path.join(dist, "PrismBigScreen.exe")
+    if not os.path.exists(exe):
+        raise RuntimeError("大屏版构建失败")
+    for doc in ("README.md", "CHANGELOG.md"):
+        src = os.path.join(ROOT, doc)
+        if os.path.exists(src):
+            shutil.copy(src, dist)
+    clean_old("Prism-BigScreen-*.zip")
+    out = zip_dir(dist, "Prism-BigScreen-%s.zip" % ver)
+    inst = pack_bigscreen_installer(dist, ver)
+    shutil.rmtree(build, ignore_errors=True)
+    return [out, inst]
+
+
+def pack_bigscreen_installer(dist, ver):
+    root = ROOT
+    inst_src = os.path.join(root, "src", "installer.pyw")
+    txt = io.open(inst_src, encoding="utf-8").read()
+    txt = re.sub(r'APP = "[^"]*"', 'APP = "PrismBigScreen"', txt, count=1)
+    txt = re.sub(r'(?m)^DISPLAY = ".*" % VER$',
+                 lambda _m: 'DISPLAY = "Prism 大屏版 %s" % VER', txt, count=1)
+    txt = re.sub(r'VER = "[\d.]+"', 'VER = "%s"' % ver, txt, count=1)
+    tmp_script = os.path.join(root, "_bigscreen_installer.py")
+    io.open(tmp_script, "w", encoding="utf-8").write(txt)
+
+    tmpdir = os.path.join(root, "_bigscreen_inst_payload")
+    shutil.rmtree(tmpdir, ignore_errors=True)
+    os.makedirs(tmpdir, exist_ok=True)
+    payload = os.path.join(tmpdir, "payload.zip")
+    with zipfile.ZipFile(payload, "w", zipfile.ZIP_DEFLATED) as zf:
+        for dirpath, _dirs, files in os.walk(dist):
+            for fn in files:
+                full = os.path.join(dirpath, fn)
+                arc = os.path.relpath(full, dist).replace("\\", "/")
+                zf.write(full, arc)
+
+    build = os.path.join(root, "_bigscreen_inst_build")
+    shutil.rmtree(build, ignore_errors=True)
+    args = [sys.executable, "-m", "PyInstaller", "--noconfirm", "--clean",
+            "--onefile", "--windowed", "--name",
+            "Prism Big Screen %s 自解压安装" % ver,
+            "--icon", os.path.join(root, "src", "Prism.ico"),
+            "--add-data", payload + os.pathsep + ".",
+            "--add-data", os.path.join(root, "src", "Prism.ico") + os.pathsep + ".",
+            "--distpath", os.path.join(build, "dist"),
+            "--workpath", os.path.join(build, "w"),
+            "--specpath", build, tmp_script]
+    subprocess.run(args, check=True, stdout=subprocess.DEVNULL,
+                   stderr=subprocess.DEVNULL)
+    exe = os.path.join(build, "dist",
+                       "Prism Big Screen %s 自解压安装.exe" % ver)
+    if not os.path.exists(exe):
+        raise RuntimeError("大屏版安装包构建失败")
+    clean_old("Prism-BigScreen-Setup-*.exe")
+    out = os.path.join(DOCS, "Prism-BigScreen-Setup-%s.exe" % ver)
+    shutil.copy(exe, out)
+    shutil.rmtree(build, ignore_errors=True)
+    if os.path.exists(tmp_script):
+        os.remove(tmp_script)
+    shutil.rmtree(tmpdir, ignore_errors=True)
+    return out
+
+
 def main():
     ver = app_version()
     do_exe = "--no-exe" not in sys.argv
     print("== Prism %s 平台包 ==" % ver)
     outs = []
     if do_exe:
-        print("  [1/3] 看图版（便携 zip + 安装包，较慢）…")
+        print("  [1/4] 看图版（便携 zip + 安装包，较慢）…")
         outs.extend(pack_viewer(ver))
-    print("  [2/3] macOS 源码包…")
+        print("  [2/4] 大屏版（便携 zip + 安装包，较慢）…")
+        outs.extend(pack_bigscreen(ver))
+    print("  [3/4] macOS 源码包…")
     outs.append(pack_macos(ver))
-    print("  [3/3] Linux 源码包…")
+    print("  [4/4] Linux 源码包…")
     outs.append(pack_linux(ver))
     for path in outs:
         if not os.path.exists(path):

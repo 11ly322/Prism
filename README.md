@@ -15,7 +15,7 @@
 
 <div align="center">
 
-![version](https://img.shields.io/badge/version-9.11.2-3d7dff?style=flat-square)
+![version](https://img.shields.io/badge/version-9.13.0-3d7dff?style=flat-square)
 ![platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-2b2f36?style=flat-square)
 ![python](https://img.shields.io/badge/python-3.9%2B-3776ab?style=flat-square&logo=python&logoColor=white)
 ![license](https://img.shields.io/badge/license-MIT-3ddc84?style=flat-square)
@@ -58,6 +58,7 @@ Prism 服务两种场景 ——
 | **插件** | 一个 .py 即插件，**自带 12 个**，内置模板一键生成；可从网址安装 |
 | **一致性** | 预览与导出走同一套渲染管，实测平均逐像素差 **0.000** |
 | **色彩管理** | 读 ICC 转 sRGB 预览，导出写入 sRGB profile；Display P3 / AdobeRGB 不再被当 sRGB；可选 ICC 软打样 |
+| **大屏版** | 纯看图 · 底部大按钮 · 无快捷键 · 无调色面板，装完即用，适合展陈/会议室大屏 |
 
 ---
 
@@ -65,10 +66,12 @@ Prism 服务两种场景 ——
 
 | 平台 | 文件 | 说明 |
 | :--- | :--- | :--- |
-| Windows | `Prism-Setup-9.11.2.exe` | 安装包 · 含修图面板与插件 · 40.1 MB |
-| Windows | `Prism-Viewer-9.11.2.zip` | 纯看图版 · 便携免安装 · 30.1 MB |
-| macOS | `Prism-macOS-9.11.2.zip` | 源码运行 · 需 Python 3 + Pillow · 227 KB |
-| Linux | `Prism-Linux-9.11.2.zip` | 源码运行 · 带 `.desktop` · 227 KB |
+| Windows | `Prism-Setup-9.13.0.exe` | 安装包 · 含修图面板与插件 · 40.1 MB |
+| Windows | `Prism-Viewer-9.13.0.zip` | 纯看图版 · 便携免安装 · 30.1 MB |
+| Windows | `Prism-BigScreen-Setup-9.13.0.exe` | **大屏版**安装包 · 底栏大按钮 · 无快捷键 · 纯看图 |
+| Windows | `Prism-BigScreen-9.13.0.zip` | 大屏版 · 便携免安装 |
+| macOS | `Prism-macOS-9.13.0.zip` | 源码运行 · 需 Python 3 + Pillow · 227 KB |
+| Linux | `Prism-Linux-9.13.0.zip` | 源码运行 · 带 `.desktop` · 227 KB |
 
 <div align="center">
 
@@ -77,6 +80,16 @@ Prism 服务两种场景 ——
 </div>
 
 ---
+
+### 大屏 / 展陈版
+
+同一份源码编出的第三个版本：`PrismBigScreen.exe`。
+
+- 纯看图：没有修图面板、没有插件、没有调色功能。
+- 工具栏在**底部**，大按钮、适合触摸/远距离操作。
+- **没有键盘快捷键**；打开、翻页、缩放、旋转、幻灯片、网格、全屏、退出全部点按钮。
+- 启动即最大化；全屏由底栏「全屏」按钮切换，再点一次退出。
+- 与完整版一样提供自解压 exe 安装器（可选安装目录/开始菜单/桌面快捷方式）。
 
 ## 运行
 
@@ -295,6 +308,8 @@ api 必须是 2（旧的 1 仍能加载）。版本更高的插件会被跳过�
   启动时默认中文不再做一遍无意义的全界面翻译，首屏更快。
 - **批量导出异步**（9.11.1）：解码、渲染、保存都走后台线程（渲染用独立副本，
   不共享界面状态），主线程只更新进度；全分辨率载入显示已用时间，可 Esc 取消。
+- **面板懒构建**（9.12.0）：面板默认隐藏，启动不构建；第一次打开才建，
+  启动中位从 1.70 s 降到 **1.08 s**（numpy 也改成按需加载）。
 
 改造前后的截图存放在 `design/before/` 与 `design/after/`。
 

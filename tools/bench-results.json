@@ -493,6 +493,63 @@
           ]
         }
       }
+    },
+    {
+      "machine": {
+        "os": "Windows-11-10.0.26200-SP0",
+        "python": "3.12.14",
+        "cpu": "AMD Ryzen 7 H 255 w/ Radeon 780M Graphics",
+        "ram_gb": 19.8,
+        "machine": "AMD64"
+      },
+      "app_version": "9.11.2",
+      "startup_ms": 1080.4,
+      "first_frame_40mp_ms": 574.3,
+      "slider_ms": 71.0,
+      "proxy_ms": 0.8,
+      "mem_current_mb": 233.0,
+      "mem_peak_mb": 321.9,
+      "repeat": 5,
+      "proxy_limit": 3400,
+      "note": "9.12.0 lazy panel",
+      "paths": {
+        "draft_1600": {
+          "ms": 222.32469999289606,
+          "mp": 2.5,
+          "mp_s": 11.24,
+          "size": [
+            2000,
+            1250
+          ]
+        },
+        "load_full": {
+          "ms": 300.66970000916626,
+          "mp": 40.0,
+          "mp_s": 133.04,
+          "size": [
+            8000,
+            5000
+          ]
+        },
+        "reduce4_resize1600": {
+          "ms": 83.22660000703763,
+          "mp": 1.6,
+          "mp_s": 19.22,
+          "size": [
+            1600,
+            1000
+          ]
+        },
+        "resize1600_only": {
+          "ms": 376.995699989493,
+          "mp": 1.6,
+          "mp_s": 4.24,
+          "size": [
+            1600,
+            1000
+          ]
+        }
+      }
     }
   ]
 }

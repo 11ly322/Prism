@@ -68,7 +68,7 @@ IS_WIN = sys.platform.startswith("win")
 K = "Command" if IS_MAC else "Control"
 
 APP_NAME = "Prism"
-APP_VERSION = "9.9.0"
+APP_VERSION = "9.9.1"
 APP_BUILD = "2025-12.9"
 # ---------------------------------------------------------------- 运行模式
 # 同一份源码编出两个版本：
@@ -3860,6 +3860,12 @@ class QPEApp(_BASE):
             self._update_status()
             return
         path = self.files[self.index]
+        # 切图时放弃上一张还没回来的全分辨率请求，避免它把当前图替换掉
+        if (getattr(self, "full_loading", None)
+                and self.full_loading != path):
+            self.pending_full = None
+            self.full_loading = None
+            self._set_full_btn_busy(False)
         doc = self.cache.get(path)
         self.error = None
         if doc is not None:

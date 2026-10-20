@@ -13,6 +13,9 @@
 Pages 的 Source 已切成 **GitHub Actions**；legacy 分支部署不再使用。
 回退方式：Settings → Pages → Source 改回 `Deploy from a branch` → `main` / `/docs`。
 
+`main` 分支保护已启用：PR 合并前要求 `static` + `static-linux` 通过
+（`gui` 仍 `continue-on-error`，不阻塞）；管理员可直接推送。
+
 ## 权限
 
 推送/修改 workflow 需要 token 带 `workflow` scope。当前账号已授权：

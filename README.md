@@ -15,7 +15,7 @@
 
 <div align="center">
 
-![version](https://img.shields.io/badge/version-9.9.0-3d7dff?style=flat-square)
+![version](https://img.shields.io/badge/version-9.9.1-3d7dff?style=flat-square)
 ![platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-2b2f36?style=flat-square)
 ![python](https://img.shields.io/badge/python-3.9%2B-3776ab?style=flat-square&logo=python&logoColor=white)
 ![license](https://img.shields.io/badge/license-MIT-3ddc84?style=flat-square)
@@ -65,10 +65,10 @@ Prism 服务两种场景 ——
 
 | 平台 | 文件 | 说明 |
 | :--- | :--- | :--- |
-| Windows | `Prism-Setup-9.9.0.exe` | 安装包 · 含修图面板与插件 · 40.1 MB |
-| Windows | `Prism-Viewer-9.9.0.zip` | 纯看图版 · 便携免安装 · 30.1 MB |
-| macOS | `Prism-macOS-9.9.0.zip` | 源码运行 · 需 Python 3 + Pillow · 223 KB |
-| Linux | `Prism-Linux-9.9.0.zip` | 源码运行 · 带 `.desktop` · 223 KB |
+| Windows | `Prism-Setup-9.9.1.exe` | 安装包 · 含修图面板与插件 · 40.1 MB |
+| Windows | `Prism-Viewer-9.9.1.zip` | 纯看图版 · 便携免安装 · 30.1 MB |
+| macOS | `Prism-macOS-9.9.1.zip` | 源码运行 · 需 Python 3 + Pillow · 223 KB |
+| Linux | `Prism-Linux-9.9.1.zip` | 源码运行 · 带 `.desktop` · 223 KB |
 
 <div align="center">
 
@@ -389,6 +389,12 @@ api 必须是 2（旧的 1 仍能加载）。版本更高的插件会被跳过�
 不会出现「预览好看、导出不一样」（tools/beautycheck.py 里有逐像素校验）。
 
 ---
+
+### 源码结构
+
+- `src/Prism.pyw`：主程序（界面、渲染、插件、批处理）。
+- `src/lang_data.py`：三语词典与帮助文本（13.8k → 12.3k 行的拆分）。
+- `tools/`：回归、发版、文档生成；`tools/runall.py --fast` 一条命令跑完 13 套。
 
 ## 开发
 

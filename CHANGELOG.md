@@ -4,6 +4,47 @@
 > 已一并改为 Prism，功能与时间线不变。代码里的 QPEApp / _QpeSlider 等内部
 > 标识符与旧配置迁移路径保持原名，改动会破坏兼容。
 
+## v9.9.0  （大图异步 + ICC 色彩管理 + 更新检查 + CI 强化）
+
+### 全分辨率载入改为后台
+
+- F5 / 状态栏「全分辨率」不再在主线程同步解码：走 loader 线程，界面不冻结，
+  状态栏显示「载入中…」，Esc 可取消；完成后自动替换并复位缩放。
+- 超过 8000 万像素先确认内存占用（估计值），避免 200MP 图直接吃光内存。
+- 批量导出跳过单张超过 1.5 亿像素的图，并在失败列表里写明原因；导出仍始终读原图。
+- 修复上一版 `force_full` 只对 JPEG 生效的遗留：PNG/WebP/HEIC/RAW 同样走原图路径。
+
+### ICC 色彩管理（调色准的底层）
+
+- 载入时读 ICC：Display P3 / AdobeRGB 等非 sRGB 图先转 sRGB 再显示，
+  不再把 P3 当 sRGB 直接算；信息窗口显示源色彩空间与是否转换。
+- 导出 JPEG/PNG/WebP/TIFF 写入 sRGB profile；不做软打样，也不保留原 ICC。
+- 新增 `tools/icccheck.py`：带 profile 读取、无 profile 回落、导出 profile 可识别。
+
+### 更新与首次使用
+
+- 帮助 →「检查更新…」：只在点击时联网查 GitHub latest release，不后台轮询、不自动下载；
+  有新版本给下载页链接，没有就提示已是最新。
+- 首次打开图片时提示「F5 全分辨率 · Tab 专注模式 · 拖动右栏调宽」；空状态也加了同一行。
+- 只记录 `tips_seen`，不采集任何使用数据。
+
+### 站点与 CI
+
+- 站点顶部导航加「文档」下拉，指向插件指南/API；文档 HTML 顶部生成目录（TOC）。
+- 新增 `Plugin PR` workflow：PR 改插件清单/插件源码时自动校验 id、schema、SHA-256、
+  内置冲突与 README 索引。
+- CI 增加 Ubuntu 静态 job（插件清单、三语文档、文档 HTML、版本号）；README 加 CI/Pages badge。
+- `main` 分支保护：合并前要求 `static` + `static-linux` 通过（管理员仍可直接推送）。
+- 单文件拆分：`LANG_TABLE` 与三份 `HELP_TEXT` 拆到 `src/lang_data.py`，
+  `Prism.pyw` 从 13.8k 行降到 12.3k 行；PyInstaller 与 macOS/Linux 源码包都会带上该模块。
+
+### 验证
+
+- `runall --fast` 13 套全过（新增清单静态、ICC；uicheck 覆盖异步 F5、1:1、专注、面板、档位）。
+- CI 三个 job 全绿：static / static-linux / gui。
+- 本轮未改调色算法；bench 数字与 9.6.0 repeat 5 一致（首帧 582 ms）。
+- 仍然不买代码签名证书：SmartScreen 未签名提示继续存在。
+
 ## v9.8.1  （帮助文案纠偏）
 
 - 9.8.0 的帮助/关于里还写着「拖动时降半分辨率」；实际代码从 8.x 起就没有降半分辨率

@@ -142,7 +142,8 @@ if (-not $SkipApp) {
     Write-Host '-- 1/4 主程序（onedir）'
     $a = @('-m','PyInstaller','--noconfirm','--clean','--onedir','--windowed','--name','Prism',
            '--icon',"$root\src\Prism.ico",'--add-data',"$root\src\Prism.ico;.",
-           '--add-data',"$root\src\Prism.png;.",'--distpath',"$build\dist",
+           '--add-data',"$root\src\Prism.png;.",'--hidden-import','lang_data',
+           '--distpath',"$build\dist",
            '--workpath',"$build\work",'--specpath',$build,"$root\src\Prism.pyw")
     & $py @a *> $null
     if (-not (Test-Path -LiteralPath "$build\dist\Prism\Prism.exe")) { throw '主程序构建失败' }

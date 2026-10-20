@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""把一批三语词条追加进 src/Prism.pyw 的 LANG_TABLE。
+"""把一批三语词条追加进 src/lang_data.py 的 LANG_TABLE。
 
 输入 JSON 格式（tools/i18ncheck_app.py --json 的反向）：
 
@@ -23,7 +23,7 @@ import re
 import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-APP = os.path.join(ROOT, "src", "Prism.pyw")
+APP = os.path.join(ROOT, "src", "lang_data.py")
 PH = re.compile(r"%(?:[-+ #0]*\d*(?:\.\d+)?[sdifgeE%])")
 
 
@@ -61,7 +61,7 @@ def main():
         print(__doc__)
         return 2
     path = args[0]
-    with io.open(path, encoding="utf-8") as fh:
+    with io.open(path, encoding="utf-8-sig") as fh:
         data = json.load(fh)
     if isinstance(data, list):
         data = {str(it["zh"]): {"en": it["en"], "ja": it["ja"]} for it in data}
@@ -117,13 +117,13 @@ def main():
 
     en_txt, ja_txt = block(rows, "en"), block(rows, "ja")
     anchor_en = '\n    },\n    "ja": {\n'
-    anchor_ja = "\n    },\n}\n\n\ndef _tr(text):"
+    anchor_ja = '\n    },\n}\n\nHELP_TEXT = """'
     if src.count(anchor_en) != 1 or src.count(anchor_ja) != 1:
         print("词典结构不是预期的两块，放弃写入")
         return 1
     src = src.replace(anchor_en, "\n" + en_txt + '    },\n    "ja": {\n')
     src = src.replace(anchor_ja,
-                      "\n" + ja_txt + "    },\n}\n\n\ndef _tr(text):")
+                      "\n" + ja_txt + '    },\n}\n\nHELP_TEXT = """')
     try:
         ast.parse(src)
     except SyntaxError as exc:

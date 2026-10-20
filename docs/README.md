@@ -8,11 +8,14 @@
 
 <sub>打开快 · 切图快 · 调色准</sub>
 
+[![CI](https://github.com/11ly322/Prism/actions/workflows/ci.yml/badge.svg)](https://github.com/11ly322/Prism/actions/workflows/ci.yml)
+[![Pages](https://github.com/11ly322/Prism/actions/workflows/pages.yml/badge.svg)](https://github.com/11ly322/Prism/actions/workflows/pages.yml)
+
 </div>
 
 <div align="center">
 
-![version](https://img.shields.io/badge/version-9.8.1-3d7dff?style=flat-square)
+![version](https://img.shields.io/badge/version-9.9.0-3d7dff?style=flat-square)
 ![platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-2b2f36?style=flat-square)
 ![python](https://img.shields.io/badge/python-3.9%2B-3776ab?style=flat-square&logo=python&logoColor=white)
 ![license](https://img.shields.io/badge/license-MIT-3ddc84?style=flat-square)
@@ -54,6 +57,7 @@ Prism 服务两种场景 ——
 | **局部** | 径向滤镜 · 渐变滤镜 · 主体/高对比自动选区 |
 | **插件** | 一个 .py 即插件，**自带 12 个**，内置模板一键生成；可从网址安装 |
 | **一致性** | 预览与导出走同一套渲染管，实测平均逐像素差 **0.000** |
+| **色彩管理** | 读 ICC 转 sRGB 预览，导出写入 sRGB profile；Display P3 / AdobeRGB 不再被当 sRGB |
 
 ---
 
@@ -61,10 +65,10 @@ Prism 服务两种场景 ——
 
 | 平台 | 文件 | 说明 |
 | :--- | :--- | :--- |
-| Windows | `Prism-Setup-9.8.1.exe` | 安装包 · 含修图面板与插件 · 40.1 MB |
-| Windows | `Prism-Viewer-9.8.1.zip` | 纯看图版 · 便携免安装 · 30.1 MB |
-| macOS | `Prism-macOS-9.8.1.zip` | 源码运行 · 需 Python 3 + Pillow · 220 KB |
-| Linux | `Prism-Linux-9.8.1.zip` | 源码运行 · 带 `.desktop` · 220 KB |
+| Windows | `Prism-Setup-9.9.0.exe` | 安装包 · 含修图面板与插件 · 40.1 MB |
+| Windows | `Prism-Viewer-9.9.0.zip` | 纯看图版 · 便携免安装 · 30.1 MB |
+| macOS | `Prism-macOS-9.9.0.zip` | 源码运行 · 需 Python 3 + Pillow · 223 KB |
+| Linux | `Prism-Linux-9.9.0.zip` | 源码运行 · 带 `.desktop` · 223 KB |
 
 <div align="center">
 

@@ -46,6 +46,8 @@ def main():
             except Exception:
                 continue
             for line in text.splitlines():
+                if line.lstrip().startswith("#"):
+                    continue          # 注释里的历史分节号不算当前版本
                 if any(h in line for h in SKIP_LINE_HINTS):
                     continue
                 for m in PAT.finditer(line):

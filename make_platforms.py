@@ -116,6 +116,7 @@ def pack_macos(ver):
     shutil.rmtree(stage, ignore_errors=True)
     os.makedirs(stage)
     shutil.copy(os.path.join(SRC, "Prism.pyw"), stage)
+    shutil.copy(os.path.join(SRC, "lang_data.py"), stage)
     shutil.copy(os.path.join(SRC, "Prism.png"), stage)
     copy_plugins(stage)
     with open(os.path.join(stage, "启动 Prism.command"), "w",
@@ -140,6 +141,7 @@ def pack_linux(ver):
     shutil.rmtree(stage, ignore_errors=True)
     os.makedirs(stage)
     shutil.copy(os.path.join(SRC, "Prism.pyw"), stage)
+    shutil.copy(os.path.join(SRC, "lang_data.py"), stage)
     shutil.copy(os.path.join(SRC, "Prism.png"), stage)
     copy_plugins(stage)
     with open(os.path.join(stage, "prism.sh"), "w", encoding="utf-8",

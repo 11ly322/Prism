@@ -82,7 +82,7 @@ def main():
 
         scan_preview(app.set_win)
         ok("主题预览色块数量",
-           len(preview) == len(mod.THEME_ORDER) * 5, str(len(preview)))
+           len(preview) == len(mod.THEME_ORDER) * 6, str(len(preview)))
         preview_before = [str(ch.cget("bg")).lower() for ch in preview]
 
         sc = app.set_canvas
@@ -187,6 +187,34 @@ def main():
             ok("空画布文字跟随主题",
                str(app.canvas.itemcget(ti, "fill")).lower() == mod.FG_DIM.lower(),
                app.canvas.itemcget(ti, "fill"))
+
+        # 描边开关：独立于主题，任何主题都能叠加，颜色跟随当前主题
+        app.set_outline(True)
+        for _ in range(25):
+            app.update(); time.sleep(0.01)
+        ok("描边开关可开启", mod.OUTLINE_ON and app.outline)
+        ok("描边颜色取当前主题",
+           mod.OUTLINE_COLOR == mod.THEMES[app.theme]["OUTLINE"],
+           mod.OUTLINE_COLOR)
+        ok("面板有 2px 描边",
+           int(app.panel.cget("highlightthickness")) >= 2,
+           app.panel.cget("highlightthickness"))
+        app.set_theme("dark")
+        for _ in range(25):
+            app.update(); time.sleep(0.01)
+        ok("切主题后描边颜色适配",
+           app.outline and mod.OUTLINE_COLOR == "#ffffff",
+           mod.OUTLINE_COLOR)
+        ok("切主题后描边仍开启",
+           int(app.panel.cget("highlightthickness")) >= 2,
+           app.panel.cget("highlightthickness"))
+        app.set_outline(False)
+        for _ in range(20):
+            app.update(); time.sleep(0.01)
+        ok("描边开关可关闭", not mod.OUTLINE_ON and not app.outline)
+        ok("关闭后描边复位",
+           int(app.panel.cget("highlightthickness")) == 0,
+           app.panel.cget("highlightthickness"))
         ok("BG_RGB 随主题更新",
            mod.BG_RGB == tuple(int(mod.BG[i:i + 2], 16) for i in (1, 3, 5)),
            str(mod.BG_RGB))

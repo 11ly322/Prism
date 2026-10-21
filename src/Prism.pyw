@@ -78,7 +78,7 @@ IS_WIN = sys.platform.startswith("win")
 K = "Command" if IS_MAC else "Control"
 
 APP_NAME = "Prism"
-APP_VERSION = "9.14.3"
+APP_VERSION = "9.15.0"
 APP_BUILD = "2025-12.9"
 # ---------------------------------------------------------------- 运行模式
 # 同一份源码编出三个版本：
@@ -207,7 +207,7 @@ CHECK_B = "#232323"
 _THEME_ROLES = ("BG", "BAR_BG", "BAR_HOVER", "FG", "FG_DIM", "FG_HI",
                 "ACCENT", "BTN", "DEEP", "DEEP2", "TROUGH", "HEAD",
                 "HEAD2", "RULE", "KNOB", "ON", "PANEL", "CARD",
-                "CARD_LINE", "CHECK_A", "CHECK_B")
+                "CARD_LINE", "CHECK_A", "CHECK_B", "OUTLINE")
 
 _THEME_DARK = {
     "BG": "#121212", "BAR_BG": "#1c1c1c", "BAR_HOVER": "#2c2c2c",
@@ -217,6 +217,7 @@ _THEME_DARK = {
     "HEAD2": "#1d1d1d", "RULE": "#2e2e2e", "KNOB": "#d0d0d0",
     "ON": "#101010", "PANEL": "#141414", "CARD": "#1c1c1c",
     "CARD_LINE": "#2a2a2a", "CHECK_A": "#191919", "CHECK_B": "#232323",
+    "OUTLINE": "#ffffff",
 }
 
 THEMES = {
@@ -230,6 +231,7 @@ THEMES = {
         "HEAD2": "#0c0c0c", "RULE": "#5a5a5a", "KNOB": "#ffffff",
         "ON": "#000000", "PANEL": "#000000", "CARD": "#0a0a0a",
         "CARD_LINE": "#3a3a3a", "CHECK_A": "#0a0a0a", "CHECK_B": "#1a1a1a",
+        "OUTLINE": "#ffd400",
     },
     # 浅色：白底深字
     "light": {
@@ -240,17 +242,7 @@ THEMES = {
         "HEAD2": "#f5f5f5", "RULE": "#c8c8c8", "KNOB": "#5a5a5a",
         "ON": "#ffffff", "PANEL": "#ebebeb", "CARD": "#fbfbfb",
         "CARD_LINE": "#d6d6d6", "CHECK_A": "#ffffff", "CHECK_B": "#e8e8e8",
-    },
-    # 高对比 + 白色描边：黑底白字黄强调，每个控件加 1 像素白边
-    "outline": {
-        "BG": "#000000", "BAR_BG": "#000000", "BAR_HOVER": "#2e2e2e",
-        "FG": "#ffffff", "FG_DIM": "#dcdcdc", "FG_HI": "#ffffff",
-        "ACCENT": "#ffe100", "BTN": "#000000", "DEEP": "#000000",
-        "DEEP2": "#000000", "TROUGH": "#585858", "HEAD": "#000000",
-        "HEAD2": "#000000", "RULE": "#ffffff", "KNOB": "#ffffff",
-        "ON": "#000000", "PANEL": "#000000", "CARD": "#000000",
-        "CARD_LINE": "#ffffff", "CHECK_A": "#000000", "CHECK_B": "#1a1a1a",
-        "outline": "#ffffff",
+        "OUTLINE": "#000000",
     },
     # 炭橙：炭灰底 + 橙色强调
     "amber": {
@@ -261,6 +253,7 @@ THEMES = {
         "HEAD2": "#1a1a1c", "RULE": "#3a3a3d", "KNOB": "#ff8c1a",
         "ON": "#101010", "PANEL": "#0b0b0d", "CARD": "#1b1b1d",
         "CARD_LINE": "#333338", "CHECK_A": "#151517", "CHECK_B": "#202024",
+        "OUTLINE": "#ffb066",
     },
     # 深海：藏青底 + 天蓝强调
     "navy": {
@@ -271,6 +264,7 @@ THEMES = {
         "HEAD2": "#0f1a2c", "RULE": "#2a3f5c", "KNOB": "#9fd8f5",
         "ON": "#06121e", "PANEL": "#0a1322", "CARD": "#111d31",
         "CARD_LINE": "#243a55", "CHECK_A": "#0f1a2b", "CHECK_B": "#17263d",
+        "OUTLINE": "#7dd3fc",
     },
     # 森林：墨绿底 + 草绿强调
     "forest": {
@@ -281,6 +275,7 @@ THEMES = {
         "HEAD2": "#101a12", "RULE": "#2b3d2e", "KNOB": "#b7e0a8",
         "ON": "#071008", "PANEL": "#0a100c", "CARD": "#121c15",
         "CARD_LINE": "#283a2b", "CHECK_A": "#101a12", "CHECK_B": "#18261b",
+        "OUTLINE": "#a7f3d0",
     },
     # 玫瑰：酒红底 + 粉色强调
     "rose": {
@@ -291,6 +286,7 @@ THEMES = {
         "HEAD2": "#170e14", "RULE": "#3b2733", "KNOB": "#f3b4d3",
         "ON": "#160a10", "PANEL": "#100a0e", "CARD": "#1a1018",
         "CARD_LINE": "#382432", "CHECK_A": "#180f15", "CHECK_B": "#23141e",
+        "OUTLINE": "#fbcfe8",
     },
     # 极夜：冷灰蓝底 + 冰蓝强调
     "nord": {
@@ -301,6 +297,7 @@ THEMES = {
         "HEAD2": "#121920", "RULE": "#33414e", "KNOB": "#d8e5ee",
         "ON": "#0b1015", "PANEL": "#0b1015", "CARD": "#141b22",
         "CARD_LINE": "#2a3742", "CHECK_A": "#121920", "CHECK_B": "#1a232c",
+        "OUTLINE": "#d8e5ee",
     },
     # 霓虹：黑紫底 + 品红强调
     "neon": {
@@ -311,6 +308,7 @@ THEMES = {
         "HEAD2": "#0f0918", "RULE": "#3c2452", "KNOB": "#f0c2ff",
         "ON": "#0a0410", "PANEL": "#080510", "CARD": "#120b1c",
         "CARD_LINE": "#342048", "CHECK_A": "#130b1d", "CHECK_B": "#1d102b",
+        "OUTLINE": "#f0abfc",
     },
     # 暖纸：米色底 + 棕橙强调（浅色）
     "paper": {
@@ -321,16 +319,19 @@ THEMES = {
         "HEAD2": "#f7edde", "RULE": "#d2c0a6", "KNOB": "#7a5a3a",
         "ON": "#ffffff", "PANEL": "#ece2d2", "CARD": "#fdf8ef",
         "CARD_LINE": "#d8c7ae", "CHECK_A": "#fffaf1", "CHECK_B": "#eadcc7",
+        "OUTLINE": "#3a3025",
     },
 }
 
-THEME_NAMES = {"dark": "深色", "contrast": "高对比", "outline": "高对比·描边",
+THEME_NAMES = {"dark": "深色", "contrast": "高对比",
                "amber": "炭橙", "light": "浅色", "navy": "深海",
                "forest": "森林", "rose": "玫瑰", "nord": "极夜",
                "neon": "霓虹", "paper": "暖纸"}
-THEME_ORDER = ("dark", "light", "contrast", "outline", "amber",
+THEME_ORDER = ("dark", "light", "contrast", "amber",
                "navy", "forest", "rose", "nord", "neon", "paper")
 _CURRENT_THEME = ["dark"]
+OUTLINE_ON = False
+OUTLINE_COLOR = "#ffffff"
 
 
 BTN_BG = "#262626"
@@ -483,6 +484,7 @@ def _apply_palette(name):
     g["CARD_LINE"] = p["CARD_LINE"]
     g["CHECK_A"] = p["CHECK_A"]
     g["CHECK_B"] = p["CHECK_B"]
+    g["OUTLINE_COLOR"] = p["OUTLINE"]
     bg = p["BG"]
     g["BG_RGB"] = (int(bg[1:3], 16), int(bg[3:5], 16), int(bg[5:7], 16))
     _CURRENT_THEME[0] = name
@@ -1962,7 +1964,9 @@ class _QpeRoundButton(tk.Canvas):
         else:
             fill, ink = self._bg, self._fg
         self.create_polygon(self._round_pts(0, 0, w, h, self._radius),
-                            smooth=True, fill=fill, outline="")
+                            smooth=True, fill=fill,
+                            outline=OUTLINE_COLOR if OUTLINE_ON else "",
+                            width=max(1, px(2)) if OUTLINE_ON else 0)
         self.create_text(w / 2, h / 2, text=self._text, fill=ink,
                          font=self._font)
 
@@ -3018,6 +3022,9 @@ class QPEApp(_BASE):
         self.hist_sel = None
         self.hist_data = None
         self.b_stop = False
+        self.outline = bool(self._peek_setting("outline", False))
+        if self._peek_setting("theme") == "outline":
+            self.outline = True
         self.theme = self._peek_theme()
         _apply_palette(self.theme)
         global APP_LANG
@@ -3256,6 +3263,8 @@ class QPEApp(_BASE):
         self._mfont = tkfont.Font(font=self.ui_font)
 
         self._build_ui()
+        if self.outline:
+            self._apply_outline(OUTLINE_COLOR)
         if BIGSCREEN:
             # 大屏版没有任何快捷键，只保留窗口关闭协议
             self.protocol("WM_DELETE_WINDOW", self.on_close)
@@ -3702,6 +3711,8 @@ class QPEApp(_BASE):
             self.bar, text="", font=self.ui_font, bg=BAR_BG, fg=FG_DIM,
             width=6, anchor="e")
         self.zoom_lbl.pack(side="right", padx=(px(6), px(4)))
+        if getattr(self, "outline", False):
+            self._apply_outline(OUTLINE_COLOR, self.bar)
 
     def _build_bar(self):
         """构建（或在切换语言后重建）工具条。"""
@@ -3794,6 +3805,9 @@ class QPEApp(_BASE):
 
         self._layout_bar(force=True)
         self.bar.bind("<Configure>", self._on_bar_configure)
+        if getattr(self, "outline", False):
+            self._apply_outline(OUTLINE_COLOR, self.bar)
+
     def _build_ui(self):
         self._build_bar()
 
@@ -6793,6 +6807,7 @@ class QPEApp(_BASE):
         # 每块分区是一张「卡片」：面板底更深（PANEL_BG），卡片用 CARD_BG，
         # 靠明度差和 6px 外距分层，而不是靠边框或色块。
         wrap = tk.Frame(parent, bg=CARD_BG)
+        wrap._outline_frame = True
         wrap.pack(fill="x", padx=px(SPACE_MD), pady=(px(SPACE_MD), 0))
         head = tk.Frame(wrap, bg=CARD_BG, cursor="hand2")
         head.pack(fill="x")
@@ -6807,6 +6822,7 @@ class QPEApp(_BASE):
         rule = tk.Frame(head, bg=CARD_LINE, height=max(1, px(1)))
         rule.pack(side="left", fill="x", expand=True, pady=(px(1), 0))
         body = tk.Frame(parent, bg=CARD_BG)
+        body._outline_frame = True
         if hasattr(self, "_theme_cards"):
             self._theme_cards.extend((wrap, head, title_lbl, body))
         state = {"open": opened, "ran": False}
@@ -8479,6 +8495,8 @@ class QPEApp(_BASE):
         if getattr(self, "panel", None) is not None:
             return
         self._build_panel()
+        if getattr(self, "outline", False):
+            self._apply_outline(OUTLINE_COLOR, self.panel)
         try:
             if APP_LANG != "zh":
                 self._apply_lang()
@@ -9186,7 +9204,11 @@ class QPEApp(_BASE):
                 name = json.load(fh).get("theme") or "dark"
         except Exception:
             return "dark"
-        return "amber" if name == "fl" else name
+        if name == "fl":
+            name = "amber"
+        if name == "outline":
+            return "dark"
+        return name if name in THEMES else "dark"
 
     def _swap_colors(self, widget, delta):
         """把一棵控件树上仍然使用旧配色的选项换成新配色。
@@ -9331,6 +9353,7 @@ class QPEApp(_BASE):
 
         # 标题做成一张卡片，和主面板的层次一致（面板底更暗、卡片略亮）
         head = tk.Frame(wrap, bg=CARD_BG)
+        head._outline_frame = True
         head.pack(fill="x", pady=(0, px(SPACE_2XL)))
         tk.Label(head, text="设置", font=self.ui_font_l, bg=CARD_BG, fg=FG_HI,
                  anchor="w").pack(fill="x", padx=px(SPACE_XL),
@@ -9392,12 +9415,29 @@ class QPEApp(_BASE):
                     side="left")
             dots = tk.Frame(cell, bg=BAR_BG)
             dots.pack(side="right", padx=(0, px(4)))
-            for role in ("BG", "BAR_BG", "FG", "ACCENT", "KNOB"):
+            for role in ("BG", "BAR_BG", "FG", "ACCENT", "KNOB", "OUTLINE"):
                 sw = tk.Frame(dots, width=px(10), height=px(10),
                               bg=THEMES[key][role])
                 # 预览色块是主题的静态样本，切主题时不能被 _swap_colors 改色
                 sw._theme_preview = True
                 sw.pack(side="left", padx=(0, px(2)))
+
+        out_var = tk.IntVar(value=1 if getattr(self, "outline", False) else 0)
+        self.outline_var = out_var
+
+        def on_outline():
+            self.set_outline(bool(out_var.get()))
+
+        tk.Checkbutton(
+            wrap, text="高对比描边（MC 风格，所有主题可用）",
+            variable=out_var, command=on_outline, font=self.ui_font,
+            bg=BAR_BG, fg=FG, activebackground=BAR_BG,
+            activeforeground=FG_HI, selectcolor=DEEP_BG, anchor="w",
+            bd=0, highlightthickness=0, cursor="hand2").pack(
+                fill="x", pady=(px(6), 0))
+        tk.Label(wrap, text="2px 硬边；描边颜色跟随当前主题",
+                 font=self.ui_font_s, bg=BAR_BG, fg=FG_DIM,
+                 anchor="w").pack(fill="x", pady=(0, px(2)))
 
         tk.Frame(wrap, bg=RULE_BG, height=max(1, px(1))).pack(
             fill="x", pady=(px(12), px(10)))
@@ -9538,6 +9578,8 @@ class QPEApp(_BASE):
 
         bind_scroll(win)
         canvas.yview_moveto(0)
+        if getattr(self, "outline", False):
+            self._apply_outline(OUTLINE_COLOR, win)
 
     def _settings_wheel(self, event):
         """设置窗口滚轮：Windows/macOS 用 delta，Linux 用 Button-4/5。"""
@@ -9571,6 +9613,8 @@ class QPEApp(_BASE):
                                    parent=self):
             return
         self.set_theme("dark", persist=False)
+        if getattr(self, "outline", False):
+            self.set_outline(False)
         if self.clip_warn:
             self.toggle_clip()
         self.save_settings()
@@ -10930,23 +10974,39 @@ def run(img, **params):
         self._panel_btn(bar, "关闭", close_win)
 
     def _apply_outline(self, color, widget=None):
-        """描边主题：给容器和文字类控件加一圈 1 像素边框。
+        """MC 风格高对比描边：2px 硬边，可叠加在任意主题上。
 
-        只碰 Frame/Label/Button/Checkbutton；输入框本来有自己的焦点描边，
-        画布加边会吃掉绘图区域，都不动。
+        只描控件与关键容器，不给每个 Label 套框；颜色用当前主题的 OUTLINE。
         """
+        global OUTLINE_ON, OUTLINE_COLOR
+        if widget is None:
+            OUTLINE_ON = bool(color)
+            if color:
+                OUTLINE_COLOR = color
         w = self if widget is None else widget
+        structural = {id(x) for x in (
+            getattr(self, "bar", None),
+            getattr(self, "panel", None), getattr(self, "panel_inner", None),
+            getattr(self, "set_win", None)) if x is not None}
+        controls = ("Button", "Menubutton", "Radiobutton", "Checkbutton",
+                    "Entry", "Spinbox", "Scale", "Listbox")
         try:
             cls = w.winfo_class()
-            if cls in ("Frame", "Label", "Button", "Checkbutton"):
+            if cls in controls or (cls == "Frame" and (
+                    id(w) in structural or getattr(w, "_outline_frame", False))):
                 if color:
-                    w.configure(highlightthickness=max(1, px(1)),
+                    w.configure(highlightthickness=max(2, px(2)),
                                 highlightbackground=color,
                                 highlightcolor=color)
                 else:
                     w.configure(highlightthickness=0)
         except Exception:
             pass
+        if isinstance(w, _QpeRoundButton):
+            try:
+                w._draw()
+            except Exception:
+                pass
         for child in w.winfo_children():
             self._apply_outline(color, child)
 
@@ -11020,6 +11080,19 @@ def run(img, **params):
         except Exception:
             pass
 
+    def set_outline(self, enabled):
+        """MC 风格高对比描边：独立开关，叠加在任意主题上。"""
+        self.outline = bool(enabled)
+        var = getattr(self, "outline_var", None)
+        if var is not None:
+            try:
+                var.set(1 if self.outline else 0)
+            except Exception:
+                pass
+        self.save_settings()
+        self._apply_outline(OUTLINE_COLOR if self.outline else None)
+        self._flash(_tr("高对比描边：%s") % _tr("开" if self.outline else "关"))
+
     def set_theme(self, name, persist=True):
         if name not in THEMES:
             return
@@ -11028,7 +11101,8 @@ def run(img, **params):
         _apply_palette(name)                 # 先换全局常量，之后新建的控件用新色
         self._swap_colors(self, delta)       # 再把已有控件逐个换掉
         self._reset_theme_surfaces()         # 结构性容器按角色强制归位
-        self._apply_outline(THEMES[name].get("outline"))
+        self._apply_outline(OUTLINE_COLOR if getattr(self, "outline", False)
+                            else None)
         self.theme = name
         if self.theme_btn is not None and self.theme_btn.winfo_exists():
             self.theme_btn.configure(
@@ -11082,6 +11156,9 @@ def run(img, **params):
             return
         if not isinstance(d, dict):
             return
+        if str(d.get("theme", "")) == "outline":
+            self.outline = True
+        self.outline = bool(d.get("outline", getattr(self, "outline", False)))
         try:
             self.sort_key = str(d.get("sort_key", self.sort_key))
             if self.sort_key not in ("name", "mtime", "size"):
@@ -11196,6 +11273,7 @@ def run(img, **params):
                          "geom": self._safe_geom(),
                          "panel": bool(self.panel_shown),
                          "theme": getattr(self, "theme", "dark"),
+                         "outline": bool(getattr(self, "outline", False)),
                          "lang": getattr(self, "lang", "zh"),
                          "low_mem": bool(getattr(self, "low_mem", False)),
                          "plugin_params": getattr(self, "plug_params", {}),

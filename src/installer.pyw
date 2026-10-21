@@ -12,9 +12,15 @@ import time
 import subprocess
 import zipfile
 
-VER = "9.15.0"
+VER = "9.15.1"
 APP = "Prism"
+FRIENDLY = "Prism"
 DISPLAY = "Prism %s" % VER
+SUPPORTED_EXTS = (
+    ".jpg", ".jpeg", ".jpe", ".jfif", ".png", ".apng", ".gif", ".webp",
+    ".bmp", ".tif", ".tiff", ".ico", ".avif", ".heic", ".nef", ".cr2",
+    ".arw", ".dng", ".rw2", ".orf", ".raf",
+)
 
 
 def _base():
@@ -101,13 +107,97 @@ def register_uninstall(dest, exe):
         return False
 
 
+def register_default_app(exe):
+    """把本安装注册进 Windows 10/11 的「默认应用」候选列表。
+
+    Windows 不允许安装程序直接改默认程序（UserChoice 有哈希保护），但注册
+    RegisteredApplications + Capabilities 后，用户就能在 设置 → 应用 →
+    默认应用 里选到 Prism / Prism 大屏版，也能按扩展名逐项指定。
+    """
+    if os.name != "nt":
+        return False
+    try:
+        import winreg
+    except Exception:
+        return False
+    progid = APP + ".Image"
+    base = r"Software\Classes\Applications\%s.exe" % APP
+    try:
+        k = winreg.CreateKey(winreg.HKEY_CURRENT_USER, base)
+        winreg.SetValueEx(k, "FriendlyAppName", 0, winreg.REG_SZ, FRIENDLY)
+        winreg.SetValueEx(k, "ApplicationCompany", 0, winreg.REG_SZ, "Prism")
+        winreg.SetValueEx(k, "DefaultIcon", 0, winreg.REG_SZ, exe + ",0")
+        winreg.CloseKey(k)
+        k = winreg.CreateKey(winreg.HKEY_CURRENT_USER,
+                             base + r"\shell\open\command")
+        winreg.SetValueEx(k, None, 0, winreg.REG_SZ, '"%s" "%%1"' % exe)
+        winreg.CloseKey(k)
+        k = winreg.CreateKey(winreg.HKEY_CURRENT_USER,
+                             base + r"\SupportedTypes")
+        for ext in SUPPORTED_EXTS:
+            winreg.SetValueEx(k, ext, 0, winreg.REG_SZ, "")
+        winreg.CloseKey(k)
+
+        pbase = r"Software\Classes\%s" % progid
+        k = winreg.CreateKey(winreg.HKEY_CURRENT_USER, pbase)
+        winreg.SetValueEx(k, None, 0, winreg.REG_SZ, FRIENDLY)
+        winreg.CloseKey(k)
+        k = winreg.CreateKey(winreg.HKEY_CURRENT_USER, pbase + r"\DefaultIcon")
+        winreg.SetValueEx(k, None, 0, winreg.REG_SZ, exe + ",0")
+        winreg.CloseKey(k)
+        k = winreg.CreateKey(winreg.HKEY_CURRENT_USER,
+                             pbase + r"\shell\open\command")
+        winreg.SetValueEx(k, None, 0, winreg.REG_SZ, '"%s" "%%1"' % exe)
+        winreg.CloseKey(k)
+
+        cap = r"Software\%s\Capabilities" % APP
+        k = winreg.CreateKey(winreg.HKEY_CURRENT_USER, cap)
+        winreg.SetValueEx(k, "ApplicationName", 0, winreg.REG_SZ, FRIENDLY)
+        winreg.SetValueEx(k, "ApplicationDescription", 0, winreg.REG_SZ,
+                          FRIENDLY + " 图片查看器")
+        winreg.SetValueEx(k, "ApplicationIcon", 0, winreg.REG_SZ, exe + ",0")
+        winreg.CloseKey(k)
+        k = winreg.CreateKey(winreg.HKEY_CURRENT_USER,
+                             cap + r"\FileAssociations")
+        for ext in SUPPORTED_EXTS:
+            winreg.SetValueEx(k, ext, 0, winreg.REG_SZ, progid)
+        winreg.CloseKey(k)
+        k = winreg.CreateKey(winreg.HKEY_CURRENT_USER,
+                             r"Software\RegisteredApplications")
+        winreg.SetValueEx(k, APP, 0, winreg.REG_SZ,
+                          r"Software\%s\Capabilities" % APP)
+        winreg.CloseKey(k)
+
+        for ext in SUPPORTED_EXTS:
+            k = winreg.CreateKey(winreg.HKEY_CURRENT_USER,
+                                 r"Software\Classes\%s\OpenWithProgids" % ext)
+            winreg.SetValueEx(k, progid, 0, winreg.REG_NONE, b"")
+            winreg.CloseKey(k)
+        return True
+    except Exception:
+        return False
+
+
 def write_uninstaller(dest):
+    reg = [
+        'reg delete "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion'
+        '\\Uninstall\\%s" /f >nul 2>&1' % APP,
+        'reg delete "HKCU\\Software\\Classes\\Applications'
+        '\\%s.exe" /f >nul 2>&1' % APP,
+        'reg delete "HKCU\\Software\\Classes\\%s.Image" /f >nul 2>&1' % APP,
+        'reg delete "HKCU\\Software\\%s" /f >nul 2>&1' % APP,
+        'reg delete "HKCU\\Software\\RegisteredApplications" /v "%s"'
+        ' /f >nul 2>&1' % APP,
+    ]
+    for ext in SUPPORTED_EXTS:
+        reg.append('reg delete "HKCU\\Software\\Classes\\%s'
+                   '\\OpenWithProgids" /v "%s.Image" /f >nul 2>&1'
+                   % (ext, APP))
     bat = "\r\n".join([
         "@echo off",
         "echo 正在卸载 %s ..." % DISPLAY,
         "timeout /t 1 >nul",
-        'reg delete "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion'
-        '\\Uninstall\\%s" /f >nul 2>&1' % APP,
+    ] + reg + [
         'del "%s" >nul 2>&1' % shortcut_path(),
         'del "%s" >nul 2>&1' % desktop_shortcut_path(),
         "cd /d %%TEMP%%",
@@ -127,17 +217,17 @@ def app_running():
     """Prism 正在运行时不能覆盖它的 dll（Windows 文件锁）。"""
     try:
         out = subprocess.run(
-            ["tasklist", "/FI", "IMAGENAME eq Prism.exe", "/NH"],
+            ["tasklist", "/FI", "IMAGENAME eq %s.exe" % APP, "/NH"],
             capture_output=True, text=True, timeout=15,
             creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0)).stdout
-        return "Prism.exe" in (out or "")
+        return (APP + ".exe") in (out or "")
     except Exception:
         return False
 
 
 def close_app():
     try:
-        subprocess.run(["taskkill", "/IM", "Prism.exe", "/F"],
+        subprocess.run(["taskkill", "/IM", APP + ".exe", "/F"],
                        capture_output=True, timeout=15,
                        creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
         time.sleep(1.2)
@@ -178,6 +268,7 @@ def silent_main(args):
             make_shortcut(exe)
             make_shortcut(exe, desktop_shortcut_path())
             register_uninstall(dest, exe)
+            register_default_app(exe)
             write_uninstaller(dest)
     except Exception as exc:
         sys.stderr.write("install failed: %s\n" % exc)
@@ -333,6 +424,7 @@ def main():
                     if make_shortcut(exe, desktop_shortcut_path()):
                         made.append("桌面")
                 register_uninstall(dest, exe)
+                registered = register_default_app(exe)
                 write_uninstaller(dest)
                 # 把结果写清楚：桌面的真实路径会被系统重定向（本机就在 D: 盘），
                 # 不显示出来用户根本不知道去哪儿找。
@@ -342,6 +434,8 @@ def main():
                 if want_desk.get():
                     want.append("桌面" + ("✓" if "桌面" in made else "✗"))
                 note = "已安装　" + "　".join(want)
+                if registered:
+                    note += "　默认应用已注册"
             else:
                 dest = p2.get().strip() or portable_target()
                 exe = extract_to(dest, progress)
@@ -379,6 +473,10 @@ def main():
             tk.Label(root, text="桌面快捷方式在：" + desktop_shortcut_path(),
                      font=small, bg="#181b20", fg="#6f7681",
                      wraplength=520).pack(pady=(6, 0), padx=20)
+        if note.startswith("已安装") and "默认应用已注册" in note:
+            tk.Label(root, text="已注册为图片打开方式；可在 设置 → 应用 → 默认应用 中选择 " + FRIENDLY,
+                     font=small, bg="#181b20", fg="#8a8f98",
+                     wraplength=540).pack(pady=(6, 0), padx=20)
         bar = tk.Frame(root, bg="#181b20")
         bar.pack(pady=22)
 
@@ -396,6 +494,9 @@ def main():
                                                 cwd=os.path.dirname(exe)),
                                 root.after(400, root.destroy)), True)
         mk("打开文件夹", lambda: open_dir(dest))
+        if note.startswith("已安装") and "默认应用已注册" in note:
+            mk("打开默认应用设置",
+               lambda: os.startfile("ms-settings:defaultapps"))
         mk("关闭", root.destroy)
 
     def on_install():

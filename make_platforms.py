@@ -208,6 +208,7 @@ def pack_viewer_installer(dist, ver):
     txt = io.open(inst_src, encoding="utf-8").read()
     # APP 同时用于拼「启动 xxx.exe」的路径与安装目录名，必须与真实 exe 名一致
     txt = re.sub(r'APP = "[^"]*"', 'APP = "PrismViewer"', txt, count=1)
+    txt = re.sub(r'FRIENDLY = "[^"]*"', 'FRIENDLY = "Prism 看图版"', txt, count=1)
     # 必须把行尾的 「 % VER」也一并匹配掉，否则会变成 "...%s" % VER % VER
     txt = re.sub(r'(?m)^DISPLAY = ".*" % VER$',
                  lambda _m: 'DISPLAY = "Prism Viewer %s" % VER', txt, count=1)
@@ -291,6 +292,7 @@ def pack_bigscreen_installer(dist, ver):
     inst_src = os.path.join(root, "src", "installer.pyw")
     txt = io.open(inst_src, encoding="utf-8").read()
     txt = re.sub(r'APP = "[^"]*"', 'APP = "PrismBigScreen"', txt, count=1)
+    txt = re.sub(r'FRIENDLY = "[^"]*"', 'FRIENDLY = "Prism 大屏版"', txt, count=1)
     txt = re.sub(r'(?m)^DISPLAY = ".*" % VER$',
                  lambda _m: 'DISPLAY = "Prism 大屏版 %s" % VER', txt, count=1)
     txt = re.sub(r'VER = "[\d.]+"', 'VER = "%s"' % ver, txt, count=1)

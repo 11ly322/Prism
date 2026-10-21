@@ -681,7 +681,7 @@ LANG_TABLE = {
         "霓虹": "Neon",
         "暖纸": "Warm paper",
         # 9.15.0 描边开关
-        "高对比描边（MC 风格，所有主题可用）": "High-contrast outline (MC style, works with every theme)",
+        "高对比描边（所有主题可用）": "High-contrast outline (works with every theme)",
         "2px 硬边；描边颜色跟随当前主题": "2px hard edge; outline color follows the current theme",
         "高对比描边：%s": "High-contrast outline: %s",
     },
@@ -1356,7 +1356,7 @@ LANG_TABLE = {
         "霓虹": "ネオン",
         "暖纸": "暖紙",
         # 9.15.0 描边开关
-        "高对比描边（MC 风格，所有主题可用）": "高コントラスト輪郭（MC 風・全テーマ対応）",
+        "高对比描边（所有主题可用）": "高コントラスト輪郭（全テーマ対応）",
         "2px 硬边；描边颜色跟随当前主题": "2px の硬い縁取り。色は現在のテーマに追従",
         "高对比描边：%s": "高コントラスト輪郭：%s",
     },

@@ -78,7 +78,7 @@ IS_WIN = sys.platform.startswith("win")
 K = "Command" if IS_MAC else "Control"
 
 APP_NAME = "Prism"
-APP_VERSION = "9.15.0"
+APP_VERSION = "9.15.1"
 APP_BUILD = "2025-12.9"
 # ---------------------------------------------------------------- 运行模式
 # 同一份源码编出三个版本：
@@ -9429,7 +9429,7 @@ class QPEApp(_BASE):
             self.set_outline(bool(out_var.get()))
 
         tk.Checkbutton(
-            wrap, text="高对比描边（MC 风格，所有主题可用）",
+            wrap, text="高对比描边（所有主题可用）",
             variable=out_var, command=on_outline, font=self.ui_font,
             bg=BAR_BG, fg=FG, activebackground=BAR_BG,
             activeforeground=FG_HI, selectcolor=DEEP_BG, anchor="w",
@@ -10974,7 +10974,7 @@ def run(img, **params):
         self._panel_btn(bar, "关闭", close_win)
 
     def _apply_outline(self, color, widget=None):
-        """MC 风格高对比描边：2px 硬边，可叠加在任意主题上。
+        """高对比描边：2px 硬边，可叠加在任意主题上。
 
         只描控件与关键容器，不给每个 Label 套框；颜色用当前主题的 OUTLINE。
         """
@@ -11081,7 +11081,7 @@ def run(img, **params):
             pass
 
     def set_outline(self, enabled):
-        """MC 风格高对比描边：独立开关，叠加在任意主题上。"""
+        """高对比描边：独立开关，叠加在任意主题上。"""
         self.outline = bool(enabled)
         var = getattr(self, "outline_var", None)
         if var is not None:

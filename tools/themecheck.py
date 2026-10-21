@@ -85,6 +85,17 @@ def main():
            len(preview) == len(mod.THEME_ORDER) * 5, str(len(preview)))
         preview_before = [str(ch.cget("bg")).lower() for ch in preview]
 
+        sc = app.set_canvas
+        ok("设置窗口可滚动", bool(sc.bbox("all"))
+           and sc.bbox("all")[3] > sc.winfo_height(),
+           str(sc.bbox("all")))
+        y0 = sc.yview()[0]
+        app.set_win.event_generate("<MouseWheel>", delta=-120)
+        for _ in range(15):
+            app.update(); time.sleep(0.01)
+        ok("设置滚轮能滚动", sc.yview()[0] > y0, str(sc.yview()))
+        sc.yview_moveto(0)
+
         for name in mod.THEME_ORDER:
             app.set_theme(name)
             for _ in range(25):

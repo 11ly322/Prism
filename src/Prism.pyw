@@ -78,7 +78,7 @@ IS_WIN = sys.platform.startswith("win")
 K = "Command" if IS_MAC else "Control"
 
 APP_NAME = "Prism"
-APP_VERSION = "9.14.1"
+APP_VERSION = "9.14.2"
 APP_BUILD = "2025-12.9"
 # ---------------------------------------------------------------- 运行模式
 # 同一份源码编出三个版本：
@@ -9254,7 +9254,63 @@ class QPEApp(_BASE):
         except Exception:
             pass
 
-        wrap = tk.Frame(win, bg=PANEL_BG)
+        tk.Button(win, text="完成", command=win.destroy, font=self.ui_font,
+                  bg=ACCENT, fg=ON_BG, activebackground=BAR_HOVER,
+                  activeforeground=ON_BG, relief="flat", bd=0,
+                  highlightthickness=0, padx=px(20), pady=px(5),
+                  cursor="hand2").pack(side="bottom", pady=(0, px(14)))
+
+        body = tk.Frame(win, bg=PANEL_BG)
+        body.pack(fill="both", expand=True)
+        canvas = tk.Canvas(body, bg=PANEL_BG, highlightthickness=0, bd=0)
+        # 自绘细滚动条：Tk 原生 Scrollbar 在 Windows 上不跟随深色主题，会出现白条
+        scroll = tk.Canvas(body, width=px(8), bg=PANEL_BG,
+                           highlightthickness=0, bd=0, cursor="hand2")
+        scroll.pack(side="right", fill="y")
+        canvas.pack(side="left", fill="both", expand=True)
+
+        def draw_scroll(*_args):
+            try:
+                scroll.delete("all")
+                w = scroll.winfo_width()
+                h = scroll.winfo_height()
+                if w < 2 or h < 2:
+                    return
+                scroll.create_rectangle(0, 0, w, h, fill=PANEL_BG, outline="")
+                first, last = canvas.yview()
+                if last - first >= 0.999:
+                    return
+                y0 = int(first * h)
+                y1 = int(last * h)
+                if y1 - y0 < px(18):
+                    y1 = y0 + px(18)
+                scroll.create_rectangle(
+                    px(2), y0 + px(2), w - px(2),
+                    min(h - px(2), y1 - px(2)),
+                    fill=TROUGH_BG, outline="")
+            except Exception:
+                pass
+
+        def on_scroll(first, last):
+            draw_scroll()
+
+        canvas.configure(yscrollcommand=on_scroll)
+        holder = tk.Frame(canvas, bg=PANEL_BG)
+        holder_id = canvas.create_window((0, 0), window=holder, anchor="nw")
+        holder.bind("<Configure>", lambda e: canvas.configure(
+            scrollregion=canvas.bbox("all")))
+        canvas.bind("<Configure>", lambda e: (
+            canvas.itemconfigure(holder_id, width=e.width), draw_scroll()))
+        scroll.bind("<Configure>", lambda e: draw_scroll())
+        scroll.bind("<Button-1>", lambda e: canvas.yview_moveto(
+            max(0.0, min(1.0, e.y / max(1, scroll.winfo_height())))))
+        scroll.bind("<B1-Motion>", lambda e: canvas.yview_moveto(
+            max(0.0, min(1.0, e.y / max(1, scroll.winfo_height())))))
+        self.set_canvas = canvas
+        self.set_scroll = scroll
+        self._draw_settings_scroll = draw_scroll
+
+        wrap = tk.Frame(holder, bg=PANEL_BG)
         wrap.pack(fill="both", expand=True, padx=px(SPACE_2XL),
                   pady=px(SPACE_2XL))
 
@@ -9457,11 +9513,36 @@ class QPEApp(_BASE):
         self._panel_btn(bar2, "复制设置", self.copy_settings)
         self._panel_btn(bar2, "关于 / 帮助", self.show_about)
 
-        tk.Button(win, text="完成", command=win.destroy, font=self.ui_font,
-                  bg=ACCENT, fg=ON_BG, activebackground=BAR_HOVER,
-                  activeforeground=ON_BG, relief="flat", bd=0,
-                  highlightthickness=0, padx=px(20), pady=px(5),
-                  cursor="hand2").pack(side="bottom", pady=(0, px(14)))
+        # 设置页比窗口高：滚轮、触控板与滚动条都能滚
+        def bind_scroll(w):
+            w.bind("<MouseWheel>", self._settings_wheel, add="+")
+            w.bind("<Button-4>", self._settings_wheel, add="+")
+            w.bind("<Button-5>", self._settings_wheel, add="+")
+            for child in w.winfo_children():
+                bind_scroll(child)
+
+        bind_scroll(win)
+        canvas.yview_moveto(0)
+
+    def _settings_wheel(self, event):
+        """设置窗口滚轮：Windows/macOS 用 delta，Linux 用 Button-4/5。"""
+        canvas = getattr(self, "set_canvas", None)
+        if canvas is None or not canvas.winfo_exists():
+            return
+        num = getattr(event, "num", None)
+        if num == 4:
+            step = -1
+        elif num == 5:
+            step = 1
+        else:
+            delta = getattr(event, "delta", 0) or 0
+            if not delta:
+                return
+            step = -int(delta / 120) if abs(delta) >= 120 else (
+                -1 if delta > 0 else 1)
+            step *= 3
+        canvas.yview_scroll(step, "units")
+        return "break"
 
     def _open_path(self, path):
         try:
@@ -10871,6 +10952,7 @@ def run(img, **params):
             (getattr(self, "pcan", None), BAR_BG),
             (getattr(self, "panel_grip", None), RULE_BG),
             (getattr(self, "set_win", None), PANEL_BG),
+            (getattr(self, "set_scroll", None), PANEL_BG),
         )
         for widget, color in pairs:
             if widget is None:
@@ -10899,6 +10981,12 @@ def run(img, **params):
                 reset_round(child)
 
         reset_round(self)
+        try:
+            draw = getattr(self, "_draw_settings_scroll", None)
+            if callable(draw):
+                draw()
+        except Exception:
+            pass
 
     def set_theme(self, name, persist=True):
         if name not in THEMES:

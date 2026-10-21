@@ -162,6 +162,31 @@ def main():
         ok("主题预览色块不随切换变色",
            [str(ch.cget("bg")).lower() for ch in preview] == preview_before,
            "stable" if preview_before else "")
+        icons = []
+
+        def scan_glyphs(w):
+            for ch in w.winfo_children():
+                if getattr(ch, "find_withtag", None):
+                    try:
+                        for item in ch.find_withtag("icon"):
+                            typ = ch.type(item)
+                            col = (ch.itemcget(item, "outline")
+                                   if typ == "arc"
+                                   else ch.itemcget(item, "fill"))
+                            icons.append(str(col).lower())
+                    except Exception:
+                        pass
+                scan_glyphs(ch)
+
+        scan_glyphs(app.bar)
+        ok("工具条图标跟随主题上色",
+           bool(icons) and all(c == mod.FG.lower() for c in icons),
+           str(icons[:3]))
+        ti = getattr(app, "text_item", None)
+        if ti is not None:
+            ok("空画布文字跟随主题",
+               str(app.canvas.itemcget(ti, "fill")).lower() == mod.FG_DIM.lower(),
+               app.canvas.itemcget(ti, "fill"))
         ok("BG_RGB 随主题更新",
            mod.BG_RGB == tuple(int(mod.BG[i:i + 2], 16) for i in (1, 3, 5)),
            str(mod.BG_RGB))

@@ -78,7 +78,7 @@ IS_WIN = sys.platform.startswith("win")
 K = "Command" if IS_MAC else "Control"
 
 APP_NAME = "Prism"
-APP_VERSION = "9.14.2"
+APP_VERSION = "9.14.3"
 APP_BUILD = "2025-12.9"
 # ---------------------------------------------------------------- 运行模式
 # 同一份源码编出三个版本：
@@ -3462,6 +3462,10 @@ class QPEApp(_BASE):
                               tip[0] * k, (tip[1] + 3.5) * k,
                               (tip[0] + (5 if kind == "rotr" else -5)) * k,
                               (tip[1] + 0.5) * k, fill=col, outline="")
+        # 图标线条/多边形用创建时的 FG 上色；打上 icon 标签，切主题时重上色
+        for _item in cv.find_all():
+            if _item != _bg:
+                cv.addtag_withtag("icon", _item)
         cv.bind("<Button-1>", lambda e: cmd())
         cv.bind("<Enter>", lambda e: cv.configure(bg=BAR_HOVER))
         cv.bind("<Leave>", lambda e: cv.configure(bg=BAR_BG))
@@ -3506,7 +3510,10 @@ class QPEApp(_BASE):
         self._menu_item(m_file, "打开文件…", self.open_dialog, "Ctrl+O")
         self._menu_item(m_file, "打开文件夹…", self.open_folder_dialog,
                         "Ctrl+Shift+O")
-        self._recent_menu = tk.Menu(m_file, tearoff=0)
+        self._recent_menu = tk.Menu(
+            m_file, tearoff=0, bg=DEEP2_BG, fg=FG, activebackground=ACCENT,
+            activeforeground=ON_BG, bd=0, relief="flat",
+            font=self.ui_font_s)
         self._rebuild_recent_menu()
         m_file.add_cascade(label=_tr("最近打开"), menu=self._recent_menu)
         m_file.add_separator()
@@ -9212,6 +9219,14 @@ class QPEApp(_BASE):
                 try:
                     for item in widget.find_withtag("rbg"):
                         widget.itemconfigure(item, fill=BAR_BG)
+                    for item in widget.find_withtag("icon"):
+                        typ = widget.type(item)
+                        if typ == "arc":
+                            widget.itemconfigure(item, outline=FG)
+                        elif typ == "line":
+                            widget.itemconfigure(item, fill=FG)
+                        elif typ in ("polygon", "oval", "rectangle"):
+                            widget.itemconfigure(item, fill=FG)
                 except Exception:
                     pass
             if isinstance(widget, _QpeRoundButton):
@@ -10981,6 +10996,23 @@ def run(img, **params):
                 reset_round(child)
 
         reset_round(self)
+        try:
+            if getattr(self, "text_item", None) is not None:
+                self.canvas.itemconfigure(self.text_item, fill=FG_DIM)
+        except Exception:
+            pass
+        try:
+            if getattr(self, "split_label2", None) is not None:
+                self.canvas.itemconfigure(self.split_label2, fill=ACCENT)
+        except Exception:
+            pass
+        try:
+            menu = getattr(self, "_recent_menu", None)
+            if menu is not None:
+                menu.configure(bg=DEEP2_BG, fg=FG, activebackground=ACCENT,
+                               activeforeground=ON_BG)
+        except Exception:
+            pass
         try:
             draw = getattr(self, "_draw_settings_scroll", None)
             if callable(draw):

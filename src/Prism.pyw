@@ -78,7 +78,7 @@ IS_WIN = sys.platform.startswith("win")
 K = "Command" if IS_MAC else "Control"
 
 APP_NAME = "Prism"
-APP_VERSION = "9.13.1"
+APP_VERSION = "9.14.0"
 APP_BUILD = "2025-12.9"
 # ---------------------------------------------------------------- 运行模式
 # 同一份源码编出三个版本：
@@ -262,11 +262,74 @@ THEMES = {
         "ON": "#101010", "PANEL": "#0b0b0d", "CARD": "#1b1b1d",
         "CARD_LINE": "#333338", "CHECK_A": "#151517", "CHECK_B": "#202024",
     },
+    # 深海：藏青底 + 天蓝强调
+    "navy": {
+        "BG": "#0b1220", "BAR_BG": "#111b2e", "BAR_HOVER": "#1c2b45",
+        "FG": "#c9d6e8", "FG_DIM": "#7d8fa8", "FG_HI": "#ffffff",
+        "ACCENT": "#38bdf8", "BTN": "#16233a", "DEEP": "#0a1526",
+        "DEEP2": "#101c30", "TROUGH": "#2a3d57", "HEAD": "#16243a",
+        "HEAD2": "#0f1a2c", "RULE": "#2a3f5c", "KNOB": "#9fd8f5",
+        "ON": "#06121e", "PANEL": "#0a1322", "CARD": "#111d31",
+        "CARD_LINE": "#243a55", "CHECK_A": "#0f1a2b", "CHECK_B": "#17263d",
+    },
+    # 森林：墨绿底 + 草绿强调
+    "forest": {
+        "BG": "#0d1210", "BAR_BG": "#121a16", "BAR_HOVER": "#1f2c24",
+        "FG": "#c7d6c9", "FG_DIM": "#7f917f", "FG_HI": "#ffffff",
+        "ACCENT": "#6cc24a", "BTN": "#17221a", "DEEP": "#0b110e",
+        "DEEP2": "#101812", "TROUGH": "#2a3a2d", "HEAD": "#18251a",
+        "HEAD2": "#101a12", "RULE": "#2b3d2e", "KNOB": "#b7e0a8",
+        "ON": "#071008", "PANEL": "#0a100c", "CARD": "#121c15",
+        "CARD_LINE": "#283a2b", "CHECK_A": "#101a12", "CHECK_B": "#18261b",
+    },
+    # 玫瑰：酒红底 + 粉色强调
+    "rose": {
+        "BG": "#140d12", "BAR_BG": "#1c121a", "BAR_HOVER": "#2c1c27",
+        "FG": "#e3cbd7", "FG_DIM": "#9d7d8d", "FG_HI": "#ffffff",
+        "ACCENT": "#f472b6", "BTN": "#241722", "DEEP": "#110a0e",
+        "DEEP2": "#181017", "TROUGH": "#3d2835", "HEAD": "#241622",
+        "HEAD2": "#170e14", "RULE": "#3b2733", "KNOB": "#f3b4d3",
+        "ON": "#160a10", "PANEL": "#100a0e", "CARD": "#1a1018",
+        "CARD_LINE": "#382432", "CHECK_A": "#180f15", "CHECK_B": "#23141e",
+    },
+    # 极夜：冷灰蓝底 + 冰蓝强调
+    "nord": {
+        "BG": "#0f1419", "BAR_BG": "#151c23", "BAR_HOVER": "#222d38",
+        "FG": "#d0dae3", "FG_DIM": "#7f8f9c", "FG_HI": "#ffffff",
+        "ACCENT": "#88c0d0", "BTN": "#1b242d", "DEEP": "#0c1116",
+        "DEEP2": "#121920", "TROUGH": "#33414e", "HEAD": "#1b242d",
+        "HEAD2": "#121920", "RULE": "#33414e", "KNOB": "#d8e5ee",
+        "ON": "#0b1015", "PANEL": "#0b1015", "CARD": "#141b22",
+        "CARD_LINE": "#2a3742", "CHECK_A": "#121920", "CHECK_B": "#1a232c",
+    },
+    # 霓虹：黑紫底 + 品红强调
+    "neon": {
+        "BG": "#0a0710", "BAR_BG": "#120b1c", "BAR_HOVER": "#241235",
+        "FG": "#e6d9f5", "FG_DIM": "#9a7fb5", "FG_HI": "#ffffff",
+        "ACCENT": "#e879f9", "BTN": "#1b0f28", "DEEP": "#080510",
+        "DEEP2": "#0f0918", "TROUGH": "#3a2350", "HEAD": "#1b1028",
+        "HEAD2": "#0f0918", "RULE": "#3c2452", "KNOB": "#f0c2ff",
+        "ON": "#0a0410", "PANEL": "#080510", "CARD": "#120b1c",
+        "CARD_LINE": "#342048", "CHECK_A": "#130b1d", "CHECK_B": "#1d102b",
+    },
+    # 暖纸：米色底 + 棕橙强调（浅色）
+    "paper": {
+        "BG": "#f3ecdf", "BAR_BG": "#fbf6ec", "BAR_HOVER": "#eee2cf",
+        "FG": "#3a3025", "FG_DIM": "#7a6a56", "FG_HI": "#1f1810",
+        "ACCENT": "#b45309", "BTN": "#f0e6d6", "DEEP": "#fffaf1",
+        "DEEP2": "#f8f0e2", "TROUGH": "#d8c9b2", "HEAD": "#efe3d1",
+        "HEAD2": "#f7edde", "RULE": "#d2c0a6", "KNOB": "#7a5a3a",
+        "ON": "#ffffff", "PANEL": "#ece2d2", "CARD": "#fdf8ef",
+        "CARD_LINE": "#d8c7ae", "CHECK_A": "#fffaf1", "CHECK_B": "#eadcc7",
+    },
 }
 
 THEME_NAMES = {"dark": "深色", "contrast": "高对比", "outline": "高对比·描边",
-               "amber": "炭橙", "light": "浅色"}
-THEME_ORDER = ("dark", "contrast", "outline", "amber", "light")
+               "amber": "炭橙", "light": "浅色", "navy": "深海",
+               "forest": "森林", "rose": "玫瑰", "nord": "极夜",
+               "neon": "霓虹", "paper": "暖纸"}
+THEME_ORDER = ("dark", "light", "contrast", "outline", "amber",
+               "navy", "forest", "rose", "nord", "neon", "paper")
 _CURRENT_THEME = ["dark"]
 
 
@@ -1821,6 +1884,19 @@ def _round_window(win):
         pass
 
 
+def _qpe_theme_role(color):
+    """把创建时的颜色归到语义角色，切主题时按角色恢复。"""
+    for role, val in (("BAR_BG", BAR_BG), ("BTN", BTN_BG),
+                      ("ACCENT", ACCENT), ("TROUGH", TROUGH_BG),
+                      ("CARD", CARD_BG)):
+        try:
+            if str(color).lower() == str(val).lower():
+                return role
+        except Exception:
+            pass
+    return None
+
+
 class _QpeRoundButton(tk.Canvas):
     """Canvas 自绘的圆角按钮。
 
@@ -1841,6 +1917,7 @@ class _QpeRoundButton(tk.Canvas):
         self._text = text
         self._command = command
         self._bg = bg
+        self._theme_role = _qpe_theme_role(bg)
         self._fg = fg
         self._hover_bg = hover_bg
         self._hover_fg = hover_fg
@@ -1917,7 +1994,11 @@ class _QpeRoundButton(tk.Canvas):
             elif k == "state":
                 self._state = v; redraw = True
             elif k == "bg":
-                self._bg = v; redraw = True
+                self._bg = v
+                role = _qpe_theme_role(v)
+                if role is not None:
+                    self._theme_role = role
+                redraw = True
             elif k == "fg":
                 self._fg = v; redraw = True
             elif k == "font":
@@ -6719,6 +6800,8 @@ class QPEApp(_BASE):
         rule = tk.Frame(head, bg=CARD_LINE, height=max(1, px(1)))
         rule.pack(side="left", fill="x", expand=True, pady=(px(1), 0))
         body = tk.Frame(parent, bg=CARD_BG)
+        if hasattr(self, "_theme_cards"):
+            self._theme_cards.extend((wrap, head, title_lbl, body))
         state = {"open": opened, "ran": False}
 
         def ensure():
@@ -7217,6 +7300,9 @@ class QPEApp(_BASE):
         self.pcan.bind("<Configure>", lambda e: self.pcan.itemconfigure(
             self.pwin, width=e.width))
         inner = tk.Frame(wrap, bg=PANEL_BG)
+        self.panel_wrap = wrap
+        self.panel_inner = inner
+        self._theme_cards = []
         inner.pack(fill="both", expand=True, padx=px(4), pady=px(8))
 
         tk.Label(inner, text="修图", font=self.ui_font_b, bg=BAR_BG, fg=FG,
@@ -9157,7 +9243,7 @@ class QPEApp(_BASE):
         self.set_win = win
         win.title("设置")
         win.configure(bg=PANEL_BG)
-        win.geometry("%dx%d" % (px(430), px(470)))
+        win.geometry("%dx%d" % (px(430), px(560)))
         win.after(60, lambda: _round_window(win))
         win.transient(self)
         self.after(40, self._apply_lang)
@@ -9214,20 +9300,29 @@ class QPEApp(_BASE):
                  fg=FG_DIM, anchor="w").pack(fill="x", pady=(0, px(6)))
 
         var = tk.StringVar(value=self.theme)
-        for key in THEME_ORDER:
-            row = tk.Frame(wrap, bg=BAR_BG)
-            row.pack(fill="x", pady=px(1))
+        # 两列主题网格：11 套主题也不会把设置窗口撑成一条长列表
+        grid = tk.Frame(wrap, bg=PANEL_BG)
+        grid.pack(fill="x")
+        grid.columnconfigure(0, weight=1, uniform="theme")
+        grid.columnconfigure(1, weight=1, uniform="theme")
+        for _i, key in enumerate(THEME_ORDER):
+            cell = tk.Frame(grid, bg=BAR_BG)
+            cell.grid(row=_i // 2, column=_i % 2, sticky="ew",
+                      padx=((0, px(4)) if _i % 2 == 0 else (px(4), 0)),
+                      pady=px(1))
             tk.Radiobutton(
-                row, text=THEME_NAMES[key], variable=var, value=key,
+                cell, text=THEME_NAMES[key], variable=var, value=key,
                 command=lambda k=key: self.set_theme(k),
                 font=self.ui_font, bg=BAR_BG, fg=FG, activebackground=BAR_BG,
                 activeforeground=FG_HI, selectcolor=DEEP_BG, anchor="w", bd=0,
-                highlightthickness=0, cursor="hand2").pack(side="left")
-            dots = tk.Frame(row, bg=BAR_BG)
-            dots.pack(side="left", padx=(px(10), 0))
+                highlightthickness=0, padx=px(4), cursor="hand2").pack(
+                    side="left")
+            dots = tk.Frame(cell, bg=BAR_BG)
+            dots.pack(side="right", padx=(0, px(4)))
             for role in ("BG", "BAR_BG", "FG", "ACCENT", "KNOB"):
-                tk.Frame(dots, width=px(12), height=px(12),
-                         bg=THEMES[key][role]).pack(side="left", padx=(0, px(3)))
+                tk.Frame(dots, width=px(10), height=px(10),
+                         bg=THEMES[key][role]).pack(side="left",
+                                                   padx=(0, px(2)))
 
         tk.Frame(wrap, bg=RULE_BG, height=max(1, px(1))).pack(
             fill="x", pady=(px(12), px(10)))
@@ -10755,6 +10850,52 @@ def run(img, **params):
         for child in w.winfo_children():
             self._apply_outline(color, child)
 
+    def _reset_theme_surfaces(self):
+        """主题切换后把结构性容器按角色归位。
+
+        `_swap_colors` 靠颜色相等来推断旧角色，主题里多个角色共用同一个色值
+        （例如深色的 BAR_BG 和 CARD）时会发生漂移；这些窗口骨架直接按角色重设。
+        """
+        pairs = (
+            (getattr(self, "bar", None), BAR_BG),
+            (getattr(self, "status", None), BAR_BG),
+            (getattr(self, "body", None), BG),
+            (getattr(self, "canvas", None), BG),
+            (getattr(self, "panel", None), BAR_BG),
+            (getattr(self, "panel_wrap", None), BAR_BG),
+            (getattr(self, "panel_inner", None), PANEL_BG),
+            (getattr(self, "pcan", None), BAR_BG),
+            (getattr(self, "panel_grip", None), RULE_BG),
+            (getattr(self, "set_win", None), PANEL_BG),
+        )
+        for widget, color in pairs:
+            if widget is None:
+                continue
+            try:
+                widget.configure(bg=color)
+            except Exception:
+                pass
+        for widget in getattr(self, "_theme_cards", ()):
+            try:
+                widget.configure(bg=CARD_BG)
+            except Exception:
+                pass
+        roles = {"BAR_BG": BAR_BG, "BTN": BTN_BG, "ACCENT": ACCENT,
+                 "TROUGH": TROUGH_BG, "CARD": CARD_BG}
+
+        def reset_round(w):
+            for child in w.winfo_children():
+                if isinstance(child, _QpeRoundButton):
+                    role = getattr(child, "_theme_role", None)
+                    if role in roles:
+                        child._bg = roles[role]
+                        child._hover_bg = BAR_HOVER
+                        child._hover_fg = FG_HI
+                        child._draw()
+                reset_round(child)
+
+        reset_round(self)
+
     def set_theme(self, name, persist=True):
         if name not in THEMES:
             return
@@ -10762,6 +10903,7 @@ def run(img, **params):
         delta = _theme_delta(old, name)
         _apply_palette(name)                 # 先换全局常量，之后新建的控件用新色
         self._swap_colors(self, delta)       # 再把已有控件逐个换掉
+        self._reset_theme_surfaces()         # 结构性容器按角色强制归位
         self._apply_outline(THEMES[name].get("outline"))
         self.theme = name
         if self.theme_btn is not None and self.theme_btn.winfo_exists():

@@ -72,6 +72,18 @@ def main():
         scan_radios(app.set_win)
         ok("设置里列出全部主题", len(radios) >= len(mod.THEME_ORDER) + 3,
            "%d radios" % len(radios))
+        preview = []
+
+        def scan_preview(w):
+            for ch in w.winfo_children():
+                if getattr(ch, "_theme_preview", False):
+                    preview.append(ch)
+                scan_preview(ch)
+
+        scan_preview(app.set_win)
+        ok("主题预览色块数量",
+           len(preview) == len(mod.THEME_ORDER) * 5, str(len(preview)))
+        preview_before = [str(ch.cget("bg")).lower() for ch in preview]
 
         for name in mod.THEME_ORDER:
             app.set_theme(name)
@@ -136,6 +148,9 @@ def main():
         ok("棋盘格随主题更新",
            mod.CHECK_A == mod.THEMES[mod.THEME_ORDER[-1]]["CHECK_A"],
            mod.CHECK_A)
+        ok("主题预览色块不随切换变色",
+           [str(ch.cget("bg")).lower() for ch in preview] == preview_before,
+           "stable" if preview_before else "")
         ok("BG_RGB 随主题更新",
            mod.BG_RGB == tuple(int(mod.BG[i:i + 2], 16) for i in (1, 3, 5)),
            str(mod.BG_RGB))

@@ -78,7 +78,7 @@ IS_WIN = sys.platform.startswith("win")
 K = "Command" if IS_MAC else "Control"
 
 APP_NAME = "Prism"
-APP_VERSION = "9.14.0"
+APP_VERSION = "9.14.1"
 APP_BUILD = "2025-12.9"
 # ---------------------------------------------------------------- 运行模式
 # 同一份源码编出三个版本：
@@ -9187,6 +9187,8 @@ class QPEApp(_BASE):
         只替换「当前值正好等于旧主题某个颜色」的选项，别的颜色不动，
         所以渐变、色带这类本来就该保持原色的东西不会被误改。
         """
+        if getattr(widget, "_theme_preview", False):
+            return
         opts = ("bg", "fg", "activebackground", "activeforeground",
                 "selectbackground", "selectforeground", "troughcolor",
                 "highlightbackground", "highlightcolor", "insertbackground",
@@ -9320,9 +9322,11 @@ class QPEApp(_BASE):
             dots = tk.Frame(cell, bg=BAR_BG)
             dots.pack(side="right", padx=(0, px(4)))
             for role in ("BG", "BAR_BG", "FG", "ACCENT", "KNOB"):
-                tk.Frame(dots, width=px(10), height=px(10),
-                         bg=THEMES[key][role]).pack(side="left",
-                                                   padx=(0, px(2)))
+                sw = tk.Frame(dots, width=px(10), height=px(10),
+                              bg=THEMES[key][role])
+                # 预览色块是主题的静态样本，切主题时不能被 _swap_colors 改色
+                sw._theme_preview = True
+                sw.pack(side="left", padx=(0, px(2)))
 
         tk.Frame(wrap, bg=RULE_BG, height=max(1, px(1))).pack(
             fill="x", pady=(px(12), px(10)))

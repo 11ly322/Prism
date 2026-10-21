@@ -4,6 +4,20 @@
 > 已一并改为 Prism，功能与时间线不变。代码里的 QPEApp / _QpeSlider 等内部
 > 标识符与旧配置迁移路径保持原名，改动会破坏兼容。
 
+## v9.15.3  （Windows 全版本：一键登记全部图片格式）
+
+- 安装完成页新增 **「一键设为默认」**，完整版、看图版、大屏版共用；
+  一次写入 `HKCU\Software\Classes\.ext` 的全部支持扩展名，并刷新资源管理器。
+- **不伪造、不删除 `UserChoice`**：Windows 7/8 的类默认直接生效；
+  Windows 10 会打开「设置默认程序」，点一次「设为默认」即可；
+  Windows 11 用 `ms-settings:defaultapps?registeredAppUser=...` 直达应用页，
+  按格式确认（微软从 Windows 11 起不再提供整包默认按钮）。
+- 按钮明确显示登记数量与系统确认步骤；不会假装静默改默认，也不会覆盖
+  用户已有的按扩展名选择。
+- `tools/defaultappcheck.py` 新增类默认、URI、Win7/10/11 分支与
+  `UserChoice` 不可触碰断言，支持 `--rounds N`；本次自检 **10 轮**全过。
+- `runall --fast` 19 套全过；网站同步「一键设为默认」说明。
+
 ## v9.15.2  （默认应用支持应用级一次选择）
 
 - 修正默认应用注册的关键字段：`RegisteredApplications` 的值名现在与

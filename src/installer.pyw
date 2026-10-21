@@ -12,7 +12,7 @@ import time
 import subprocess
 import zipfile
 
-VER = "9.15.2"
+VER = "9.15.3"
 APP = "Prism"
 FRIENDLY = "Prism"
 DISPLAY = "Prism %s" % VER
@@ -182,6 +182,81 @@ def register_default_app(exe):
         return True
     except Exception:
         return False
+
+
+def _win_build():
+    try:
+        return int(sys.getwindowsversion().build)
+    except Exception:
+        return 0
+
+
+def apply_image_associations():
+    """把全部已支持扩展名的 HKCU 类默认指向本安装的 ProgID。
+
+    只写 HKCU\\Software\\Classes\\.ext 的默认值，不碰
+    FileExts\\.ext\\UserChoice：Windows 10/11 的 UserChoice 有哈希保护，
+    安装器不能也不应该绕过它。没有 UserChoice 的格式会被这一步真正接管；
+    已有明确用户选择的格式仍以用户选择为准，最后到设置页确认一次。
+    """
+    if os.name != "nt":
+        return 0
+    try:
+        import winreg
+    except Exception:
+        return 0
+    progid = APP + ".Image"
+    count = 0
+    try:
+        for ext in SUPPORTED_EXTS:
+            k = winreg.CreateKey(winreg.HKEY_CURRENT_USER,
+                                 r"Software\Classes\%s" % ext)
+            winreg.SetValueEx(k, None, 0, winreg.REG_SZ, progid)
+            winreg.CloseKey(k)
+            k = winreg.CreateKey(winreg.HKEY_CURRENT_USER,
+                                 r"Software\Classes\%s\OpenWithProgids" % ext)
+            winreg.SetValueEx(k, progid, 0, winreg.REG_NONE, b"")
+            winreg.CloseKey(k)
+            count += 1
+        try:
+            import ctypes
+            ctypes.windll.shell32.SHChangeNotify(0x08000000, 0x1000, None, None)
+        except Exception:
+            pass
+    except Exception:
+        return 0
+    return count
+
+
+def default_apps_uri():
+    """打开本应用的默认应用页；Win11 支持直接定位到应用。"""
+    build = _win_build()
+    if build >= 22000:
+        from urllib.parse import quote
+        return ("ms-settings:defaultapps?registeredAppUser=" +
+                quote(FRIENDLY, safe=""))
+    return "ms-settings:defaultapps"
+
+
+def one_click_default(exe):
+    """一键登记全部图片格式；返回 (数量, 是否仍需系统确认)。
+
+    Windows 7/8 的类默认就是最终默认；Windows 10/11 的最终默认由
+    UserChoice 决定，只能打开默认应用页让用户确认一次。
+    """
+    register_default_app(exe)
+    count = apply_image_associations()
+    legacy = 0 < _win_build() < 10240
+    if not legacy:
+        try:
+            os.startfile(default_apps_uri())
+        except Exception:
+            try:
+                subprocess.Popen(["cmd", "/c", "start", "",
+                                  default_apps_uri()], shell=False)
+            except Exception:
+                pass
+    return count, not legacy
 
 
 def write_uninstaller(dest):
@@ -470,6 +545,7 @@ def main():
             if w is not btnbar:
                 w.destroy()
         btnbar.pack_forget()
+        root.geometry("%dx%d" % (px(620), px(450)))
         tk.Label(root, text="完成", font=big, bg="#181b20", fg="#7ee787").pack(
             pady=(30, 6))
         tk.Label(root, text=note, font=ui_font, bg="#181b20", fg="#e6e8ec").pack()
@@ -483,6 +559,9 @@ def main():
             tk.Label(root, text="已注册为图片打开方式；可在 设置 → 应用 → 默认应用 中选择 " + FRIENDLY,
                      font=small, bg="#181b20", fg="#8a8f98",
                      wraplength=540).pack(pady=(6, 0), padx=20)
+        default_note = tk.Label(root, text="", font=small, bg="#181b20",
+                                fg="#8a8f98", wraplength=540)
+        default_note.pack(pady=(4, 0), padx=20)
         bar = tk.Frame(root, bg="#181b20")
         bar.pack(pady=22)
 
@@ -496,13 +575,36 @@ def main():
             b.pack(side="left", padx=6)
             return b
 
+        def set_defaults():
+            default_note.configure(text="正在登记全部图片格式…", fg="#8a8f98")
+            root.update_idletasks()
+            count, confirm = one_click_default(exe)
+            if count <= 0:
+                default_note.configure(
+                    text="登记失败；请用「打开默认应用设置」手动选择 " + FRIENDLY,
+                    fg="#ff8a80")
+                return
+            if confirm:
+                if _win_build() >= 22000:
+                    tip = "Windows 11 需在打开的应用页按格式确认"
+                else:
+                    tip = "Windows 10 在「设置默认程序」里点一次「设为默认」"
+                default_note.configure(
+                    text="已登记 %d 种图片格式；%s（系统不允许安装器静默改默认）"
+                         % (count, tip), fg="#8a8f98")
+            else:
+                default_note.configure(
+                    text="已将 %d 种图片格式设为 %s 的默认打开方式"
+                         % (count, FRIENDLY), fg="#7ee787")
+
         mk("启动 Prism", lambda: (subprocess.Popen([exe],
                                                 cwd=os.path.dirname(exe)),
                                 root.after(400, root.destroy)), True)
         mk("打开文件夹", lambda: open_dir(dest))
         if note.startswith("已安装") and "默认应用已注册" in note:
+            mk("一键设为默认", set_defaults, True)
             mk("打开默认应用设置",
-               lambda: os.startfile("ms-settings:defaultapps"))
+               lambda: os.startfile(default_apps_uri()))
         mk("关闭", root.destroy)
 
     def on_install():

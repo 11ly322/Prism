@@ -12,7 +12,7 @@ import time
 import subprocess
 import zipfile
 
-VER = "9.15.1"
+VER = "9.15.2"
 APP = "Prism"
 FRIENDLY = "Prism"
 DISPLAY = "Prism %s" % VER
@@ -164,7 +164,7 @@ def register_default_app(exe):
         winreg.CloseKey(k)
         k = winreg.CreateKey(winreg.HKEY_CURRENT_USER,
                              r"Software\RegisteredApplications")
-        winreg.SetValueEx(k, APP, 0, winreg.REG_SZ,
+        winreg.SetValueEx(k, FRIENDLY, 0, winreg.REG_SZ,
                           r"Software\%s\Capabilities" % APP)
         winreg.CloseKey(k)
 
@@ -173,6 +173,12 @@ def register_default_app(exe):
                                  r"Software\Classes\%s\OpenWithProgids" % ext)
             winreg.SetValueEx(k, progid, 0, winreg.REG_NONE, b"")
             winreg.CloseKey(k)
+        # 通知 shell 关联已变化，避免「默认应用」页面继续用旧缓存
+        try:
+            import ctypes
+            ctypes.windll.shell32.SHChangeNotify(0x08000000, 0x1000, None, None)
+        except Exception:
+            pass
         return True
     except Exception:
         return False
@@ -187,7 +193,7 @@ def write_uninstaller(dest):
         'reg delete "HKCU\\Software\\Classes\\%s.Image" /f >nul 2>&1' % APP,
         'reg delete "HKCU\\Software\\%s" /f >nul 2>&1' % APP,
         'reg delete "HKCU\\Software\\RegisteredApplications" /v "%s"'
-        ' /f >nul 2>&1' % APP,
+        ' /f >nul 2>&1' % FRIENDLY,
     ]
     for ext in SUPPORTED_EXTS:
         reg.append('reg delete "HKCU\\Software\\Classes\\%s'

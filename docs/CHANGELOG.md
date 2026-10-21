@@ -4,6 +4,25 @@
 > 已一并改为 Prism，功能与时间线不变。代码里的 QPEApp / _QpeSlider 等内部
 > 标识符与旧配置迁移路径保持原名，改动会破坏兼容。
 
+## v9.15.2  （默认应用支持应用级一次选择）
+
+- 修正默认应用注册的关键字段：`RegisteredApplications` 的值名现在与
+  `Capabilities\ApplicationName` 完全一致。之前主版本都是 `Prism` 所以能显示，
+  但 **Prism 大屏版 / 看图版**的 `ApplicationName` 带中文名、值名却是
+  `PrismBigScreen`，Windows 默认应用页面就会漏掉它们。
+- 补齐 Windows 读取的 `ApplicationDescription`、`ApplicationIcon`、
+  `FileAssociations`、`Applications\<app>.exe` 的打开命令和 `SupportedTypes`；
+  安装完成后调用 `SHChangeNotify(SHCNE_ASSOCCHANGED)` 刷新默认应用缓存。
+- Windows 10 的「设置 → 应用 → 默认应用 → 设置应用程序的默认值」中选中
+  Prism/Prism 大屏版后，点一次「设为默认」即可接管全部已注册图片格式；
+  Windows 11 的应用页按格式确认。
+- 安装完成页增加「打开默认应用设置」按钮；卸载脚本清理 Capabilities、ProgID、
+  RegisteredApplications 与 OpenWithProgids。
+- `tools/defaultappcheck.py` 验证完整版与大屏版的 ApplicationName、
+  ApplicationDescription、ProgID、打开命令和 RegisteredApplications 名称一致。
+- 实测：Windows 10 22H2 Enterprise 虚拟机安装后，「设置 → 应用 → 默认应用 → 设置应用程序的默认值」列表出现 **Prism**；Windows 11 主机列表出现 **Prism 大屏版**。
+- `runall --fast` 19 套全过。
+
 ## v9.15.1  （Windows 默认应用注册 + 描边文案统一）
 
 - **Windows 10/11 默认应用**：安装器现在写入

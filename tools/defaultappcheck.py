@@ -52,6 +52,8 @@ def main():
         progid = app + ".Image"
         ok("%s ApplicationName" % app,
            fake.store[cap].get("ApplicationName", (0, ""))[1] == friendly)
+        ok("%s ApplicationDescription" % app,
+           bool(fake.store[cap].get("ApplicationDescription", (0, ""))[1]))
         ok("%s 文件关联" % app,
            fake.store.get(cap + r"\FileAssociations", {}).get(
                ".jpg", (0, ""))[1] == progid)
@@ -61,7 +63,7 @@ def main():
                           {}).get(None, (0, ""))[1])
         ok("%s 注册到 RegisteredApplications" % app,
            fake.store.get(r"Software\RegisteredApplications", {}).get(
-               app, (0, ""))[1] == r"Software\%s\Capabilities" % app)
+               friendly, (0, ""))[1] == r"Software\%s\Capabilities" % app)
         ok("%s 打开方式候选" % app,
            progid in fake.store.get(
                r"Software\Classes\.jpg\OpenWithProgids", {}))

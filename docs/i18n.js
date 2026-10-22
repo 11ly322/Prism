@@ -59,6 +59,9 @@ window.PRISM_I18N = {
 "11 套主题即时切换，窗口使用系统原生圆角。": "11 themes switch instantly, in a window with native rounded corners.",
 "10 套主题即时切换，可叠加高对比描边，窗口使用系统原生圆角。": "10 themes switch instantly; layer a high-contrast outline on top, in a window with native rounded corners.",
 "10 套主题 + 描边": "10 themes + outline",
+"动效与反馈": "Motion & feedback",
+"悬停、按压、状态过渡与设置淡入可一键关闭；主题网格有选中竖条，关闭后立即响应、不做动画": "Hover, press, state transitions and the settings fade can all be turned off; the theme grid gets a selection bar, and everything responds instantly with no animation when off.",
+"动态效果能关闭吗？ 可以。设置 →「动效与反馈」取消勾选；关闭后按钮仍立即执行，只是不做悬停/按压/淡入等过渡。": "Can motion effects be turned off? Yes. In Settings → Motion & feedback, clear the checkbox. Buttons still run immediately; only hover, press and fade transitions are skipped.",
 "深色、浅色、高对比、炭橙、深海、森林、玫瑰、极夜、霓虹、暖纸；另有 2px 高对比描边开关，任何主题都能叠加，颜色跟随主题": "Dark, light, high contrast, charcoal, deep sea, forest, rose, nord, neon and warm paper; plus a 2px high-contrast outline that layers on any theme and follows its color.",
 
 "主题即时切换，窗口使用系统原生圆角。": "Switch themes instantly; windows use the system's native rounded corners.",
@@ -360,6 +363,9 @@ window.PRISM_I18N = {
 "11 套主题即时切换，窗口使用系统原生圆角。": "11 種類のテーマを即時切替。ウィンドウは OS ネイティブの角丸。",
 "10 套主题即时切换，可叠加高对比描边，窗口使用系统原生圆角。": "10 種類のテーマを即時切替。高コントラスト輪郭を重ねられ、ウィンドウは OS ネイティブの角丸。",
 "10 套主题 + 描边": "10 種類のテーマ + 輪郭",
+"动效与反馈": "動きとフィードバック",
+"悬停、按压、状态过渡与设置淡入可一键关闭；主题网格有选中竖条，关闭后立即响应、不做动画": "ホバー・押下・状態遷移・設定のフェードは一括でオフにできます。テーマ一覧には選択バーが付き、オフ時はアニメーションなしで即座に反応します。",
+"动态效果能关闭吗？ 可以。设置 →「动效与反馈」取消勾选；关闭后按钮仍立即执行，只是不做悬停/按压/淡入等过渡。": "動きをオフにできますか？ はい。設定 →「動きとフィードバック」のチェックを外してください。ボタンはすぐ実行され、ホバー・押下・フェードなどの遷移だけが省略されます。",
 "深色、浅色、高对比、炭橙、深海、森林、玫瑰、极夜、霓虹、暖纸；另有 2px 高对比描边开关，任何主题都能叠加，颜色跟随主题": "ダーク・ライト・高コントラスト・チャコール・深海・森・ローズ・極夜・ネオン・暖紙。さらに 2px の高コントラスト輪郭をどのテーマにも重ねられ、色はテーマに追従。",
 
 "主题即时切换，窗口使用系统原生圆角。": "テーマは即時切り替え。ウィンドウは OS 標準の角丸。",

@@ -78,7 +78,7 @@ IS_WIN = sys.platform.startswith("win")
 K = "Command" if IS_MAC else "Control"
 
 APP_NAME = "Prism"
-APP_VERSION = "9.15.3"
+APP_VERSION = "9.15.4"
 APP_BUILD = "2025-12.9"
 # ---------------------------------------------------------------- 运行模式
 # 同一份源码编出三个版本：
@@ -505,6 +505,29 @@ def _theme_delta(old_name, new_name):
             m[a] = b
     return m
 
+
+# 动效总开关。设置里可关闭；关闭后控件仍即时响应，只是不做过渡/按压动画。
+MOTION_ENABLED = True
+MOTION_HOVER_MS = 130
+MOTION_PRESS_MS = 90
+
+
+def _mix_hex(a, b, t):
+    """两个 #rrggbb 颜色按 t 混合；容错，坏值直接回退。"""
+    try:
+        t = max(0.0, min(1.0, float(t)))
+        a = str(a).lstrip("#")
+        b = str(b).lstrip("#")
+        if len(a) != 6 or len(b) != 6:
+            return "#%s" % (a if len(a) == 6 else b)
+        out = []
+        for i in (0, 2, 4):
+            av = int(a[i:i + 2], 16)
+            bv = int(b[i:i + 2], 16)
+            out.append(int(round(av + (bv - av) * t)))
+        return "#%02x%02x%02x" % tuple(out)
+    except Exception:
+        return a if str(a).startswith("#") else "#000000"
 
 
 RESAMPLING = Image.Resampling
@@ -1929,6 +1952,10 @@ class _QpeRoundButton(tk.Canvas):
         self._font = font
         self._state = state
         self._hover = False
+        self._hover_t = 0.0
+        self._press = False
+        self._anim_job = None
+        self._feedback_job = None
         self._measure()
         self.bind("<Enter>", self._on_enter)
         self.bind("<Leave>", self._on_leave)
@@ -1959,33 +1986,92 @@ class _QpeRoundButton(tk.Canvas):
         h = max(2, self.winfo_height() or int(self.cget("height")))
         if self._state == "disabled":
             fill, ink = self._bg, FG_DIM
-        elif self._hover:
-            fill, ink = self._hover_bg, self._hover_fg
         else:
-            fill, ink = self._bg, self._fg
+            t = self._hover_t if MOTION_ENABLED else (
+                1.0 if self._hover else 0.0)
+            fill = _mix_hex(self._bg, self._hover_bg, t)
+            ink = _mix_hex(self._fg, self._hover_fg, t)
+            if self._press and MOTION_ENABLED:
+                fill = _mix_hex(fill, ACCENT, 0.18)
+                ink = _mix_hex(ink, ON_BG, 0.28)
+        pressed = bool(self._press and MOTION_ENABLED)
+        outline = ACCENT if pressed else (
+            OUTLINE_COLOR if OUTLINE_ON else "")
+        outline_w = max(1, px(2)) if (pressed or OUTLINE_ON) else 0
         self.create_polygon(self._round_pts(0, 0, w, h, self._radius),
                             smooth=True, fill=fill,
-                            outline=OUTLINE_COLOR if OUTLINE_ON else "",
-                            width=max(1, px(2)) if OUTLINE_ON else 0)
-        self.create_text(w / 2, h / 2, text=self._text, fill=ink,
-                         font=self._font)
+                            outline=outline, width=outline_w)
+        # 按下时文字轻微下沉 1px，给出明确的点击确认；松手/关闭动效即复位。
+        self.create_text(w / 2, h / 2 + (1 if pressed else 0),
+                         text=self._text, fill=ink, font=self._font)
 
     # --- 事件 ---
+    def _cancel_anim(self):
+        if self._anim_job is not None:
+            try:
+                self.after_cancel(self._anim_job)
+            except Exception:
+                pass
+            self._anim_job = None
+
+    def _animate_hover(self, target):
+        self._cancel_anim()
+        if not MOTION_ENABLED:
+            self._hover_t = target
+            self._draw()
+            return
+        start = self._hover_t
+        steps = 6
+
+        def step(i):
+            if not self.winfo_exists():
+                return
+            k = i / float(steps)
+            # ease-out：起步快、收尾稳，短交互不会显得拖沓
+            k = 1.0 - (1.0 - k) ** 3
+            self._hover_t = start + (target - start) * k
+            self._draw()
+            if i < steps:
+                self._anim_job = self.after(14, lambda: step(i + 1))
+            else:
+                self._anim_job = None
+
+        step(1)
+
     def _on_enter(self, _e=None):
         if self._state != "disabled":
             self._hover = True
-            self._draw()
+            self._animate_hover(1.0)
             self.configure(cursor="hand2")
 
     def _on_leave(self, _e=None):
         self._hover = False
-        self._draw()
+        self._animate_hover(0.0)
 
     def _on_click(self, _e=None):
         if self._state == "disabled":
             return
         if callable(self._command):
+            if MOTION_ENABLED:
+                self._press = True
+                self._draw()
+                if self._feedback_job is not None:
+                    try:
+                        self.after_cancel(self._feedback_job)
+                    except Exception:
+                        pass
+                self._feedback_job = self.after(
+                    MOTION_PRESS_MS, self._release_press)
             self._command()
+
+    def _release_press(self):
+        self._feedback_job = None
+        self._press = False
+        try:
+            if self.winfo_exists():
+                self._draw()
+        except Exception:
+            pass
 
     # --- 兼容 tk.Button 的少量接口 ---
     def configure(self, **kw):
@@ -1996,9 +2082,13 @@ class _QpeRoundButton(tk.Canvas):
                 self._measure()          # 英文/日文比中文宽，必须重新量
                 redraw = True
             elif k == "state":
-                self._state = v; redraw = True
+                self._state = v
+                self._press = False
+                redraw = True
             elif k == "bg":
                 self._bg = v
+                self._cancel_anim()
+                self._hover_t = 1.0 if self._hover else 0.0
                 role = _qpe_theme_role(v)
                 if role is not None:
                     self._theme_role = role
@@ -2115,6 +2205,11 @@ class _QpeSlider(tk.Canvas):
             r = px(6) if act else px(5)
             self.create_oval(x - r, y - r, x + r, y + r,
                              fill=FG_HI if act else KNOB_BG, outline="")
+            if self._drag and MOTION_ENABLED:
+                # 按下时加一圈主题色环，拖动中也能确认当前控件
+                self.create_oval(x - r - px(2), y - r - px(2),
+                                 x + r + px(2), y + r + px(2),
+                                 outline=ACCENT, width=max(1, px(1)))
         except Exception:
             pass
 
@@ -3008,6 +3103,7 @@ class QPEApp(_BASE):
         super(QPEApp, self).__init__()
         # 配色要在建界面之前定下来，否则控件会先按默认色建出来
         self.fast_skip_fx = False
+        self.motion = bool(self._peek_setting("motion", True))
         self.tips_seen = False
         self._lang_ready = False
         self.low_mem = bool(globals().get("LOW_MEM_ARG", False))
@@ -3149,6 +3245,7 @@ class QPEApp(_BASE):
         self.tile_cache = {}
         self.render_job = None
         self.flash_job = None
+        self.flash_color_job = None
         self.last_render = 0.0
         self.render_cost = 16.0
         self.render_interval = 16.0
@@ -3253,6 +3350,9 @@ class QPEApp(_BASE):
         self.slide_bg = None
 
         self.load_settings()          # 必须在建界面之前：水印输入框要预填
+        self.motion = bool(getattr(self, "motion", True))
+        global MOTION_ENABLED
+        MOTION_ENABLED = self.motion
 
         self.ui_font = self._pick_font(px(FONT_SM))
         self.ui_font_b = self._pick_font(px(FONT_SM), True)
@@ -3353,6 +3453,7 @@ class QPEApp(_BASE):
                           highlightthickness=0, padx=px(8), pady=px(3),
                           cursor="hand2", takefocus=0)
             b.pack(side="left", padx=(0, px(4)), pady=px(5))
+            self._wire_press(b, BTN_BG, ACCENT, ON_BG)
             self.crop_ratio_btns[key] = b
         tk.Label(self.cropbar, text="拉直", font=self.ui_font, bg=BAR_BG,
                  fg=FG_DIM).pack(side="left", padx=(px(10), px(4)))
@@ -3440,8 +3541,6 @@ class QPEApp(_BASE):
             [r, 0, s - r, 0, s, 0, s, r, s, s - r, s, s, s - r, s,
              r, s, 0, s, 0, s - r, 0, r, 0, 0],
             smooth=True, fill=BAR_BG, outline="", tags="rbg")
-        cv.bind("<Enter>", lambda e, c=cv, b=_bg: c.itemconfigure(b, fill=BAR_HOVER))
-        cv.bind("<Leave>", lambda e, c=cv, b=_bg: c.itemconfigure(b, fill=BAR_BG))
         k = s / 26.0
         col = FG
 
@@ -3475,9 +3574,45 @@ class QPEApp(_BASE):
         for _item in cv.find_all():
             if _item != _bg:
                 cv.addtag_withtag("icon", _item)
-        cv.bind("<Button-1>", lambda e: cmd())
-        cv.bind("<Enter>", lambda e: cv.configure(bg=BAR_HOVER))
-        cv.bind("<Leave>", lambda e: cv.configure(bg=BAR_BG))
+
+        def paint(hover=False, pressed=False):
+            bg = ACCENT if pressed else (BAR_HOVER if hover else BAR_BG)
+            ink = ON_BG if pressed else FG
+            try:
+                cv.itemconfigure(_bg, fill=bg)
+                cv.configure(bg=bg)
+                for item in cv.find_withtag("icon"):
+                    typ = cv.type(item)
+                    if typ == "arc":
+                        cv.itemconfigure(item, outline=ink)
+                    elif typ == "line":
+                        cv.itemconfigure(item, fill=ink)
+                    else:
+                        cv.itemconfigure(item, fill=ink)
+            except Exception:
+                pass
+
+        def on_enter(_e=None):
+            paint(True, False)
+
+        def on_leave(_e=None):
+            paint(False, False)
+
+        def on_press(_e=None):
+            if getattr(self, "motion", MOTION_ENABLED):
+                paint(True, True)
+
+        def on_release(_e=None):
+            paint(True, False)
+            try:
+                cmd()
+            except Exception:
+                pass
+
+        cv.bind("<Enter>", on_enter)
+        cv.bind("<Leave>", on_leave)
+        cv.bind("<ButtonPress-1>", on_press)
+        cv.bind("<ButtonRelease-1>", on_release)
         return cv
 
     def _menubutton(self, parent, label):
@@ -3500,6 +3635,7 @@ class QPEApp(_BASE):
         mb.pack(side="left", padx=(0, px(2)), pady=px(4))
         mb.bind("<Enter>", lambda e, w=mb: w.configure(bg=BAR_HOVER))
         mb.bind("<Leave>", lambda e, w=mb: w.configure(bg=BTN_BG))
+        self._wire_press(mb, BTN_BG, ACCENT, ON_BG)
         return menu
 
     def _menu_item(self, menu, label, fn, accel=None):
@@ -3678,6 +3814,7 @@ class QPEApp(_BASE):
                 relief="flat", bd=0, highlightthickness=0, padx=px(14),
                 pady=px(7), cursor="hand2", takefocus=0)
             b.pack(side="left", padx=px(3), pady=px(11))
+            self._wire_press(b, BTN_BG, ACCENT, ON_BG)
             return b
 
         def sep():
@@ -3701,12 +3838,13 @@ class QPEApp(_BASE):
         sep()
         add("全屏", self.toggle_fullscreen)
 
-        tk.Button(
+        exit_btn = tk.Button(
             self.bar, text="退出", command=self.on_close, font=big, bg=BTN_BG,
             fg=FG, activebackground=BAR_HOVER, activeforeground=FG_HI,
             relief="flat", bd=0, highlightthickness=0, padx=px(14),
-            pady=px(7), cursor="hand2", takefocus=0).pack(
-                side="right", padx=(px(3), px(10)), pady=px(11))
+            pady=px(7), cursor="hand2", takefocus=0)
+        exit_btn.pack(side="right", padx=(px(3), px(10)), pady=px(11))
+        self._wire_press(exit_btn, BTN_BG, ACCENT, ON_BG)
         self.zoom_lbl = tk.Label(
             self.bar, text="", font=self.ui_font, bg=BAR_BG, fg=FG_DIM,
             width=6, anchor="e")
@@ -3753,6 +3891,7 @@ class QPEApp(_BASE):
                                lambda e: self.settings_btn.configure(bg=BAR_HOVER))
         self.settings_btn.bind("<Leave>",
                                lambda e: self.settings_btn.configure(bg=BTN_BG))
+        self._wire_press(self.settings_btn, BTN_BG, ACCENT, ON_BG)
 
         # 插件入口：和设置并排，随时可见
         self.plug_btn = tk.Button(
@@ -3765,6 +3904,7 @@ class QPEApp(_BASE):
                            lambda e: self.plug_btn.configure(bg=BAR_HOVER))
         self.plug_btn.bind("<Leave>",
                            lambda e: self.plug_btn.configure(bg=BTN_BG))
+        self._wire_press(self.plug_btn, BTN_BG, ACCENT, ON_BG)
 
         # 菜单栏（原来散在工具条上的按钮都收进这里）
         g = self._bar_group(1)
@@ -6695,6 +6835,67 @@ class QPEApp(_BASE):
         widget.bind("<Leave>", leave, add="+")
         return leave
 
+    def _wire_press(self, widget, base_bg, press_bg, press_fg=None,
+                    base_fg=None):
+        """给原生 Tk 按钮补一个按下反馈；关闭动效时完全不改颜色。"""
+        if getattr(widget, "_press_wired", False):
+            return
+        widget._press_wired = True
+        base_fg = base_fg if base_fg is not None else widget.cget("fg")
+        press_fg = press_fg if press_fg is not None else base_fg
+
+        def down(_e=None):
+            if not getattr(self, "motion", MOTION_ENABLED):
+                return
+            try:
+                widget.configure(bg=press_bg, fg=press_fg)
+            except Exception:
+                pass
+
+        def up(_e=None):
+            try:
+                widget.configure(bg=base_bg, fg=base_fg)
+            except Exception:
+                pass
+
+        widget.bind("<ButtonPress-1>", down, add="+")
+        widget.bind("<ButtonRelease-1>", up, add="+")
+        widget.bind("<Leave>", lambda e: up(), add="+")
+
+    def _preview_motion(self):
+        """设置页的小预览：按钮闪一次 + 状态行提示。"""
+        if not getattr(self, "motion", True):
+            self._flash(_tr("动态效果已关闭"))
+            return
+        self._flash(_tr("动态效果已开启"))
+        btn = getattr(self, "motion_preview_btn", None)
+        if btn is None or not btn.winfo_exists():
+            return
+        try:
+            btn.configure(bg=ACCENT, fg=ON_BG)
+        except Exception:
+            return
+        steps = 6
+
+        def step(i):
+            if not btn.winfo_exists():
+                return
+            if not getattr(self, "motion", True):
+                try:
+                    btn.configure(bg=BTN_BG, fg=FG)
+                except Exception:
+                    pass
+                return
+            k = i / float(steps)
+            try:
+                btn.configure(bg=_mix_hex(BTN_BG, ACCENT, k), fg=FG)
+            except Exception:
+                return
+            if i < steps:
+                self.after(18, lambda: step(i + 1))
+
+        step(1)
+
     def _panel_btn(self, parent, text, cmd, side="left", wide=False):
         # 圆角按钮：Tk 的 Button 只能画直角，这里换成 Canvas 自绘控件
         b = _QpeRoundButton(parent, text=text, command=cmd,
@@ -9282,7 +9483,7 @@ class QPEApp(_BASE):
         self.set_win = win
         win.title("设置")
         win.configure(bg=PANEL_BG)
-        win.geometry("%dx%d" % (px(430), px(560)))
+        win.geometry("%dx%d" % (px(450), px(600)))
         win.after(60, lambda: _round_window(win))
         win.transient(self)
         self.after(40, self._apply_lang)
@@ -9291,11 +9492,14 @@ class QPEApp(_BASE):
         except Exception:
             pass
 
-        tk.Button(win, text="完成", command=win.destroy, font=self.ui_font,
-                  bg=ACCENT, fg=ON_BG, activebackground=BAR_HOVER,
-                  activeforeground=ON_BG, relief="flat", bd=0,
-                  highlightthickness=0, padx=px(20), pady=px(5),
-                  cursor="hand2").pack(side="bottom", pady=(0, px(14)))
+        done_btn = tk.Button(
+            win, text="完成", command=win.destroy, font=self.ui_font,
+            bg=ACCENT, fg=ON_BG, activebackground=BAR_HOVER,
+            activeforeground=ON_BG, relief="flat", bd=0,
+            highlightthickness=0, padx=px(20), pady=px(5),
+            cursor="hand2")
+        done_btn.pack(side="bottom", pady=(0, px(14)))
+        self._wire_press(done_btn, ACCENT, BAR_HOVER, ON_BG, ON_BG)
 
         body = tk.Frame(win, bg=PANEL_BG)
         body.pack(fill="both", expand=True)
@@ -9401,18 +9605,24 @@ class QPEApp(_BASE):
         grid.pack(fill="x")
         grid.columnconfigure(0, weight=1, uniform="theme")
         grid.columnconfigure(1, weight=1, uniform="theme")
+        self._theme_marks = {}
+        self._theme_radios = {}
         for _i, key in enumerate(THEME_ORDER):
             cell = tk.Frame(grid, bg=BAR_BG)
             cell.grid(row=_i // 2, column=_i % 2, sticky="ew",
                       padx=((0, px(4)) if _i % 2 == 0 else (px(4), 0)),
-                      pady=px(1))
-            tk.Radiobutton(
+                      pady=px(2))
+            mark = tk.Frame(cell, width=max(2, px(3)), bg=PANEL_BG)
+            mark.pack(side="left", fill="y")
+            radio = tk.Radiobutton(
                 cell, text=THEME_NAMES[key], variable=var, value=key,
                 command=lambda k=key: self.set_theme(k),
-                font=self.ui_font, bg=BAR_BG, fg=FG, activebackground=BAR_BG,
+                font=self.ui_font, bg=BAR_BG, fg=FG, activebackground=BAR_HOVER,
                 activeforeground=FG_HI, selectcolor=DEEP_BG, anchor="w", bd=0,
-                highlightthickness=0, padx=px(4), cursor="hand2").pack(
-                    side="left")
+                highlightthickness=0, padx=px(6), cursor="hand2")
+            radio.pack(side="left")
+            self._theme_marks[key] = mark
+            self._theme_radios[key] = radio
             dots = tk.Frame(cell, bg=BAR_BG)
             dots.pack(side="right", padx=(0, px(4)))
             for role in ("BG", "BAR_BG", "FG", "ACCENT", "KNOB", "OUTLINE"):
@@ -9421,6 +9631,7 @@ class QPEApp(_BASE):
                 # 预览色块是主题的静态样本，切主题时不能被 _swap_colors 改色
                 sw._theme_preview = True
                 sw.pack(side="left", padx=(0, px(2)))
+        self._sync_theme_marks()
 
         out_var = tk.IntVar(value=1 if getattr(self, "outline", False) else 0)
         self.outline_var = out_var
@@ -9438,6 +9649,43 @@ class QPEApp(_BASE):
         tk.Label(wrap, text="2px 硬边；描边颜色跟随当前主题",
                  font=self.ui_font_s, bg=BAR_BG, fg=FG_DIM,
                  anchor="w").pack(fill="x", pady=(0, px(2)))
+
+        # 动效总开关：放在外观区，和主题/描边同级；关闭后所有过渡即时结束。
+        motion_card = tk.Frame(wrap, bg=CARD_BG)
+        motion_card._outline_frame = True
+        self.motion_card = motion_card
+        motion_card.pack(fill="x", pady=(px(10), px(2)))
+        tk.Label(motion_card, text="动效与反馈", font=self.ui_font_b,
+                 bg=CARD_BG, fg=FG, anchor="w").pack(
+                     fill="x", padx=px(SPACE_MD), pady=(px(SPACE_SM), 0))
+        motion_var = tk.IntVar(value=1 if getattr(self, "motion", True) else 0)
+        self.motion_var = motion_var
+
+        def on_motion():
+            self.set_motion(bool(motion_var.get()))
+
+        mrow = tk.Frame(motion_card, bg=CARD_BG)
+        mrow.pack(fill="x", padx=px(SPACE_MD), pady=(px(2), 0))
+        tk.Checkbutton(
+            mrow, text="动态效果与点击反馈", variable=motion_var,
+            command=on_motion, font=self.ui_font, bg=CARD_BG, fg=FG,
+            activebackground=CARD_BG, activeforeground=FG_HI,
+            selectcolor=DEEP_BG, anchor="w", bd=0, highlightthickness=0,
+            cursor="hand2").pack(side="left")
+        preview_btn = tk.Button(
+            mrow, text="预览", font=self.ui_font_s, command=self._preview_motion,
+            bg=BTN_BG, fg=FG, activebackground=BAR_HOVER,
+            activeforeground=FG_HI, relief="flat", bd=0,
+            highlightthickness=0, padx=px(8), pady=px(2),
+            cursor="hand2", takefocus=0)
+        preview_btn.pack(side="right")
+        self.motion_preview_btn = preview_btn
+        self._wire_press(preview_btn, BTN_BG, ACCENT, ON_BG)
+        tk.Label(motion_card,
+                 text="开：悬停、按压与状态过渡；关：立即切换，无动画",
+                 font=self.ui_font_s, bg=CARD_BG, fg=FG_DIM,
+                 anchor="w", justify="left").pack(
+                     fill="x", padx=px(SPACE_MD), pady=(0, px(SPACE_SM)))
 
         tk.Frame(wrap, bg=RULE_BG, height=max(1, px(1))).pack(
             fill="x", pady=(px(12), px(10)))
@@ -9580,6 +9828,28 @@ class QPEApp(_BASE):
         canvas.yview_moveto(0)
         if getattr(self, "outline", False):
             self._apply_outline(OUTLINE_COLOR, win)
+        if getattr(self, "motion", True):
+            self._fade_in(win)
+
+    def _fade_in(self, win):
+        """设置窗口的短淡入；仅 Windows/macOS 支持 -alpha，失败就保持原样。"""
+        try:
+            win.attributes("-alpha", 0.0)
+        except Exception:
+            return
+        steps = 6
+
+        def step(i):
+            try:
+                if not win.winfo_exists():
+                    return
+                win.attributes("-alpha", min(1.0, i / float(steps)))
+            except Exception:
+                return
+            if i < steps:
+                self.after(16, lambda: step(i + 1))
+
+        self.after(14, lambda: step(1))
 
     def _settings_wheel(self, event):
         """设置窗口滚轮：Windows/macOS 用 delta，Linux 用 Button-4/5。"""
@@ -9615,6 +9885,8 @@ class QPEApp(_BASE):
         self.set_theme("dark", persist=False)
         if getattr(self, "outline", False):
             self.set_outline(False)
+        if not getattr(self, "motion", True):
+            self.set_motion(True, persist=False)
         if self.clip_warn:
             self.toggle_clip()
         self.save_settings()
@@ -11080,6 +11352,34 @@ def run(img, **params):
         except Exception:
             pass
 
+    def set_motion(self, enabled, persist=True):
+        """动态效果总开关：关闭后所有过渡/按压动画立即停用。"""
+        global MOTION_ENABLED
+        self.motion = bool(enabled)
+        MOTION_ENABLED = self.motion
+        var = getattr(self, "motion_var", None)
+        if var is not None:
+            try:
+                var.set(1 if self.motion else 0)
+            except Exception:
+                pass
+        if not self.motion:
+            job = getattr(self, "flash_color_job", None)
+            if job is not None:
+                try:
+                    self.after_cancel(job)
+                except Exception:
+                    pass
+                self.flash_color_job = None
+            try:
+                self.meta_lbl.configure(fg=FG_DIM)
+            except Exception:
+                pass
+        if persist:
+            self.save_settings()
+        self._flash(_tr("动态效果与点击反馈：%s") %
+                    _tr("开" if self.motion else "关"))
+
     def set_outline(self, enabled):
         """高对比描边：独立开关，叠加在任意主题上。"""
         self.outline = bool(enabled)
@@ -11093,6 +11393,52 @@ def run(img, **params):
         self._apply_outline(OUTLINE_COLOR if self.outline else None)
         self._flash(_tr("高对比描边：%s") % _tr("开" if self.outline else "关"))
 
+    def _sync_theme_marks(self, animate=False):
+        """设置页主题网格的选中标记：3px 主题色竖条 + 主题色文字。"""
+        marks = getattr(self, "_theme_marks", {}) or {}
+        radios = getattr(self, "_theme_radios", {}) or {}
+        for key, mark in marks.items():
+            try:
+                mark.configure(bg=ACCENT if key == self.theme else PANEL_BG)
+            except Exception:
+                pass
+        for key, radio in radios.items():
+            try:
+                radio.configure(fg=ACCENT if key == self.theme else FG)
+            except Exception:
+                pass
+        if animate and getattr(self, "motion", True):
+            mark = marks.get(self.theme)
+            if mark is not None:
+                self._pulse_theme_mark(mark)
+
+    def _pulse_theme_mark(self, mark):
+        """切主题时让选中竖条轻轻呼吸一次；关闭动效不执行。"""
+        if not getattr(self, "motion", True):
+            return
+        steps = 5
+        base = ACCENT
+
+        def step(i):
+            try:
+                if not mark.winfo_exists():
+                    return
+                k = i / float(steps)
+                # 两端回到强调色，中间向面板色靠近，形成一次短脉冲
+                edge = 1.0 - abs(2.0 * k - 1.0)
+                mark.configure(bg=_mix_hex(base, PANEL_BG, 0.32 * edge))
+            except Exception:
+                return
+            if i < steps:
+                self.after(22, lambda: step(i + 1))
+            else:
+                try:
+                    mark.configure(bg=base)
+                except Exception:
+                    pass
+
+        step(1)
+
     def set_theme(self, name, persist=True):
         if name not in THEMES:
             return
@@ -11104,6 +11450,7 @@ def run(img, **params):
         self._apply_outline(OUTLINE_COLOR if getattr(self, "outline", False)
                             else None)
         self.theme = name
+        self._sync_theme_marks(animate=True)
         if self.theme_btn is not None and self.theme_btn.winfo_exists():
             self.theme_btn.configure(
                 text=_tr("主题：%s") % _tr(THEME_NAMES[name]))
@@ -11170,6 +11517,7 @@ def run(img, **params):
             self.wm_size = max(1.0, min(12.0, float(d.get("wm_size", 3.5))))
             self.wm_alpha = max(5.0, min(100.0, float(d.get("wm_alpha", 65))))
             self.clip_warn = bool(d.get("clip_warn", False))
+            self.motion = bool(d.get("motion", getattr(self, "motion", True)))
             self.fast_skip_fx = bool(d.get("fast_skip_fx", False))
             self.tips_seen = bool(d.get("tips_seen", False))
             prof = str(d.get("perf_profile", "") or "")
@@ -11269,6 +11617,7 @@ def run(img, **params):
                          "wm_size": self.wm_size,
                          "wm_alpha": self.wm_alpha,
                          "clip_warn": self.clip_warn,
+                         "motion": bool(getattr(self, "motion", True)),
                          "last_dir": self.folder or "",
                          "geom": self._safe_geom(),
                          "panel": bool(self.panel_shown),
@@ -12319,6 +12668,39 @@ def run(img, **params):
 
     def _flash(self, text, ms=2200):
         self.meta_lbl.configure(text=_trf(text))
+        if self.flash_color_job is not None:
+            try:
+                self.after_cancel(self.flash_color_job)
+            except Exception:
+                pass
+            self.flash_color_job = None
+        if getattr(self, "motion", True):
+            try:
+                self.meta_lbl.configure(fg=ACCENT)
+            except Exception:
+                pass
+            steps = 6
+
+            def fade(i):
+                if not getattr(self, "alive", True):
+                    return
+                k = i / float(steps)
+                try:
+                    self.meta_lbl.configure(fg=_mix_hex(ACCENT, FG_DIM, k))
+                except Exception:
+                    return
+                if i < steps:
+                    self.flash_color_job = self.after(
+                        32, lambda: fade(i + 1))
+                else:
+                    self.flash_color_job = None
+
+            self.flash_color_job = self.after(16, lambda: fade(1))
+        else:
+            try:
+                self.meta_lbl.configure(fg=FG_DIM)
+            except Exception:
+                pass
         if self.flash_job is not None:
             try:
                 self.after_cancel(self.flash_job)

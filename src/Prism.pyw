@@ -7045,6 +7045,8 @@ class QPEApp(_BASE):
             body.pack(fill="x", padx=(px(11), 0), pady=(px(3), 0))
             ensure()
         self.sections[title] = (body, toggle)     # 便于程序化展开 / 定位
+        if hasattr(self, "section_wraps"):
+            self.section_wraps[title] = wrap
         return body
 
     def _draw_local_mini(self):
@@ -7143,6 +7145,25 @@ class QPEApp(_BASE):
             except Exception:
                 pass
         self._relayout_panel()
+
+    def _scroll_panel_to(self, title):
+        entry = getattr(self, "sections", {}).get(title)
+        if not entry or not getattr(self, "pcan", None):
+            return
+        body = entry[0]
+        try:
+            if not body.winfo_ismapped():
+                entry[1]()
+            self.pcan.update_idletasks()
+            bbox = self.pcan.bbox("all")
+            total = max(1, bbox[3] - bbox[1]) if bbox else 1
+            head = getattr(self, "section_wraps", {}).get(title, body)
+            top = max(0, (head.winfo_rooty() - self.pcan.winfo_rooty() +
+                          self.pcan.canvasy(0)) - px(8))
+            self.pcan.yview_moveto(min(1.0, top / float(total)))
+            self._draw_panel_scroll()
+        except Exception:
+            pass
 
     def _relayout_panel(self):
         def finish():
@@ -7670,6 +7691,7 @@ class QPEApp(_BASE):
 
         # 每个分类一个独立容器；只 pack 当前分类，切换不改变控件状态。
         self.panel_boxes = {}
+        self.section_wraps = {}
         for _group in self.panel_tab_order:
             self.panel_boxes[_group] = tk.Frame(inner, bg=PANEL_BG)
 
@@ -8324,20 +8346,8 @@ class QPEApp(_BASE):
                     toggle()
             except Exception:
                 pass
-        # 滚动到该分区，避免"点了菜单却看不到内容"
-        try:
-            if entry:
-                body = entry[0]
-                self.pcan.update_idletasks()
-                bbox = self.pcan.bbox("all")
-                total = max(1, bbox[3] - bbox[1]) if bbox else 1
-                target = getattr(body, "master", body)
-                top = max(0, (target.winfo_rooty() -
-                              self.pcan.winfo_rooty() + self.pcan.canvasy(0))
-                          - px(8))
-                self.pcan.yview_moveto(min(1.0, top / float(total)))
-        except Exception:
-            pass
+        # 等 body 完成 pack/relayout 后再滚，避免 bbox 还是旧的
+        self.after(100, lambda: self._scroll_panel_to(target))
         tips = {
             "skin": "人像美化：拖「肤色柔化」与「肤色提亮」；检测到人脸时只作用于脸",
             "film": "胶片模拟：先在下拉框选风格，再用「胶片强度」控制力度",
@@ -9919,6 +9929,8 @@ class QPEApp(_BASE):
 
         bind_scroll(win)
         canvas.yview_moveto(0)
+        # 窗口首次映射后内容高度才稳定；再归位一次，保证打开时看到标题/主题顶部
+        win.after(160, lambda: canvas.yview_moveto(0))
         if getattr(self, "outline", False):
             self._apply_outline(OUTLINE_COLOR, win)
         if getattr(self, "motion", True):

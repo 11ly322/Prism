@@ -1,4 +1,4 @@
-﻿<div align="center">
+<div align="center">
 
 <img src="src/Prism.png" width="96" alt="Prism">
 
@@ -205,6 +205,8 @@ chmod +x prism.sh
 - 极端逆光下，肤色蒙版可能只覆盖受光半边脸
 - 导出 12MP 全尺寸时美颜约需 6.2 秒（预览只算可见区域，不受影响）
 - 低档磨皮刻意做得很轻，方便与其它效果叠加
+
+完整 50 轮记录：[design/beauty-50rounds.md](https://github.com/11ly322/Prism/blob/main/design/beauty-50rounds.md)
 
 ### 回归测试
 

@@ -142,17 +142,28 @@ def main():
                                           app.cmp_btn, app.save_btn)))
         ok("面板滚动条为自绘", isinstance(app.psb, mod.tk.Canvas),
            app.psb.winfo_class())
-        tool_body, tool_toggle = app.sections["工具"]
-        ok("工具区默认收起", not tool_body.winfo_ismapped())
+        tool_body, _tool_toggle = app.sections["工具"]
+        ok("工具分类默认隐藏", not tool_body.winfo_ismapped())
         ok("工具区控件已建好", app.hist_box.winfo_exists()
            and app.sort_btn.winfo_exists())
-        tool_toggle()
+        app.set_panel_tab("tools")
         for _ in range(8):
             app.update(); time.sleep(0.01)
-        ok("工具区可展开", tool_body.winfo_ismapped())
-        tool_toggle()
+        ok("工具分类可切换", tool_body.winfo_ismapped()
+           and app.panel_boxes["tools"].winfo_ismapped())
+        app.set_panel_tab("adjust")
         for _ in range(8):
             app.update(); time.sleep(0.01)
+        ok("调整分类可回切", app.panel_boxes["adjust"].winfo_ismapped()
+           and not app.panel_boxes["tools"].winfo_ismapped())
+        for _group in ("color", "detail", "effect", "presets", "tools",
+                       "adjust"):
+            app.set_panel_tab(_group)
+            for _ in range(3):
+                app.update(); time.sleep(0.01)
+            only = [g for g, box in app.panel_boxes.items()
+                    if box.winfo_ismapped()]
+            ok("分类切换：%s" % _group, only == [_group], str(only))
 
         # 5) 性能档位
         app.set_perf_profile("fast-first")

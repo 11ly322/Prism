@@ -78,7 +78,7 @@ IS_WIN = sys.platform.startswith("win")
 K = "Command" if IS_MAC else "Control"
 
 APP_NAME = "Prism"
-APP_VERSION = "9.15.5"
+APP_VERSION = "9.15.6"
 APP_BUILD = "2025-12.9"
 # ---------------------------------------------------------------- 运行模式
 # 同一份源码编出三个版本：
@@ -7132,6 +7132,34 @@ class QPEApp(_BASE):
         finally:
             self.syncing = False
 
+    def set_panel_tab(self, group, scroll=True):
+        """切换右侧分类；只 pack 当前分类容器，其余分类保留状态。"""
+        if group not in getattr(self, "panel_boxes", {}):
+            return
+        self.panel_tab = group
+        for key, box in self.panel_boxes.items():
+            try:
+                if key == group:
+                    box.pack(fill="x")
+                else:
+                    box.pack_forget()
+            except Exception:
+                pass
+        for key, btn in getattr(self, "panel_tab_btns", {}).items():
+            try:
+                if key == group:
+                    btn.configure(bg=ACCENT, fg=ON_BG)
+                else:
+                    btn.configure(bg=BTN_BG, fg=FG)
+            except Exception:
+                pass
+        if scroll:
+            try:
+                self.pcan.yview_moveto(0)
+            except Exception:
+                pass
+        self._relayout_panel()
+
     def _relayout_panel(self):
         def finish():
             try:
@@ -7472,11 +7500,10 @@ class QPEApp(_BASE):
 
     # -------------------------------------------------------- 面板
 
-    def _defer_sections(self, holder, builders):
+    def _defer_sections(self, builders):
         """逐个在事件循环空闲时构建面板分区，避免启动时一次性卡住。
 
-        每个分区单独一个 after(1)，而不是一口气全建 —— 这样首帧能抢在
-        这些分区之前画出来，用户看到的是「窗口已出现，面板还在长」。
+        builders 是 (builder, group) 列表；分区直接建进对应分类容器。
         """
         todo = list(builders)
 
@@ -7487,9 +7514,9 @@ class QPEApp(_BASE):
                 except Exception:
                     pass
                 return
-            fn = todo.pop(0)
+            fn, group = todo.pop(0)
             try:
-                fn(holder)
+                fn(self.panel_boxes[group])
             except Exception:
                 traceback.print_exc()
             if todo:
@@ -7622,25 +7649,31 @@ class QPEApp(_BASE):
                                   justify="left")
         self.hist_info.pack(fill="x", pady=(px(1), 0))
 
-        # 常驻入口：四项压成一行，节省首屏高度
-        quick = tk.Frame(self.panel_top, bg=PANEL_BG)
-        quick.pack(fill="x", pady=(px(SPACE_SM), px(SPACE_XS)))
-        for _c in range(4):
-            quick.columnconfigure(_c, weight=1, uniform="qb")
-        for _i, (_txt, _cmd) in enumerate((
-                ("人像", lambda: self._focus_film("skin")),
-                ("胶片", lambda: self._focus_film("film")),
-                ("镜头", lambda: self._focus_film("lens")),
-                ("美颜", self.toggle_beauty_peek))):
-            _b = self._panel_btn(quick, _txt, _cmd, side="grid")
-            _b.grid(row=0, column=_i, sticky="ew",
-                    padx=(0 if _i == 0 else px(SPACE_XS), 0))
+        # 分类标签：只显示一个调整类别的面板，避免把十几个分区堆成一条长列表
+        tabs = tk.Frame(self.panel_top, bg=PANEL_BG)
+        tabs.pack(fill="x", pady=(px(SPACE_SM), 0))
+        self.panel_tabs = tabs
+        self.panel_tab_btns = {}
+        self.panel_tab = "adjust"
+        self.panel_tab_order = ("adjust", "color", "detail", "effect",
+                                "presets", "tools")
+        self.panel_tab_labels = {
+            "adjust": "调整", "color": "颜色", "detail": "细节",
+            "effect": "效果", "presets": "预设", "tools": "工具"}
+        for _key in self.panel_tab_order:
+            _b = _QpeRoundButton(
+                tabs, text=self.panel_tab_labels[_key],
+                command=lambda k=_key: self.set_panel_tab(k),
+                font=self.ui_font_s, bg=BTN_BG, fg=FG, hover_bg=BAR_HOVER,
+                hover_fg=FG_HI, padx=2, pady=2, radius=RADIUS_SM)
+            _b.pack(side="left", expand=True, fill="x", padx=px(1))
+            self.panel_tab_btns[_key] = _b
+
         self.ai_status_lbl = tk.Label(self.panel_top, text="", font=self.ui_font_s,
                                       bg=PANEL_BG, fg=FG_DIM, anchor="w",
                                       justify="left", wraplength=px(240))
-        self.ai_status_lbl.pack(fill="x", pady=(0, px(1)))
-        # 进度条与进度文字默认**不占位**：之前它们一直 pack 着，
-        # 空的时候也吃掉约 50 逻辑像素，状态行到「基本」之间就留出一大块空白。
+        self.ai_status_lbl.pack(fill="x", pady=(px(2), 0))
+        # 进度条与进度文字默认**不占位**：空的时候不占高度。
         self.ai_bar = tk.Canvas(self.panel_top, height=px(5), bg=PANEL_BG,
                                 highlightthickness=0, bd=0)
         self.ai_progress_lbl = tk.Label(self.panel_top, text="",
@@ -7651,21 +7684,26 @@ class QPEApp(_BASE):
         tk.Frame(self.panel_top, bg=RULE_BG, height=max(1, px(1))).pack(
             fill="x", pady=(px(6), 0))
 
-        self._sec_basic(inner)
-        self._sec_film(inner)        # 美颜/胶片/畸变放在前面，避免藏在面板底部
-        self._sec_beauty_adv(inner)
-        # 首屏只需要「基本 + 镜头」两块；其余分区推迟到首帧之后再建，
-        # 窗口能早 300~400ms 出来（低配机上差别更明显）。
-        holder = tk.Frame(inner, bg=BAR_BG)
-        holder.pack(fill="x")
-        self._defer_sections(holder, [
-            self._sec_curve, self._sec_hsl, self._sec_detail,
-            self._sec_effect, self._sec_split, self._sec_local,
-            self._sec_preset, self._sec_snapshot,
+        # 每个分类一个独立容器；只 pack 当前分类，切换不改变控件状态。
+        self.panel_boxes = {}
+        for _group in self.panel_tab_order:
+            self.panel_boxes[_group] = tk.Frame(inner, bg=PANEL_BG)
+
+        self._sec_basic(self.panel_boxes["adjust"])
+        self._sec_film(self.panel_boxes["adjust"])
+        self._sec_beauty_adv(self.panel_boxes["adjust"])
+        self._defer_sections([
+            (self._sec_curve, "color"),
+            (self._sec_hsl, "color"),
+            (self._sec_detail, "detail"),
+            (self._sec_effect, "effect"),
+            (self._sec_split, "color"),
+            (self._sec_local, "effect"),
+            (self._sec_preset, "presets"),
+            (self._sec_snapshot, "presets"),
         ])
 
-        # 工具/历史收进底部折叠区，主滚动区只保留调整分区。
-        tools = self._section(inner, "工具", opened=True)
+        tools = self._section(self.panel_boxes["tools"], "工具", opened=True)
         self.tools_section = tools
         tool_grid = tk.Frame(tools, bg=CARD_BG)
         tool_grid.pack(fill="x", pady=(px(2), px(2)))
@@ -7714,17 +7752,12 @@ class QPEApp(_BASE):
         self.hist_box.pack(fill="x", pady=(px(2), 0))
         self.hist_box.bind("<<ListboxSelect>>", self._on_hist_select)
         self._bind_wheel(self.hist_box)
-        # 默认收起工具区；按钮/历史控件已建好，快捷键和状态更新仍能工作
-        try:
-            self.sections["工具"][1]()
-        except Exception:
-            pass
+        tk.Label(tools, text="双击滑块标签可复位 · 裁剪按 C · \\ 看原图",
+                 font=self.ui_font_s, bg=CARD_BG, fg=FG_DIM, anchor="w",
+                 justify="left", wraplength=px(225)).pack(
+                     fill="x", pady=(px(6), px(2)))
 
-        tk.Label(inner, text="双击滑块标签可复位 · 裁剪按 C · \\ 看原图",
-                 font=self.ui_font_s, bg=BAR_BG, fg=FG_DIM, anchor="w",
-                 justify="left", wraplength=px(230)).pack(
-                     fill="x", pady=(px(6), 0))
-
+        self.set_panel_tab("adjust", scroll=False)
         self._bind_wheel(self.pcan)
         self._update_hist_buttons()
 
@@ -8302,6 +8335,10 @@ class QPEApp(_BASE):
         if VIEWER_ONLY:
             return
         self.toggle_panel(True)
+        try:
+            self.set_panel_tab("adjust", scroll=False)
+        except Exception:
+            pass
         entry = self.sections.get("镜头 · 胶片 · 人像")
         if entry:
             body, toggle = entry
@@ -8317,7 +8354,9 @@ class QPEApp(_BASE):
                 self.pcan.update_idletasks()
                 bbox = self.pcan.bbox("all")
                 total = max(1, bbox[3] - bbox[1]) if bbox else 1
-                top = max(0, body.winfo_y() - px(8))
+                top = max(0, (body.winfo_rooty() -
+                              self.pcan.winfo_rooty() + self.pcan.canvasy(0))
+                          - px(8))
                 self.pcan.yview_moveto(min(1.0, top / float(total)))
         except Exception:
             pass

@@ -131,7 +131,28 @@ def main():
         ok("面板宽度已保存", int(saved.get("panel_w", 0)) == app.panel_width,
            str(saved.get("panel_w")))
         app._panel_drag_reset()
-        ok("双击恢复默认宽度", app.panel_width == mod.px(238))
+        ok("双击恢复默认宽度", app.panel_width == mod.px(260))
+
+        # 4b) 右侧面板排版：固定顶部/固定底栏/折叠工具区
+        ok("面板固定顶部存在", app.panel_top.winfo_ismapped())
+        ok("面板固定底栏存在", app.panel_footer.winfo_ismapped())
+        ok("面板底栏四个主操作",
+           all(w.winfo_exists() for w in (app.hist_undo_btn,
+                                          app.hist_redo_btn,
+                                          app.cmp_btn, app.save_btn)))
+        ok("面板滚动条为自绘", isinstance(app.psb, mod.tk.Canvas),
+           app.psb.winfo_class())
+        tool_body, tool_toggle = app.sections["工具"]
+        ok("工具区默认收起", not tool_body.winfo_ismapped())
+        ok("工具区控件已建好", app.hist_box.winfo_exists()
+           and app.sort_btn.winfo_exists())
+        tool_toggle()
+        for _ in range(8):
+            app.update(); time.sleep(0.01)
+        ok("工具区可展开", tool_body.winfo_ismapped())
+        tool_toggle()
+        for _ in range(8):
+            app.update(); time.sleep(0.01)
 
         # 5) 性能档位
         app.set_perf_profile("fast-first")

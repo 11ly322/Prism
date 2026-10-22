@@ -78,7 +78,7 @@ IS_WIN = sys.platform.startswith("win")
 K = "Command" if IS_MAC else "Control"
 
 APP_NAME = "Prism"
-APP_VERSION = "9.15.4"
+APP_VERSION = "9.15.5"
 APP_BUILD = "2025-12.9"
 # ---------------------------------------------------------------- 运行模式
 # 同一份源码编出三个版本：
@@ -3109,7 +3109,7 @@ class QPEApp(_BASE):
         self.low_mem = bool(globals().get("LOW_MEM_ARG", False))
         self.perf_profile = globals().get("PERF_PROFILE", "fast-slider")
         self.focus_mode = False
-        self.panel_width = px(238)
+        self.panel_width = px(260)
         self.soft_proof = False
         self.soft_proof_path = ""
         self.soft_proof_name = ""
@@ -4996,7 +4996,7 @@ class QPEApp(_BASE):
         return out
 
     def _split_tone(self, img, a):
-        """色调分离：按亮度加权，分别给阴影和高光上色（Lightroom 的颜色分级）。
+        """色调分离：按亮度加权，分别给阴影和高光上色（三向颜色分级）。
 
         arr = arr*(1-w) + c*w 正好等于「以 w 为掩膜、把颜色 c 合成上去」，
         所以整段可以交给 PIL 的 C 实现：亮度用 convert("L")，权重用 LUT，
@@ -7003,8 +7003,7 @@ class QPEApp(_BASE):
         self._slide_done()
 
     def _section(self, parent, title, opened=True, on_open=None):
-        # 分组标题只用「小箭头 + 小字 + 一条细线」，不画底色块、不加强调条。
-        # 这样一列分组靠留白和细线区分层次，而不是靠仿 Lightroom 的重标题栏。
+        # 分组标题只用「小箭头 + 标题 + 一条细线」，不画大面积底色。
         # 每块分区是一张「卡片」：面板底更深（PANEL_BG），卡片用 CARD_BG，
         # 靠明度差和 6px 外距分层，而不是靠边框或色块。
         wrap = tk.Frame(parent, bg=CARD_BG)
@@ -7016,10 +7015,11 @@ class QPEApp(_BASE):
                         font=self.ui_font_s, bg=CARD_BG,
                         fg=FG_DIM, width=1, cursor="hand2")
         mark.pack(side="left")
-        title_lbl = tk.Label(head, text=title, font=self.ui_font_m, bg=CARD_BG,
+        title_lbl = tk.Label(head, text=title, font=self.ui_font_b, bg=CARD_BG,
                              fg=FG if opened else FG_DIM, anchor="w",
                              cursor="hand2")
-        title_lbl.pack(side="left", padx=(px(1), px(SPACE_LG)))
+        title_lbl.pack(side="left", padx=(px(1), px(SPACE_LG)),
+                        pady=px(2))
         rule = tk.Frame(head, bg=CARD_LINE, height=max(1, px(1)))
         rule.pack(side="left", fill="x", expand=True, pady=(px(1), 0))
         body = tk.Frame(parent, bg=CARD_BG)
@@ -7133,8 +7133,13 @@ class QPEApp(_BASE):
             self.syncing = False
 
     def _relayout_panel(self):
-        self.after(20, lambda: self.pcan.configure(
-            scrollregion=self.pcan.bbox("all")))
+        def finish():
+            try:
+                self.pcan.configure(scrollregion=self.pcan.bbox("all"))
+                self._draw_panel_scroll()
+            except Exception:
+                pass
+        self.after(20, finish)
 
     # -------------------------------------------------------- 直方图
 
@@ -7497,12 +7502,62 @@ class QPEApp(_BASE):
 
         self.defer_job = self.after(1, step)
 
+    def _panel_scroll_set(self, first, last):
+        self._panel_scroll_span = (first, last)
+        self._draw_panel_scroll()
+
+    def _draw_panel_scroll(self):
+        c = getattr(self, "psb", None)
+        if c is None or not c.winfo_exists():
+            return
+        c.delete("all")
+        try:
+            w = max(2, c.winfo_width())
+            h = max(2, c.winfo_height())
+            c.create_rectangle(0, 0, w, h, fill=BAR_BG, outline="")
+            first, last = self.pcan.yview()
+            if last - first >= 0.999:
+                return
+            y0 = int(first * h)
+            y1 = int(last * h)
+            if y1 - y0 < px(24):
+                y1 = y0 + px(24)
+            c.create_rectangle(px(2), y0 + px(2), w - px(2),
+                               min(h - px(2), y1 - px(2)),
+                               fill=TROUGH_BG, outline="")
+        except Exception:
+            pass
+
+    def _panel_scroll_jump(self, event):
+        try:
+            c = self.psb
+            h = max(2, c.winfo_height())
+            first, last = self.pcan.yview()
+            span = max(0.0, last - first)
+            self.pcan.yview_moveto(max(0.0, min(
+                1.0, event.y / float(h) - span / 2.0)))
+        except Exception:
+            pass
+        return "break"
+
     def _build_panel(self):
         self.sliders = []
         self.panel = tk.Frame(self.body, bg=BAR_BG,
-                              width=int(getattr(self, "panel_width", px(238))),
+                              width=int(getattr(self, "panel_width", px(260))),
                               height=px(600))
         self.panel.pack_propagate(False)
+        # 固定底栏：撤销/重做/对比/保存不跟着长面板滚走
+        self.panel_footer = tk.Frame(self.panel, bg=BAR_BG, height=px(42))
+        self.panel_footer.pack(side="bottom", fill="x")
+        self.panel_footer.pack_propagate(False)
+        tk.Frame(self.panel_footer, bg=RULE_BG,
+                 height=max(1, px(1))).pack(fill="x")
+        self.footer_bar = tk.Frame(self.panel_footer, bg=BAR_BG)
+        self.footer_bar.pack(fill="both", expand=True, padx=px(4))
+        # 固定顶部：标题/直方图/快捷入口不随下方调整分区滚走
+        self.panel_top = tk.Frame(self.panel, bg=PANEL_BG)
+        self.panel_top.pack(side="top", fill="x", padx=px(4),
+                            pady=(px(6), 0))
         # 面板左缘的拖拽条：拖动改宽度，双击恢复默认
         self.panel_grip = tk.Frame(self.body, bg=RULE_BG, width=px(5),
                                    cursor="sb_h_double_arrow")
@@ -7512,10 +7567,14 @@ class QPEApp(_BASE):
         self.panel_grip.bind("<Double-Button-1>", self._panel_drag_reset)
         self.pcan = tk.Canvas(self.panel, bg=BAR_BG, highlightthickness=0, bd=0,
                               yscrollincrement=px(22))
-        self.psb = tk.Scrollbar(self.panel, orient="vertical",
-                                command=self.pcan.yview)
-        self.pcan.configure(yscrollcommand=self.psb.set)
+        # 自绘细滚动条：系统 Scrollbar 在深色/浅色主题下会露出白色槽
+        self.psb = tk.Canvas(self.panel, width=px(8), bg=BAR_BG,
+                             highlightthickness=0, bd=0, cursor="hand2")
         self.psb.pack(side="right", fill="y")
+        self.pcan.configure(yscrollcommand=self._panel_scroll_set)
+        self.psb.bind("<Configure>", lambda e: self._draw_panel_scroll())
+        self.psb.bind("<Button-1>", self._panel_scroll_jump)
+        self.psb.bind("<B1-Motion>", self._panel_scroll_jump)
         self.pcan.pack(side="left", fill="both", expand=True)
         wrap = tk.Frame(self.pcan, bg=BAR_BG)
         self.pwin = self.pcan.create_window((0, 0), window=wrap, anchor="nw")
@@ -7527,14 +7586,30 @@ class QPEApp(_BASE):
         self.panel_wrap = wrap
         self.panel_inner = inner
         self._theme_cards = []
+
+        def footer_btn(text, cmd, accent=False):
+            b = _QpeRoundButton(
+                self.footer_bar, text=text, command=cmd,
+                font=self.ui_font_s,
+                bg=ACCENT if accent else BTN_BG,
+                fg=ON_BG if accent else FG,
+                hover_bg=BAR_HOVER, hover_fg=FG_HI, padx=5, pady=2)
+            b.pack(side="left", fill="x", expand=True, padx=px(2),
+                   pady=px(3))
+            return b
+
+        self.hist_undo_btn = footer_btn("撤销", self.undo)
+        self.hist_redo_btn = footer_btn("重做", self.redo)
+        self.cmp_btn = footer_btn("对比", self.toggle_compare)
+        self.save_btn = footer_btn("保存", self.save_as, True)
         inner.pack(fill="both", expand=True, padx=px(4), pady=px(8))
 
-        tk.Label(inner, text="修图", font=self.ui_font_b, bg=BAR_BG, fg=FG,
-                 anchor="w").pack(fill="x")
+        tk.Label(self.panel_top, text="修图", font=self.ui_font_l, bg=PANEL_BG,
+                 fg=FG, anchor="w").pack(fill="x")
 
         # 不写 width 时 Tk 会给 378 逻辑像素的默认请求宽，把整列撑出面板。
         # 实际宽度由 pack(fill="x") 决定。
-        self.hist_can = tk.Canvas(inner, height=px(64), width=px(10),
+        self.hist_can = tk.Canvas(self.panel_top, height=px(64), width=px(10),
                                   bg=DEEP_BG, highlightthickness=0, bd=0)
         self.hist_can.pack(fill="x", pady=(px(3), 0))
         self.hist_can.bind("<Button-1>", self._hist_click)
@@ -7542,38 +7617,39 @@ class QPEApp(_BASE):
         self.hist_can.bind("<Leave>", self._hist_clear)
         # 面板是懒建的：首次 pack 后宽度从 10 变成真实宽度，必须重画
         self.hist_can.bind("<Configure>", lambda e: self._schedule_histogram())
-        self.hist_info = tk.Label(inner, text="", font=self.mono_font,
+        self.hist_info = tk.Label(self.panel_top, text="", font=self.mono_font,
                                   bg=PANEL_BG, fg=FG_DIM, anchor="w",
                                   justify="left")
         self.hist_info.pack(fill="x", pady=(px(1), 0))
 
-        # 常驻入口：不依赖滚动位置，任何窗口高度都点得到
-        # 2x2 网格：四个按钮塞一行会被面板宽度裁掉（最后一个是半个字）
-        quick = tk.Frame(inner, bg=PANEL_BG)
+        # 常驻入口：四项压成一行，节省首屏高度
+        quick = tk.Frame(self.panel_top, bg=PANEL_BG)
         quick.pack(fill="x", pady=(px(SPACE_SM), px(SPACE_XS)))
-        quick.columnconfigure(0, weight=1, uniform="qb")
-        quick.columnconfigure(1, weight=1, uniform="qb")
+        for _c in range(4):
+            quick.columnconfigure(_c, weight=1, uniform="qb")
         for _i, (_txt, _cmd) in enumerate((
-                ("人像美化", lambda: self._focus_film("skin")),
+                ("人像", lambda: self._focus_film("skin")),
                 ("胶片", lambda: self._focus_film("film")),
-                ("畸变", lambda: self._focus_film("lens")),
-                ("对比(B)", self.toggle_beauty_peek))):
+                ("镜头", lambda: self._focus_film("lens")),
+                ("美颜", self.toggle_beauty_peek))):
             _b = self._panel_btn(quick, _txt, _cmd, side="grid")
-            _b.grid(row=_i // 2, column=_i % 2, sticky="ew",
-                    padx=(0 if _i % 2 == 0 else px(SPACE_SM), 0),
-                    pady=(0 if _i < 2 else px(SPACE_SM), 0))
-        self.ai_status_lbl = tk.Label(inner, text="", font=self.ui_font_s,
+            _b.grid(row=0, column=_i, sticky="ew",
+                    padx=(0 if _i == 0 else px(SPACE_XS), 0))
+        self.ai_status_lbl = tk.Label(self.panel_top, text="", font=self.ui_font_s,
                                       bg=PANEL_BG, fg=FG_DIM, anchor="w",
-                                      justify="left", wraplength=px(200))
+                                      justify="left", wraplength=px(240))
         self.ai_status_lbl.pack(fill="x", pady=(0, px(1)))
         # 进度条与进度文字默认**不占位**：之前它们一直 pack 着，
         # 空的时候也吃掉约 50 逻辑像素，状态行到「基本」之间就留出一大块空白。
-        self.ai_bar = tk.Canvas(inner, height=px(5), bg=PANEL_BG,
+        self.ai_bar = tk.Canvas(self.panel_top, height=px(5), bg=PANEL_BG,
                                 highlightthickness=0, bd=0)
-        self.ai_progress_lbl = tk.Label(inner, text="", font=self.ui_font_s,
-                                        bg=PANEL_BG, fg=ACCENT, anchor="w")
+        self.ai_progress_lbl = tk.Label(self.panel_top, text="",
+                                        font=self.ui_font_s, bg=PANEL_BG,
+                                        fg=ACCENT, anchor="w")
         self._ai_extra_shown = False
         self._ai_job = self.after(120, self._refresh_ai_status)
+        tk.Frame(self.panel_top, bg=RULE_BG, height=max(1, px(1))).pack(
+            fill="x", pady=(px(6), 0))
 
         self._sec_basic(inner)
         self._sec_film(inner)        # 美颜/胶片/畸变放在前面，避免藏在面板底部
@@ -7588,65 +7664,65 @@ class QPEApp(_BASE):
             self._sec_preset, self._sec_snapshot,
         ])
 
-        row = tk.Frame(inner, bg=PANEL_BG)
-        row.pack(fill="x", pady=(px(SPACE_XL), 0))
-        self._panel_btn(row, "裁剪", self.toggle_crop)
-        # 重置全部 / 复制设置 / 关于 已经收进设置窗口
-        row = tk.Frame(inner, bg=PANEL_BG)
-        row.pack(fill="x", pady=(px(3), 0))
-        self.hist_undo_btn = self._panel_btn(row, "撤销", self.undo)
-        self.hist_redo_btn = self._panel_btn(row, "重做", self.redo)
-        row = tk.Frame(inner, bg=PANEL_BG)
-        row.pack(fill="x", pady=(px(3), 0))
-        self.cmp_btn = self._panel_btn(row, "对比原图", self.toggle_compare)
-        self._panel_btn(row, "批量", self.batch_export)
-        self._panel_btn(row, "改名", self.batch_rename)
-        row = tk.Frame(inner, bg=PANEL_BG)
-        row.pack(fill="x", pady=(px(3), 0))
-        self.split_btn = self._panel_btn(row, "分屏对比", self.toggle_split)
-        self._panel_btn(row, "胶片条", self.toggle_strip)
-        self._panel_btn(row, "网格", self.toggle_grid)
-        row = tk.Frame(inner, bg=PANEL_BG)
-        row.pack(fill="x", pady=(px(3), 0))
-        self.sort_btn = self._panel_btn(row, "排序：文件名", self._sort_menu)
-        pass
-        row = tk.Frame(inner, bg=PANEL_BG)
-        row.pack(fill="x", pady=(px(3), 0))
-        self._panel_btn(row, "所在文件夹", self.reveal_folder)
-        row = tk.Frame(inner, bg=PANEL_BG)
-        row.pack(fill="x", pady=(px(3), 0))
-        self.auto_btn = self._panel_btn(row, "自动色调", self.auto_tone)
-        self.clip_btn = self._panel_btn(row, "过曝警告", self.toggle_clip)
-        row = tk.Frame(inner, bg=PANEL_BG)
-        row.pack(fill="x", pady=(px(3), 0))
-        self.pick_btn = self._panel_btn(row, "锁定取色", self.toggle_pick_lock)
-        row = tk.Frame(inner, bg=PANEL_BG)
-        row.pack(fill="x", pady=(px(3), 0))
-        self.theme_btn = self._panel_btn(row, "设置", self.show_settings)
-        pass
-        row = tk.Frame(inner, bg=PANEL_BG)
-        row.pack(fill="x", pady=(px(3), 0))
-        self._panel_btn(row, "粘贴设置", self.paste_settings, side="top",
-                        wide=True)
-        row = tk.Frame(inner, bg=BAR_BG)
-        row.pack(fill="x", pady=(px(6), 0))
-        self._panel_btn(row, "保存 / 另存为", self.save_as, side="top", wide=True)
+        # 工具/历史收进底部折叠区，主滚动区只保留调整分区。
+        tools = self._section(inner, "工具", opened=True)
+        self.tools_section = tools
+        tool_grid = tk.Frame(tools, bg=CARD_BG)
+        tool_grid.pack(fill="x", pady=(px(2), px(2)))
+        for _c in range(2):
+            tool_grid.columnconfigure(_c, weight=1, uniform="tool")
+        tool_row = [0]
 
-        head = tk.Frame(inner, bg=HEAD_BG)
-        head.pack(fill="x", pady=(px(10), 0))
-        tk.Label(head, text="历史记录", font=self.ui_font_b, bg=HEAD_BG,
-                 fg=FG, anchor="w").pack(side="left", padx=px(6), pady=px(4))
+        def add_tool(text, cmd, col):
+            b = self._panel_btn(tool_grid, text, cmd, side="grid")
+            b.grid(row=tool_row[0], column=col, sticky="ew",
+                   padx=(0 if col == 0 else px(SPACE_SM), 0),
+                   pady=(0, px(SPACE_XS)))
+            return b
+
+        self.crop_btn = add_tool("裁剪", self.toggle_crop, 0)
+        add_tool("批量", self.batch_export, 1)
+        tool_row[0] += 1
+        add_tool("改名", self.batch_rename, 0)
+        self.split_btn = add_tool("分屏对比", self.toggle_split, 1)
+        tool_row[0] += 1
+        add_tool("胶片条", self.toggle_strip, 0)
+        add_tool("网格", self.toggle_grid, 1)
+        tool_row[0] += 1
+        self.sort_btn = self._panel_btn(tool_grid, "排序：文件名", self._sort_menu,
+                                        side="grid")
+        self.sort_btn.grid(row=tool_row[0], column=0, columnspan=2,
+                           sticky="ew", pady=(0, px(SPACE_XS)))
+        tool_row[0] += 1
+        add_tool("所在文件夹", self.reveal_folder, 0)
+        self.auto_btn = add_tool("自动色调", self.auto_tone, 1)
+        tool_row[0] += 1
+        self.clip_btn = add_tool("过曝警告", self.toggle_clip, 0)
+        self.pick_btn = add_tool("锁定取色", self.toggle_pick_lock, 1)
+        tool_row[0] += 1
+        self.theme_btn = add_tool("设置", self.show_settings, 0)
+        add_tool("粘贴设置", self.paste_settings, 1)
+
+        head = tk.Frame(tools, bg=CARD_BG)
+        head.pack(fill="x", pady=(px(SPACE_SM), 0))
+        tk.Label(head, text="历史记录", font=self.ui_font_b, bg=CARD_BG,
+                 fg=FG, anchor="w").pack(side="left", pady=px(2))
         self.hist_box = tk.Listbox(
-            inner, height=8, bg=DEEP_BG, fg=FG, selectbackground=ACCENT,
+            tools, height=7, bg=DEEP_BG, fg=FG, selectbackground=ACCENT,
             selectforeground="#101010", bd=0, highlightthickness=0,
             font=self.ui_font_s, activestyle="none", exportselection=False)
         self.hist_box.pack(fill="x", pady=(px(2), 0))
         self.hist_box.bind("<<ListboxSelect>>", self._on_hist_select)
         self._bind_wheel(self.hist_box)
+        # 默认收起工具区；按钮/历史控件已建好，快捷键和状态更新仍能工作
+        try:
+            self.sections["工具"][1]()
+        except Exception:
+            pass
 
         tk.Label(inner, text="双击滑块标签可复位 · 裁剪按 C · \\ 看原图",
                  font=self.ui_font_s, bg=BAR_BG, fg=FG_DIM, anchor="w",
-                 justify="left", wraplength=px(200)).pack(
+                 justify="left", wraplength=px(230)).pack(
                      fill="x", pady=(px(6), 0))
 
         self._bind_wheel(self.pcan)
@@ -7660,7 +7736,7 @@ class QPEApp(_BASE):
                          lambda k=key: self.adj[k], 0.0, 1, "%+.0f")
         row = tk.Frame(b, bg=BAR_BG)
         row.pack(fill="x", pady=(px(4), 0))
-        self.pick_btn = self._panel_btn(row, "白平衡吸管", self.start_picker)
+        self.wb_btn = self._panel_btn(row, "白平衡吸管", self.start_picker)
         for key, label, lo, hi, step, fmt in (
                 ("exposure", "曝光", -3.0, 3.0, 0.01, "%+.2f"),
                 ("contrast", "对比度", -100, 100, 1, "%+.0f"),
@@ -8681,7 +8757,7 @@ class QPEApp(_BASE):
             pass
 
     def _panel_drag_reset(self, event=None):
-        self.panel_width = px(238)
+        self.panel_width = px(260)
         try:
             self.panel.configure(width=self.panel_width)
         except Exception:
@@ -11454,6 +11530,10 @@ def run(img, **params):
         if self.theme_btn is not None and self.theme_btn.winfo_exists():
             self.theme_btn.configure(
                 text=_tr("主题：%s") % _tr(THEME_NAMES[name]))
+        try:
+            self._draw_panel_scroll()
+        except Exception:
+            pass
         if persist:
             self.save_settings()
         try:
@@ -11530,6 +11610,9 @@ def run(img, **params):
             pw = d.get("panel_w")
             if isinstance(pw, (int, float)):
                 self.panel_width = max(px(200), min(px(560), int(pw)))
+                # 9.15.5 起默认面板更宽；旧版默认值顺势迁移一次
+                if int(pw) == px(238):
+                    self.panel_width = px(260)
             sp = str(d.get("soft_proof_profile", "") or "")
             self.soft_proof = bool(d.get("soft_proof", False))
             if sp and os.path.isfile(sp):
@@ -11634,7 +11717,7 @@ def run(img, **params):
                          "soft_proof": bool(getattr(self, "soft_proof", False)),
                          "soft_proof_profile": str(getattr(
                              self, "soft_proof_path", "") or ""),
-                         "panel_w": int(getattr(self, "panel_width", px(238)))})
+                         "panel_w": int(getattr(self, "panel_width", px(260)))})
             with open(path, "w", encoding="utf-8") as fh:
                 json.dump(data, fh, ensure_ascii=False, indent=1)
         except Exception:

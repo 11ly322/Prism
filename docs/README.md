@@ -15,7 +15,7 @@
 
 <div align="center">
 
-![version](https://img.shields.io/badge/version-9.15.4-3d7dff?style=flat-square)
+![version](https://img.shields.io/badge/version-9.15.5-3d7dff?style=flat-square)
 ![platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-2b2f36?style=flat-square)
 ![python](https://img.shields.io/badge/python-3.9%2B-3776ab?style=flat-square&logo=python&logoColor=white)
 ![license](https://img.shields.io/badge/license-MIT-3ddc84?style=flat-square)
@@ -61,6 +61,7 @@ Prism 服务两种场景 ——
 | **默认应用** | 安装器注册默认应用候选；安装完成页「一键设为默认」登记全部支持格式，Windows 10 确认一次，Windows 11 按格式确认；完整版/看图版/大屏版各自独立 |
 | **主题** | 10 套配色：深色 / 浅色 / 高对比 / 炭橙 / 深海 / 森林 / 玫瑰 / 极夜 / 霓虹 / 暖纸；另有 2px 高对比描边开关，可叠加在任意主题上 |
 | **动效与反馈** | 悬停、按压、状态过渡和窗口淡入都可一键关闭；主题网格有选中竖条，关闭后立即响应、不做动画 |
+| **右侧栏** | 固定直方图/快捷入口与底栏，调整分区卡片化，工具与历史默认收起；面板默认 260px，可拖宽 |
 | **大屏版** | 纯看图 · 底部大按钮 · 无快捷键 · 无调色面板，装完即用，适合展陈/会议室大屏 |
 
 ---
@@ -69,12 +70,12 @@ Prism 服务两种场景 ——
 
 | 平台 | 文件 | 说明 |
 | :--- | :--- | :--- |
-| Windows | `Prism-Setup-9.15.4.exe` | 安装包 · 含修图面板与插件 · 40.1 MB |
-| Windows | `Prism-Viewer-9.15.4.zip` | 纯看图版 · 便携免安装 · 30.1 MB |
-| Windows | `Prism-BigScreen-Setup-9.15.4.exe` | **大屏版**安装包 · 底栏大按钮 · 无快捷键 · 纯看图 |
-| Windows | `Prism-BigScreen-9.15.4.zip` | 大屏版 · 便携免安装 |
-| macOS | `Prism-macOS-9.15.4.zip` | 源码运行 · 需 Python 3 + Pillow · 227 KB |
-| Linux | `Prism-Linux-9.15.4.zip` | 源码运行 · 带 `.desktop` · 227 KB |
+| Windows | `Prism-Setup-9.15.5.exe` | 安装包 · 含修图面板与插件 · 40.1 MB |
+| Windows | `Prism-Viewer-9.15.5.zip` | 纯看图版 · 便携免安装 · 30.1 MB |
+| Windows | `Prism-BigScreen-Setup-9.15.5.exe` | **大屏版**安装包 · 底栏大按钮 · 无快捷键 · 纯看图 |
+| Windows | `Prism-BigScreen-9.15.5.zip` | 大屏版 · 便携免安装 |
+| macOS | `Prism-macOS-9.15.5.zip` | 源码运行 · 需 Python 3 + Pillow · 227 KB |
+| Linux | `Prism-Linux-9.15.5.zip` | 源码运行 · 带 `.desktop` · 227 KB |
 
 <div align="center">
 

@@ -151,6 +151,57 @@ def main():
             app.update(); time.sleep(0.01)
         ok("工具分类可切换", tool_body.winfo_ismapped()
            and app.panel_boxes["tools"].winfo_ismapped())
+        ok("工具区不再重复设置/过曝/取色按钮",
+           app.theme_btn is None and app.clip_btn is None
+           and app.pick_btn is None)
+        labels = []
+        for _m in getattr(app, "_menus", []):
+            if isinstance(_m, mod.tk.Menu):
+                try:
+                    for _i in range(int(_m.index("end")) + 1):
+                        try:
+                            labels.append(_m.entrycget(_i, "label"))
+                        except Exception:
+                            pass
+                except Exception:
+                    pass
+        ok("文件菜单有图片信息", "图片信息" in labels)
+        body_b, toggle_b = app.sections.get("人像美化", (None, None))
+        ok("人像美化只有一个分区", body_b is not None
+           and "人像 · 高级" not in app.sections)
+        app.set_panel_tab("adjust")
+        for _ in range(30):
+            app.update(); time.sleep(0.01)
+        app.update_idletasks()
+        if body_b is not None and not body_b.winfo_ismapped():
+            toggle_b()
+            for _ in range(50):
+                app.update(); time.sleep(0.01)
+            app.update_idletasks()
+        presets = getattr(app, "beauty_preset_btns", {})
+        ok("美颜预设四个按钮", len(presets) == 4, str(len(presets)))
+        ok("美颜预设不截断",
+           bool(presets) and all(b.winfo_width() + 1 >= b.winfo_reqwidth()
+                                 for b in presets.values()),
+           str([(b._text, b.winfo_width(), b.winfo_reqwidth())
+                for b in presets.values()]))
+        for _lang in ("en", "ja"):
+            app.lang = _lang
+            mod.APP_LANG = _lang
+            app._apply_lang()
+            for _ in range(12):
+                app.update(); time.sleep(0.01)
+            app.update_idletasks()
+            ok("美颜预设不截断 %s" % _lang,
+               all(b.winfo_width() + 1 >= b.winfo_reqwidth()
+                   for b in presets.values()),
+               str([(b._text, b.winfo_width(), b.winfo_reqwidth())
+                    for b in presets.values()]))
+        app.lang = "zh"
+        mod.APP_LANG = "zh"
+        app._apply_lang()
+        for _ in range(12):
+            app.update(); time.sleep(0.01)
         app.set_panel_tab("adjust")
         for _ in range(8):
             app.update(); time.sleep(0.01)

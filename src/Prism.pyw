@@ -78,7 +78,7 @@ IS_WIN = sys.platform.startswith("win")
 K = "Command" if IS_MAC else "Control"
 
 APP_NAME = "Prism"
-APP_VERSION = "9.15.6"
+APP_VERSION = "9.15.7"
 APP_BUILD = "2025-12.9"
 # ---------------------------------------------------------------- 运行模式
 # 同一份源码编出三个版本：
@@ -2934,7 +2934,14 @@ def _beautify(img, smooth, radius, bright, even, shine=0, warm=0,
               softness=0, zones=None, blemish=0, spot_size=5,
               eye_care=0, eye_spread=50, lip=0, teeth=0,
               slim=0, eyes=0):
-    """保边磨皮 + 提亮 + 肤色均匀（纯算法，无模型）。"""
+    """保边磨皮 + 均匀肤色 + 局部修复（纯算法，无模型）。
+
+    2026-10 重写：
+    - 只建一次肤色蒙版、一次人脸框、一次边缘权重；
+    - 用低频分离同时承担磨皮与均匀，去掉全尺寸中值滤波；
+    - 分区权重只算一次，之后只做蒙版乘法与合成；
+    - 所有效果都在肤色/人脸区域内完成，边界保持不变。
+    """
     smooth = max(0.0, min(100.0, float(smooth or 0)))
     bright = max(0.0, min(100.0, float(bright or 0)))
     even = max(0.0, min(100.0, float(even or 0)))
@@ -2942,6 +2949,12 @@ def _beautify(img, smooth, radius, bright, even, shine=0, warm=0,
     shine = max(0.0, min(100.0, float(shine or 0)))
     warm = max(-100.0, min(100.0, float(warm or 0)))
     softness = max(0.0, min(100.0, float(softness or 0)))
+    blemish = max(0.0, min(100.0, float(blemish or 0)))
+    eye_care = max(0.0, min(100.0, float(eye_care or 0)))
+    lip = max(0.0, min(100.0, float(lip or 0)))
+    teeth = max(0.0, min(100.0, float(teeth or 0)))
+    slim = max(0.0, min(100.0, float(slim or 0)))
+    eyes = max(0.0, min(100.0, float(eyes or 0)))
     if not (smooth or bright or even or shine or warm or softness
             or blemish or eye_care or lip or teeth or slim or eyes):
         return img
@@ -2950,46 +2963,52 @@ def _beautify(img, smooth, radius, bright, even, shine=0, warm=0,
     ok, _why = _beauty_guard(rgb)
     if not ok:
         return img
-    # 黑白照片没有可靠的肤色信息，色度接近 0 时不做依赖肤色的处理
     if _is_grayish(rgb):
         return img
     skin = _skin_mask(rgb, max(2.0, h / 320.0))
     ok, _why = _beauty_guard(rgb, skin)
     if not ok:
         return img
-    faces = _face_boxes(skin) if (slim or eyes or eye_care or lip or teeth) else []
+
+    need_face = bool(slim or eyes or eye_care or lip or teeth)
+    faces = _face_boxes(skin) if need_face else []
     if not faces:
         fb = _face_bbox(skin)
         faces = [fb] if fb else []
-    if slim or eyes:
+
+    # 几何变形先做，后续所有颜色处理都基于变形后的肤色区域
+    if slim > 2 or eyes > 2:
         for fb in faces:
             rgb = _face_warp(rgb, skin, slim, eyes, fb)
         skin = _skin_mask(rgb, max(2.0, h / 320.0))
+
     out = rgb
+    # 分区权重只生成一次；没有脸时就是全图 1.0
+    zone_w = None
+    if zones and (smooth > 0 or even > 0):
+        fb = _face_bbox(skin)
+        if fb:
+            zone_w = _zone_weight(rgb.size, fb, *zones)
+
     if smooth > 0 or even > 0:
-        # 半径同时受「范围」和「强度」影响：强度越大，压平的低频尺度越大，
-        # 否则强度拉到 75 以上几乎看不出差别（实测原来 75 与 100 只差 0.08）
-        r = (1.0 + radius_lv / 100.0 * 8.0) * (0.65 + 0.55 * smooth / 100.0) \
-            * max(0.6, h / 900.0)
-        base = rgb
-        if even > 0:
-            base = rgb.filter(ImageFilter.MedianFilter(size=5))
-            base = Image.blend(rgb, base, even / 100.0 * 0.7)
+        r = (1.0 + radius_lv / 100.0 * 8.0) * (0.65 + 0.55 * smooth / 100.0)             * max(0.6, h / 900.0)
+        edge = _edge_weight(rgb, r * 0.6)
+        base = skin
+        if zone_w is not None:
+            base = ImageChops.multiply(base, zone_w)
         if smooth > 0:
-            # 频域分离：只压低频，高频（毛孔、绒毛）保留
-            soft = _freq_smooth(base, r, smooth)
-            edge = _edge_weight(rgb, r * 0.6)
-            w = ImageChops.multiply(skin, edge)
-            if zones:
-                bbox = _face_bbox(skin)
-                if bbox:
-                    zw = _zone_weight(rgb.size, bbox, *zones)
-                    w = ImageChops.multiply(w, zw)
+            # 保边磨皮：低频压平，高频（毛孔/绒毛）由 _freq_smooth 加回
+            soft = _freq_smooth(rgb, r, max(smooth, even * 0.9))
+            w = ImageChops.multiply(base, edge)
             w = w.point(lambda v: int(v * ((smooth / 100.0) ** 0.55) * 0.97))
             out = Image.composite(soft, out, w)
-        else:
-            w = skin.point(lambda v: int(v * even / 100.0 * 0.6))
-            out = Image.composite(base, out, w)
+        if even > 0:
+            # 均匀肤色用更大尺度的低频，只减少色斑/肤色不匀，保留纹理
+            flat = _freq_smooth(rgb, r * 1.35, even)
+            w = ImageChops.multiply(base, edge)
+            w = w.point(lambda v: int(v * (even / 100.0) * 0.62))
+            out = Image.composite(flat, out, w)
+
     if blemish > 0:
         out = _blemish_fix(out, skin, blemish, spot_size)
     if eye_care > 0:
@@ -3006,10 +3025,8 @@ def _beautify(img, smooth, radius, bright, even, shine=0, warm=0,
         out = Image.composite(lit, out, w)
 
     if shine > 0:
-        # 去油光：把皮肤里的高光压下来，越亮的地方压得越多
         k = shine / 100.0
         g = out.convert("L")
-        # 只取 180 以上作为油光区
         hot = g.point(lambda v: 0 if v < 180 else min(255, (v - 180) * 4))
         hot = ImageChops.multiply(hot, skin)
         hot = hot.point(lambda v: int(v * k * 0.85))
@@ -3017,7 +3034,6 @@ def _beautify(img, smooth, radius, bright, even, shine=0, warm=0,
         out = Image.composite(dull, out, hot)
 
     if abs(warm) > 0.5:
-        # 肤色冷暖：正值偏暖（红多蓝少），负值偏冷
         k = warm / 100.0
         w = skin.point(lambda v: int(v * min(1.0, abs(k)) * 0.6))
         r, gg, b = out.split()
@@ -3028,7 +3044,6 @@ def _beautify(img, smooth, radius, bright, even, shine=0, warm=0,
         out = Image.composite(tinted, out, w)
 
     if softness > 0:
-        # 柔光：模糊后与原图叠加（Orton），只作用于皮肤
         k = softness / 100.0
         r2 = max(1.0, min(img.size) / 260.0)
         blur = out.filter(ImageFilter.GaussianBlur(r2))
@@ -3665,6 +3680,7 @@ class QPEApp(_BASE):
         self._menu_item(m_file, "批量导出…", self.batch_export)
         self._menu_item(m_file, "批量重命名…", self.batch_rename)
         self._menu_item(m_file, "在文件夹中显示", self.reveal_folder, "F2")
+        self._menu_item(m_file, "图片信息", self.show_info, "I")
         m_file.add_separator()
         self._menu_item(m_file, "退出", self.on_close, "Ctrl+Q")
 
@@ -5491,42 +5507,10 @@ class QPEApp(_BASE):
         return self._film_skin(self._adjust_color(img, fast))
 
     def _film_skin(self, img):
-        """胶片模拟。人像美化已上移到 _beauty_stage（先于调色，便于缓存）。"""
+        """胶片模拟。人像美颜在 _beauty_stage 里先于调色完成。"""
         a = self.adj
-        out = _film_apply(img, a.get("film", "无"), a.get("film_strength", 100))
-        return out
-        smooth, glow = a.get("skin_smooth", 0), a.get("skin_glow", 0)
-        if getattr(self, "beauty_off", False):
-            return out
-        if (smooth or glow or a.get("skin_even") or a.get("skin_shine")
-                or a.get("skin_warm") or a.get("skin_soft")
-                or a.get("skin_blemish") or a.get("skin_eye_care")
-                or a.get("skin_lip") or a.get("skin_teeth")
-                or a.get("skin_slim") or a.get("skin_eyes")):
-            # 参数联动：瘦脸会让轮廓线移动，同步把轮廓附近磨得更平一点，
-            # 大眼会让眼周被拉伸，顺手补一点眼周提亮，避免"只放大不提亮"的突兀
-            if a.get("skin_link", True):
-                slim_v = a.get("skin_slim", 0.0)
-                eyes_v = a.get("skin_eyes", 0.0)
-                if slim_v > 20:
-                    k = min(1.0, slim_v / 100.0)
-                    smooth = smooth * (1.0 + 0.18 * k) + 12.0 * k
-                    a["skin_even"] = max(a.get("skin_even", 0.0), 25.0 * k)
-                if eyes_v > 10:
-                    a["skin_eye_care"] = max(a.get("skin_eye_care", 0.0),
-                                             eyes_v * 0.55)
-            zones = (a.get("zone_forehead", 100.0), a.get("zone_cheek", 100.0),
-                     a.get("zone_chin", 100.0), a.get("zone_eye", 70.0))
-            out = _beautify(out, smooth, a.get("skin_radius", 40.0), glow,
-                            a.get("skin_even", 0.0), a.get("skin_shine", 0.0),
-                            a.get("skin_warm", 0.0), a.get("skin_soft", 0.0),
-                            zones, a.get("skin_blemish", 0.0),
-                            a.get("skin_spot_size", 5.0),
-                            a.get("skin_eye_care", 0.0),
-                            a.get("skin_eye_spread", 50.0),
-                            a.get("skin_lip", 0.0), a.get("skin_teeth", 0.0),
-                            a.get("skin_slim", 0.0), a.get("skin_eyes", 0.0))
-        return out
+        return _film_apply(img, a.get("film", "无"),
+                           a.get("film_strength", 100))
 
     def _ai_progress(self, frac, text=""):
         """面板顶部那条进度：0 隐藏，>0 显示。"""
@@ -7691,7 +7675,7 @@ class QPEApp(_BASE):
 
         self._sec_basic(self.panel_boxes["adjust"])
         self._sec_film(self.panel_boxes["adjust"])
-        self._sec_beauty_adv(self.panel_boxes["adjust"])
+        self._sec_beauty(self.panel_boxes["adjust"])
         self._defer_sections([
             (self._sec_curve, "color"),
             (self._sec_hsl, "color"),
@@ -7718,28 +7702,13 @@ class QPEApp(_BASE):
                    pady=(0, px(SPACE_XS)))
             return b
 
-        self.crop_btn = add_tool("裁剪", self.toggle_crop, 0)
-        add_tool("批量", self.batch_export, 1)
-        tool_row[0] += 1
-        add_tool("改名", self.batch_rename, 0)
-        self.split_btn = add_tool("分屏对比", self.toggle_split, 1)
-        tool_row[0] += 1
-        add_tool("胶片条", self.toggle_strip, 0)
-        add_tool("网格", self.toggle_grid, 1)
+        self.split_btn = add_tool("分屏对比", self.toggle_split, 0)
         tool_row[0] += 1
         self.sort_btn = self._panel_btn(tool_grid, "排序：文件名", self._sort_menu,
                                         side="grid")
         self.sort_btn.grid(row=tool_row[0], column=0, columnspan=2,
                            sticky="ew", pady=(0, px(SPACE_XS)))
         tool_row[0] += 1
-        add_tool("所在文件夹", self.reveal_folder, 0)
-        self.auto_btn = add_tool("自动色调", self.auto_tone, 1)
-        tool_row[0] += 1
-        self.clip_btn = add_tool("过曝警告", self.toggle_clip, 0)
-        self.pick_btn = add_tool("锁定取色", self.toggle_pick_lock, 1)
-        tool_row[0] += 1
-        self.theme_btn = add_tool("设置", self.show_settings, 0)
-        add_tool("粘贴设置", self.paste_settings, 1)
 
         head = tk.Frame(tools, bg=CARD_BG)
         head.pack(fill="x", pady=(px(SPACE_SM), 0))
@@ -8036,14 +8005,52 @@ class QPEApp(_BASE):
         self._push_history("色调分离色相")
 
     def _sec_film(self, parent):
-        return self._section(parent, "镜头 · 胶片 · 人像", opened=True,
+        return self._section(parent, "镜头与胶片", opened=True,
                              on_open=self._build_film)
 
-    def _sec_beauty_adv(self, parent):
-        return self._section(parent, "人像 · 高级", opened=False,
-                             on_open=self._build_beauty_adv)
+    def _sec_beauty(self, parent):
+        return self._section(parent, "人像美化", opened=False,
+                             on_open=self._build_beauty)
 
-    def _build_beauty_adv(self, b):
+    def _beauty_group(self, b, text):
+        tk.Frame(b, bg=RULE_BG, height=max(1, px(1))).pack(
+            fill="x", pady=(px(8), px(3)))
+        tk.Label(b, text=text, font=self.ui_font_s, bg=BAR_BG, fg=FG_DIM,
+                 anchor="w").pack(fill="x", pady=(0, px(1)))
+
+    def _build_beauty(self, b):
+        # 预设用 2x2：翻译后的名字较长，一行四个会被面板裁掉
+        presets = tk.Frame(b, bg=BAR_BG)
+        presets.pack(fill="x", pady=(px(2), px(3)))
+        for _c in range(2):
+            presets.columnconfigure(_c, weight=1, uniform="beauty_preset")
+        self.beauty_preset_btns = {}
+        for _i, _nm in enumerate(("自然", "人像", "网红", "素颜")):
+            _b = self._panel_btn(presets, _nm,
+                                 lambda n=_nm: self.apply_beauty_preset(n),
+                                 side="grid")
+            _b.grid(row=_i // 2, column=_i % 2, sticky="ew",
+                    padx=(0 if _i % 2 == 0 else px(SPACE_SM), 0),
+                    pady=(0, px(SPACE_XS)))
+            self.beauty_preset_btns[_nm] = _b
+        tk.Label(b, text="按肤色定位；预设可再逐项微调",
+                 font=self.ui_font_s, bg=BAR_BG, fg=FG_DIM, anchor="w",
+                 justify="left", wraplength=px(220)).pack(
+                     fill="x", pady=(0, px(2)))
+
+        self._beauty_group(b, "皮肤")
+        self._slider(b, "肤色柔化", 0, 100, self.adj["skin_smooth"],
+                     lambda v: self.adj.__setitem__("skin_smooth", v),
+                     lambda: self.adj["skin_smooth"], 0.0, 5, "%.0f")
+        self._slider(b, "肤色提亮", 0, 100, self.adj["skin_glow"],
+                     lambda v: self.adj.__setitem__("skin_glow", v),
+                     lambda: self.adj["skin_glow"], 0.0, 5, "%.0f")
+        self._slider(b, "肤色均匀", 0, 100, self.adj["skin_even"],
+                     lambda v: self.adj.__setitem__("skin_even", v),
+                     lambda: self.adj["skin_even"], 0.0, 5, "%.0f")
+        self._slider(b, "磨皮范围", 0, 100, self.adj["skin_radius"],
+                     lambda v: self.adj.__setitem__("skin_radius", v),
+                     lambda: self.adj["skin_radius"], 40.0, 5, "%.0f")
         self._slider(b, "去油光", 0, 100, self.adj["skin_shine"],
                      lambda v: self.adj.__setitem__("skin_shine", v),
                      lambda: self.adj["skin_shine"], 0.0, 5, "%.0f")
@@ -8053,10 +8060,53 @@ class QPEApp(_BASE):
         self._slider(b, "柔光", 0, 100, self.adj["skin_soft"],
                      lambda v: self.adj.__setitem__("skin_soft", v),
                      lambda: self.adj["skin_soft"], 0.0, 5, "%.0f")
-        tk.Label(b, text="分区强度（作用于磨皮，100 为默认）",
+
+        self._beauty_group(b, "修复")
+        self._slider(b, "祛斑强度", 0, 100, self.adj["skin_blemish"],
+                     lambda v: self.adj.__setitem__("skin_blemish", v),
+                     lambda: self.adj["skin_blemish"], 0.0, 5, "%.0f")
+        self._slider(b, "斑点大小", 2, 15, self.adj["skin_spot_size"],
+                     lambda v: self.adj.__setitem__("skin_spot_size", v),
+                     lambda: self.adj["skin_spot_size"], 5.0, 1, "%.0f")
+        self._slider(b, "眼周提亮", 0, 100, self.adj["skin_eye_care"],
+                     lambda v: self.adj.__setitem__("skin_eye_care", v),
+                     lambda: self.adj["skin_eye_care"], 0.0, 5, "%.0f")
+        self._slider(b, "眼周范围", 0, 100, self.adj["skin_eye_spread"],
+                     lambda v: self.adj.__setitem__("skin_eye_spread", v),
+                     lambda: self.adj["skin_eye_spread"], 50.0, 5, "%.0f")
+        self._slider(b, "牙齿美白", 0, 100, self.adj["skin_teeth"],
+                     lambda v: self.adj.__setitem__("skin_teeth", v),
+                     lambda: self.adj["skin_teeth"], 0.0, 5, "%.0f")
+        self._slider(b, "唇色增强", 0, 100, self.adj["skin_lip"],
+                     lambda v: self.adj.__setitem__("skin_lip", v),
+                     lambda: self.adj["skin_lip"], 0.0, 5, "%.0f")
+
+        self._beauty_group(b, "轮廓")
+        self._slider(b, "瘦脸", 0, 100, self.adj["skin_slim"],
+                     lambda v: self.adj.__setitem__("skin_slim", v),
+                     lambda: self.adj["skin_slim"], 0.0, 5, "%.0f")
+        self._slider(b, "大眼", 0, 100, self.adj["skin_eyes"],
+                     lambda v: self.adj.__setitem__("skin_eyes", v),
+                     lambda: self.adj["skin_eyes"], 0.0, 5, "%.0f")
+        self.link_var = tk.IntVar(value=1 if self.adj.get("skin_link", True) else 0)
+
+        def _on_link():
+            self.adj["skin_link"] = bool(self.link_var.get())
+            self._mark_fast()
+            self._request_render()
+
+        tk.Checkbutton(b, text="瘦脸时自动加强轮廓磨皮 / 大眼时补眼周提亮",
+                       variable=self.link_var, command=_on_link,
+                       font=self.ui_font_s, bg=BAR_BG, fg=FG_DIM,
+                       activebackground=BAR_BG, activeforeground=FG,
+                       selectcolor=DEEP_BG, bd=0, highlightthickness=0,
+                       anchor="w", justify="left",
+                       wraplength=px(215)).pack(fill="x", pady=(px(2), 0))
+
+        self._beauty_group(b, "分区强度")
+        tk.Label(b, text="作用于磨皮；100 为默认",
                  font=self.ui_font_s, bg=BAR_BG, fg=FG_DIM, anchor="w",
-                 justify="left", wraplength=px(200)).pack(
-                     fill="x", pady=(px(8), px(2)))
+                 justify="left").pack(fill="x")
         for key, label, dflt in (("zone_forehead", "额头", 100.0),
                                  ("zone_eye", "眼周", 70.0),
                                  ("zone_cheek", "脸颊", 100.0),
@@ -8072,11 +8122,10 @@ class QPEApp(_BASE):
                      lambda: self.adj["lens"], 0.0, 1, "%+.0f")
         tk.Label(b, text="正值拉直桶形畸变，负值修枕形",
                  font=self.ui_font_s, bg=BAR_BG, fg=FG_DIM, anchor="w",
-                 justify="left", wraplength=px(200)).pack(fill="x")
+                 justify="left", wraplength=px(220)).pack(fill="x")
 
         # ---- 胶片模拟 ----
-        tk.Label(b, text="胶片模拟", font=self.ui_font_s, bg=BAR_BG, fg=FG_DIM,
-                 anchor="w").pack(fill="x", pady=(px(10), px(2)))
+        self._beauty_group(b, "胶片")
         self.film_var = tk.StringVar(value=self.adj.get("film", "无"))
         cb = ttk.Combobox(b, textvariable=self.film_var,
                           values=list(_FILM_PRESETS.keys()), state="readonly",
@@ -8086,79 +8135,6 @@ class QPEApp(_BASE):
         self._slider(b, "胶片强度", 0, 100, self.adj["film_strength"],
                      lambda v: self.adj.__setitem__("film_strength", v),
                      lambda: self.adj["film_strength"], 100.0, 5, "%.0f")
-
-        # ---- 人像美化 ----
-        row_p = tk.Frame(b, bg=BAR_BG)
-        row_p.pack(fill="x", pady=(px(8), px(2)))
-        for nm in ("自然", "人像", "网红", "素颜"):
-            self._panel_btn(row_p, nm,
-                            lambda n=nm: self.apply_beauty_preset(n))
-        tk.Label(b, text="人像美化（按肤色定位，不是神经网络）",
-                 font=self.ui_font_s, bg=BAR_BG, fg=FG_DIM, anchor="w",
-                 justify="left", wraplength=px(200)).pack(
-                     fill="x", pady=(px(10), px(2)))
-        self._slider(b, "肤色柔化", 0, 100, self.adj["skin_smooth"],
-                     lambda v: self.adj.__setitem__("skin_smooth", v),
-                     lambda: self.adj["skin_smooth"], 0.0, 5, "%.0f")
-        self._slider(b, "肤色提亮", 0, 100, self.adj["skin_glow"],
-                     lambda v: self.adj.__setitem__("skin_glow", v),
-                     lambda: self.adj["skin_glow"], 0.0, 5, "%.0f")
-        self._slider(b, "磨皮范围", 0, 100, self.adj["skin_radius"],
-                     lambda v: self.adj.__setitem__("skin_radius", v),
-                     lambda: self.adj["skin_radius"], 40.0, 5, "%.0f")
-        self._slider(b, "肤色均匀", 0, 100, self.adj["skin_even"],
-                     lambda v: self.adj.__setitem__("skin_even", v),
-                     lambda: self.adj["skin_even"], 0.0, 5, "%.0f")
-        tk.Label(b, text="祛斑 / 痘印",
-                 font=self.ui_font_s, bg=BAR_BG, fg=FG_DIM, anchor="w").pack(
-                     fill="x", pady=(px(10), px(2)))
-        self._slider(b, "祛斑强度", 0, 100, self.adj["skin_blemish"],
-                     lambda v: self.adj.__setitem__("skin_blemish", v),
-                     lambda: self.adj["skin_blemish"], 0.0, 5, "%.0f")
-        self._slider(b, "斑点大小", 2, 15, self.adj["skin_spot_size"],
-                     lambda v: self.adj.__setitem__("skin_spot_size", v),
-                     lambda: self.adj["skin_spot_size"], 5.0, 1, "%.0f")
-        tk.Label(b, text="黑眼圈 / 眼袋",
-                 font=self.ui_font_s, bg=BAR_BG, fg=FG_DIM, anchor="w").pack(
-                     fill="x", pady=(px(10), px(2)))
-        self._slider(b, "眼周提亮", 0, 100, self.adj["skin_eye_care"],
-                     lambda v: self.adj.__setitem__("skin_eye_care", v),
-                     lambda: self.adj["skin_eye_care"], 0.0, 5, "%.0f")
-        self._slider(b, "眼周范围", 0, 100, self.adj["skin_eye_spread"],
-                     lambda v: self.adj.__setitem__("skin_eye_spread", v),
-                     lambda: self.adj["skin_eye_spread"], 50.0, 5, "%.0f")
-        tk.Label(b, text="牙齿 / 唇色",
-                 font=self.ui_font_s, bg=BAR_BG, fg=FG_DIM, anchor="w").pack(
-                     fill="x", pady=(px(10), px(2)))
-        self._slider(b, "牙齿美白", 0, 100, self.adj["skin_teeth"],
-                     lambda v: self.adj.__setitem__("skin_teeth", v),
-                     lambda: self.adj["skin_teeth"], 0.0, 5, "%.0f")
-        self._slider(b, "唇色增强", 0, 100, self.adj["skin_lip"],
-                     lambda v: self.adj.__setitem__("skin_lip", v),
-                     lambda: self.adj["skin_lip"], 0.0, 5, "%.0f")
-        tk.Label(b, text="脸型 / 眼睛（几何变形）",
-                 font=self.ui_font_s, bg=BAR_BG, fg=FG_DIM, anchor="w").pack(
-                     fill="x", pady=(px(10), px(2)))
-        self._slider(b, "瘦脸", 0, 100, self.adj["skin_slim"],
-                     lambda v: self.adj.__setitem__("skin_slim", v),
-                     lambda: self.adj["skin_slim"], 0.0, 5, "%.0f")
-        self.link_var = tk.IntVar(value=1 if self.adj.get("skin_link", True) else 0)
-
-        def _on_link():
-            self.adj["skin_link"] = bool(self.link_var.get())
-            self._mark_fast()
-            self._request_render()
-
-        tk.Checkbutton(b, text="瘦脸时自动加强轮廓磨皮 / 大眼时补眼周提亮",
-                       variable=self.link_var, command=_on_link,
-                       font=self.ui_font_s, bg=BAR_BG, fg=FG_DIM,
-                       activebackground=BAR_BG, activeforeground=FG,
-                       selectcolor=DEEP_BG, bd=0, highlightthickness=0,
-                       anchor="w", justify="left",
-                       wraplength=px(196)).pack(fill="x", pady=(px(2), 0))
-        self._slider(b, "大眼", 0, 100, self.adj["skin_eyes"],
-                     lambda v: self.adj.__setitem__("skin_eyes", v),
-                     lambda: self.adj["skin_eyes"], 0.0, 5, "%.0f")
 
     def _beauty_sig(self):
         a = self.adj
@@ -8339,7 +8315,8 @@ class QPEApp(_BASE):
             self.set_panel_tab("adjust", scroll=False)
         except Exception:
             pass
-        entry = self.sections.get("镜头 · 胶片 · 人像")
+        target = "人像美化" if which == "skin" else "镜头与胶片"
+        entry = self.sections.get(target)
         if entry:
             body, toggle = entry
             try:
@@ -8354,7 +8331,8 @@ class QPEApp(_BASE):
                 self.pcan.update_idletasks()
                 bbox = self.pcan.bbox("all")
                 total = max(1, bbox[3] - bbox[1]) if bbox else 1
-                top = max(0, (body.winfo_rooty() -
+                target = getattr(body, "master", body)
+                top = max(0, (target.winfo_rooty() -
                               self.pcan.winfo_rooty() + self.pcan.canvasy(0))
                           - px(8))
                 self.pcan.yview_moveto(min(1.0, top / float(total)))
@@ -8783,8 +8761,8 @@ class QPEApp(_BASE):
         if not state:
             return
         x0, w0 = state
-        limit = max(px(200), min(px(560), int(self.winfo_width() * 0.45)))
-        new = max(px(200), min(limit, w0 + (x0 - event.x_root)))
+        limit = max(px(250), min(px(560), int(self.winfo_width() * 0.45)))
+        new = max(px(250), min(limit, w0 + (x0 - event.x_root)))
         self.panel.configure(width=new)
         self.panel_width = new
 
@@ -11648,7 +11626,7 @@ def run(img, **params):
                 globals()["PERF_PROFILE"] = prof
             pw = d.get("panel_w")
             if isinstance(pw, (int, float)):
-                self.panel_width = max(px(200), min(px(560), int(pw)))
+                self.panel_width = max(px(250), min(px(560), int(pw)))
                 # 9.15.5 起默认面板更宽；旧版默认值顺势迁移一次
                 if int(pw) == px(238):
                     self.panel_width = px(260)

@@ -15,7 +15,7 @@
 
 <div align="center">
 
-![version](https://img.shields.io/badge/version-9.15.6-3d7dff?style=flat-square)
+![version](https://img.shields.io/badge/version-9.15.7-3d7dff?style=flat-square)
 ![platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-2b2f36?style=flat-square)
 ![python](https://img.shields.io/badge/python-3.9%2B-3776ab?style=flat-square&logo=python&logoColor=white)
 ![license](https://img.shields.io/badge/license-MIT-3ddc84?style=flat-square)
@@ -70,12 +70,12 @@ Prism 服务两种场景 ——
 
 | 平台 | 文件 | 说明 |
 | :--- | :--- | :--- |
-| Windows | `Prism-Setup-9.15.6.exe` | 安装包 · 含修图面板与插件 · 40.1 MB |
-| Windows | `Prism-Viewer-9.15.6.zip` | 纯看图版 · 便携免安装 · 30.1 MB |
-| Windows | `Prism-BigScreen-Setup-9.15.6.exe` | **大屏版**安装包 · 底栏大按钮 · 无快捷键 · 纯看图 |
-| Windows | `Prism-BigScreen-9.15.6.zip` | 大屏版 · 便携免安装 |
-| macOS | `Prism-macOS-9.15.6.zip` | 源码运行 · 需 Python 3 + Pillow · 227 KB |
-| Linux | `Prism-Linux-9.15.6.zip` | 源码运行 · 带 `.desktop` · 227 KB |
+| Windows | `Prism-Setup-9.15.7.exe` | 安装包 · 含修图面板与插件 · 40.1 MB |
+| Windows | `Prism-Viewer-9.15.7.zip` | 纯看图版 · 便携免安装 · 30.1 MB |
+| Windows | `Prism-BigScreen-Setup-9.15.7.exe` | **大屏版**安装包 · 底栏大按钮 · 无快捷键 · 纯看图 |
+| Windows | `Prism-BigScreen-9.15.7.zip` | 大屏版 · 便携免安装 |
+| macOS | `Prism-macOS-9.15.7.zip` | 源码运行 · 需 Python 3 + Pillow · 227 KB |
+| Linux | `Prism-Linux-9.15.7.zip` | 源码运行 · 带 `.desktop` · 227 KB |
 
 <div align="center">
 
@@ -120,7 +120,7 @@ chmod +x prism.sh
 
 ### 怎么找到它
 
-工具栏「工具 → 人像美化…」，或直接按 `E` 打开面板后点顶部的「人像美化」按钮。
+工具栏「工具 → 人像美化…」；或按 `E` 打开面板，在「调整」分类中展开「人像美化」。
 面板顶部常驻一行状态，会告诉你当前情况：
 
 ```
@@ -128,16 +128,16 @@ chmod +x prism.sh
 人像美化：本图不适用（黑白照片）
 ```
 
-**按住 `B`** 可以临时关闭美颜看效果对比，松开恢复；也可以点「对比(B)」按钮用鼠标切换。
+**按住 `B`** 可以临时关闭美颜看效果对比，松开恢复。
 
-### 九个效果
+### 主要效果
 
 | 效果 | 范围 | 原理 |
 | :--- | :--- | :--- |
 | 肤色柔化（磨皮）| 0–100 | 频域分离：只压低频色斑，**高频毛孔原样保留** |
 | 磨皮范围 | 0–100 | 模糊半径，越大越均匀 |
 | 肤色提亮 | 0–100 | 肤色区提亮，最高 +16% |
-| 肤色均匀 | 0–100 | 中值滤波去小斑点 |
+| 肤色均匀 | 0–100 | 低频分离均匀肤色；不做全尺寸中值滤波，保留纹理 |
 | 祛斑 / 痘印 | 0–100 | 大半径背景减除，找出比背景暗的孤立小块并填补 |
 | 斑点大小 | 2–15 | 背景估计半径，决定能处理多大的痘印 |
 | 眼周提亮 | 0–100 | 眼下区域只提暗部，并压蓝 12% 抵消青紫 |
@@ -146,18 +146,22 @@ chmod +x prism.sh
 | 瘦脸 | 0–100 | 下半脸向中线挤压（逆映射重采样）|
 | 大眼 | 0–100 | 自动定位最暗的左右两个区域后局部放大 |
 
-另有「人像 · 高级」折叠区：去油光、肤色冷暖、柔光，以及额头/眼周/脸颊/下巴四个分区强度。
+去油光、肤色冷暖、柔光、分区强度都收在同一个「人像美化」分区里，不再拆成两个折叠区。
 
 ### 一键预设
 
 | 预设 | 磨皮 | 祛斑 | 眼周 | 牙齿 | 瘦脸 | 大眼 | 与原图差 |
 | :--- | :-: | :-: | :-: | :-: | :-: | :-: | :-: |
 | 素颜 | 0 | 0 | 0 | 0 | 0 | 0 | 0.00 |
-| 自然 | 35 | 25 | 0 | 20 | 0 | 0 | 0.30 |
-| 人像 | 60 | 50 | 35 | 40 | 15 | 15 | 0.94 |
-| 网红 | 85 | 70 | 60 | 70 | 45 | 40 | 2.09 |
+| 自然 | 35 | 25 | 0 | 20 | 0 | 0 | 0.36 |
+| 人像 | 60 | 50 | 35 | 40 | 15 | 15 | 0.86 |
+| 网红 | 85 | 70 | 60 | 70 | 45 | 40 | 1.77 |
 
 预设只改美颜参数，不碰曲线 / HSL / 胶片 / 畸变。
+
+### 图片信息
+
+`文件 → 图片信息`，或直接按 `I`。窗口显示尺寸、格式、文件大小、路径和 EXIF，支持一键复制。
 
 ### 它怎么找到脸
 

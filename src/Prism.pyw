@@ -78,7 +78,7 @@ IS_WIN = sys.platform.startswith("win")
 K = "Command" if IS_MAC else "Control"
 
 APP_NAME = "Prism"
-APP_VERSION = "9.15.7"
+APP_VERSION = "9.15.8"
 APP_BUILD = "2025-12.9"
 # ---------------------------------------------------------------- 运行模式
 # 同一份源码编出三个版本：
@@ -2472,10 +2472,12 @@ def _is_grayish(img):
 
 
 def _skin_mask(img, feather=0):
-    """肤色蒙版（YCbCr 的 Cb/Cr 区间）。
+    """肤色蒙版（YCbCr + 色度差）。
 
-    蒙版本身就是一张平滑的灰度图，大图上没必要逐像素算：先降到半分辨率，
-    算完再用双线性放回来，形状几乎不变，耗时降到约 1/4。
+    只看 Cb/Cr 区间会把深棕头发、棕色家具一起算成皮肤：
+    头发接近中性灰，Cr 与 Cb 只差几个点；皮肤即使很深也有明显的红黄倾向。
+    因此再加 Y 下限与 Cr-Cb 色度差，暗部发丝和木纹会被挡掉。
+    蒙版先在半分辨率算，再双线性放大，边缘保持柔和。
     """
     W, H = img.size
     small = None
@@ -2486,10 +2488,18 @@ def _skin_mask(img, feather=0):
     else:
         src = img
     ycc = src.convert("YCbCr")
-    cb, cr = ycc.split()[1], ycc.split()[2]
-    cb_ok = cb.point(lambda v: 255 if 77 <= v <= 130 else 0)
-    cr_ok = cr.point(lambda v: 255 if 132 <= v <= 178 else 0)
-    mask = ImageChops.multiply(cb_ok, cr_ok)
+    y, cb, cr = ycc.split()
+    # 天空/雾气的 Cb/Cr 常落在肤色区间，但饱和度很低；真人皮肤再白也有红黄差
+    sat = src.convert("HSV").split()[1]
+    y_ok = y.point(lambda v: 255 if 34 <= v <= 249 else 0)
+    cb_ok = cb.point(lambda v: 255 if 72 <= v <= 132 else 0)
+    cr_ok = cr.point(lambda v: 255 if 130 <= v <= 181 else 0)
+    sat_ok = sat.point(lambda v: 255 if v >= 26 else 0)
+    chroma = ImageChops.subtract(cr, cb)
+    chroma_ok = chroma.point(lambda v: 255 if v >= 14 else 0)
+    mask = ImageChops.multiply(ImageChops.multiply(cb_ok, cr_ok),
+                               ImageChops.multiply(y_ok, chroma_ok))
+    mask = ImageChops.multiply(mask, sat_ok)
     if small is not None:
         mask = mask.resize((W, H), Image.BILINEAR)
     if feather and feather > 0:
@@ -2518,14 +2528,18 @@ def _edge_weight(img, blur):
 
 
 def _freq_smooth(img, radius, strength):
-    """频域分离磨皮：只压低频（色斑、不均匀），高频（毛孔、绒毛）原样加回。
+    """三段频率磨皮：保留下颌/鼻梁的大光影，只压肤色不均与毛孔。
 
-    模糊只在半分辨率上做 —— 低频本来就平滑，降采样不改变结果，
-    但高斯模糊的开销降到 1/4；加减运算仍在全分辨率做，细节不受影响。
+    macro  = 大半径低频（脸型光影）
+    meso   = 中半径低频 - macro（色块、红血丝、浅斑）
+    detail = img - 中半径低频（毛孔、绒毛）
+    旧版直接把整段低频替换成更大的模糊，会把鼻梁和颧骨的光一起抹平，
+    脸看起来像一张纸；这里保留 macro，只压 meso，detail 按强度回加。
     """
     k = max(0.0, min(1.0, float(strength or 0) / 100.0))
     if k <= 0:
         return img
+    import numpy as np
     W, H = img.size
     r = max(0.6, float(radius))
     half = W * H > 400000
@@ -2533,15 +2547,21 @@ def _freq_smooth(img, radius, strength):
         sw, sh = max(16, W // 2), max(16, H // 2)
         small = img.resize((sw, sh), Image.BILINEAR)
         low_s = small.filter(ImageFilter.GaussianBlur(max(0.6, r * 0.5)))
-        low2_s = low_s.filter(ImageFilter.GaussianBlur(max(0.6, r * 0.5)))
+        macro_s = small.filter(ImageFilter.GaussianBlur(max(1.0, r * 3.1)))
         low = low_s.resize((W, H), Image.BILINEAR)
-        low2 = low2_s.resize((W, H), Image.BILINEAR)
+        macro = macro_s.resize((W, H), Image.BILINEAR)
     else:
-        low = img.filter(ImageFilter.GaussianBlur(r))
-        low2 = low.filter(ImageFilter.GaussianBlur(r * 0.8))
-    flat_low = Image.blend(low, low2, (k ** 0.55) * 0.95)
-    hi = ImageChops.subtract(img, low, scale=1, offset=128)
-    return ImageChops.add(flat_low, hi, scale=1, offset=-128)
+        low = img.filter(ImageFilter.GaussianBlur(max(0.6, r)))
+        macro = img.filter(ImageFilter.GaussianBlur(max(1.0, r * 3.1)))
+    a = np.asarray(img.convert("RGB"), dtype=np.float32)
+    l = np.asarray(low, dtype=np.float32)
+    m = np.asarray(macro, dtype=np.float32)
+    meso = l - m
+    detail = a - l
+    meso_gain = 1.0 - 0.38 * k
+    retain = 1.0 - 0.18 * k
+    out = m + meso * meso_gain + detail * retain
+    return Image.fromarray(np.clip(out, 0, 255).astype(np.uint8), "RGB")
 
 
 def _face_bbox(skin):
@@ -2572,48 +2592,219 @@ def _face_bbox(skin):
     return x0, y0, x1 - x0, y1 - y0
 
 
-def _zone_weight(size, bbox, forehead, cheek, chin, eye):
-    """按人脸包围盒生成分区权重图（L 模式，0~255）。"""
+def _even_chroma(img, mask, radius, strength):
+    """只均匀色度（Cb/Cr），不动亮度细节。
+
+    磨皮压的是明暗不均匀；红血丝、痘印周围的泛红属于色度不均匀，
+    单独在 Cb/Cr 上做低频混合，不会把毛孔和胡渣一起抹掉。
+    """
+    k = max(0.0, min(1.0, float(strength or 0) / 100.0))
+    if k <= 0:
+        return img
+    import numpy as np
+    W, H = img.size
+    r = max(1.0, float(radius))
+    # 色度是低频信息，可以在半分辨率上模糊再放回；亮度仍用全分辨率，
+    # 这样不会像整图降采样那样把背景也一起改掉。
+    big = W * H > 400000
+    if big:
+        small = img.resize((max(16, W // 2), max(16, H // 2)), Image.BILINEAR)
+        ycc_s = small.convert("YCbCr")
+        _ys, cb, cr = ycc_s.split()
+        rr = max(0.8, r * 0.5)
+        cb2 = cb.filter(ImageFilter.GaussianBlur(rr)).resize((W, H), Image.BILINEAR)
+        cr2 = cr.filter(ImageFilter.GaussianBlur(rr)).resize((W, H), Image.BILINEAR)
+        y = img.convert("YCbCr").split()[0]
+        sat = small.convert("HSV").split()[1].resize((W, H), Image.BILINEAR)
+    else:
+        ycc = img.convert("YCbCr")
+        y, cb, cr = ycc.split()
+        cb2 = cb.filter(ImageFilter.GaussianBlur(r))
+        cr2 = cr.filter(ImageFilter.GaussianBlur(r))
+        sat = img.convert("HSV").split()[1]
+    a = np.asarray(img.convert("RGB"), dtype=np.float32)
+    # 饱和区（嘴唇、眼影）不参与色度均匀，避免把妆色洗淡
+    s = np.asarray(sat, dtype=np.float32) / 255.0
+    guard = np.clip((0.62 - s) / 0.18, 0.0, 1.0)
+    new = np.asarray(Image.merge("YCbCr", (y, cb2, cr2)).convert("RGB"),
+                     dtype=np.float32)
+    m = np.asarray(mask, dtype=np.float32) / 255.0
+    w = (m * guard * k * 0.72)[:, :, None]
+    blended = a * (1.0 - w) + new * w
+    return Image.fromarray(np.clip(blended, 0, 255).astype(np.uint8), "RGB")
+
+
+def _zone_weight(size, bbox, forehead, cheek, chin, eye, eyes=None):
+    """按人脸生成分区权重图（L 模式，0~255）。
+
+    旧版把整张脸横切成四条矩形，眼周权重会刷到鼻梁和太阳穴，边界也有硬台阶。
+    现在额头/脸颊/下巴用椭圆区域，眼周只覆盖两只眼睛周围；所有权重做一次
+    高斯羽化，分区之间不会出现横带。
+    """
     W, H = size
     img = Image.new("L", (W, H), 255)
     if not bbox:
         return img
     x, y, w, h = bbox
     d = ImageDraw.Draw(img)
-    # 横向分带、互不重叠：额头 / 眼周 / 脸颊 / 下巴
-    bands = ((0.00, 0.30, forehead), (0.30, 0.50, eye),
-             (0.50, 0.78, cheek), (0.78, 1.00, chin))
-    for fy0, fy1, level in bands:
-        d.rectangle([x + w * 0.02, y + h * fy0, x + w * 0.98, y + h * fy1],
-                    fill=int(max(0, min(150, level)) * 255 / 100))
-    # 只做很小的模糊，避免权重跨区外溢
-    return img.filter(ImageFilter.GaussianBlur(max(1.0, min(W, H) / 400.0)))
+
+    def _level(v):
+        return int(max(0.0, min(1.0, float(v or 0) / 100.0)) * 255)
+
+    def _oval(box, level):
+        lay = Image.new("L", (W, H), 0)
+        ImageDraw.Draw(lay).ellipse(box, fill=255)
+        lay = lay.filter(ImageFilter.GaussianBlur(max(2.0, w * 0.06)))
+        # 255 - lay*(255-level)：区域内降到 level，区域外保持 255
+        return lay.point(lambda v: 255 - int(v * (255 - _level(level)) / 255.0))
+
+    # 额头、两侧脸颊、下巴；交叠处取最低值（最轻的强度）
+    z = _oval([x + w * 0.04, y + h * 0.00, x + w * 0.96, y + h * 0.34], forehead)
+    z = ImageChops.darker(z, _oval(
+        [x - w * 0.02, y + h * 0.46, x + w * 0.48, y + h * 0.84], cheek))
+    z = ImageChops.darker(z, _oval(
+        [x + w * 0.52, y + h * 0.46, x + w * 1.02, y + h * 0.84], cheek))
+    z = ImageChops.darker(z, _oval(
+        [x + w * 0.18, y + h * 0.76, x + w * 0.82, y + h * 1.06], chin))
+    if eyes:
+        for (ex, ey) in eyes:
+            z = ImageChops.darker(z, _oval(
+                [ex - w * 0.20, ey - h * 0.055,
+                 ex + w * 0.20, ey + h * 0.115], eye))
+    return z
 
 
-def _blemish_fix(img, skin, strength, size=5):
-    """祛斑 / 痘印：找肤色区里比中值背景明显更暗的孤立小点，用背景替换。"""
+def _face_region_mask(size, faces, feather=None):
+    """由人脸框生成柔和的椭圆区域，避免美颜改到背景、衣服和手臂。"""
+    W, H = size
+    m = Image.new("L", (W, H), 0)
+    if not faces:
+        return m
+    d = ImageDraw.Draw(m)
+    for (x, y, w, h) in faces:
+        d.ellipse([x - w * 0.045, y - h * 0.055,
+                   x + w * 1.045, y + h * 1.075], fill=255)
+    if feather is None:
+        feather = max(2.0, min(W, H) / 220.0)
+    return m.filter(ImageFilter.GaussianBlur(feather))
+
+
+def _spot_filter(mask, max_ratio=0.0025):
+    """只保留孤立小斑点：去掉整片红晕、鼻影和零散噪声。"""
+    try:
+        import numpy as np
+    except Exception:
+        return mask
+    W, H = mask.size
+    sw = 240
+    sh = max(24, int(H * sw / max(1, W)))
+    small = mask.resize((sw, sh), Image.BILINEAR)
+    a = np.asarray(small, dtype=np.uint8) > 28
+    if not a.any():
+        return mask
+    seen = np.zeros_like(a, dtype=bool)
+    keep = np.zeros_like(a, dtype=bool)
+    max_area = max(24, int(sw * sh * max_ratio))
+    for y in range(sh):
+        for x in range(sw):
+            if not a[y, x] or seen[y, x]:
+                continue
+            stack = [(y, x)]
+            seen[y, x] = True
+            pts = []
+            while stack:
+                cy, cx = stack.pop()
+                pts.append((cy, cx))
+                for dy, dx in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                    ny, nx = cy + dy, cx + dx
+                    if 0 <= ny < sh and 0 <= nx < sw and a[ny, nx] and not seen[ny, nx]:
+                        seen[ny, nx] = True
+                        stack.append((ny, nx))
+            if 2 <= len(pts) <= max_area:
+                for (py, px) in pts:
+                    keep[py, px] = True
+    if not keep.any():
+        return Image.new("L", (W, H), 0)
+    out = Image.fromarray((keep * 255).astype(np.uint8), "L")
+    out = out.resize((W, H), Image.BILINEAR)
+    return ImageChops.multiply(out, mask)
+
+
+def _skin_patch(rgb, skin, radius):
+    """用「只含肤色」的归一化模糊做修补背景，避免斑点靠近脸缘时吸进背景色。"""
+    import numpy as np
+    r = max(1.0, float(radius))
+    num = ImageChops.multiply(rgb, skin.convert("RGB"))
+    den = skin.filter(ImageFilter.GaussianBlur(r))
+    num = num.filter(ImageFilter.GaussianBlur(r))
+    a = np.asarray(rgb, dtype=np.float32)
+    n = np.asarray(num, dtype=np.float32)
+    d = np.asarray(den, dtype=np.float32)[:, :, None] / 255.0
+    patch = np.where(d > 0.02, n / np.maximum(d, 0.02), a)
+    return Image.fromarray(np.clip(patch, 0, 255).astype(np.uint8), "RGB")
+
+
+def _blemish_fix(img, skin, strength, size=5, _crop=True):
+    """祛斑 / 痘印：只修小尺度暗点与红点，不动整片阴影。
+
+    旧版拿大半径模糊与原图相减，鼻影、眼窝这类大面积暗部也会被当成斑点，
+    修补半径又太大，结果是把半张脸抹亮。现在用 DoG（细模糊 - 粗模糊）
+    只保留「比周围小的暗点」，并用小半径局部背景替换，保留周围纹理。
+    """
     k = max(0.0, min(1.0, float(strength or 0) / 100.0))
     if k <= 0:
         return img
     rgb = img.convert("RGB")
+    size = max(2.0, float(size or 5))
+    # 只在有肤色的包围盒里算，12MP 图上能省掉大半张背景
+    if _crop:
+        bb = skin.getbbox()
+        if bb:
+            pad = int(size * 7)
+            x0 = max(0, bb[0] - pad)
+            y0 = max(0, bb[1] - pad)
+            x1 = min(rgb.size[0], bb[2] + pad)
+            y1 = min(rgb.size[1], bb[3] + pad)
+            if (x1 - x0) * (y1 - y0) < rgb.size[0] * rgb.size[1] * 0.92:
+                sub = _blemish_fix(rgb.crop((x0, y0, x1, y1)),
+                                   skin.crop((x0, y0, x1, y1)),
+                                   strength, size, _crop=False)
+                rgb.paste(sub, (x0, y0))
+                return rgb
     g = rgb.convert("L")
-    # 背景要用比斑点更大的半径估计，否则背景本身被斑点污染（中值窗口小于斑点时无效）
-    r = max(6.0, float(size) * 1.8)
-    bg = g.filter(ImageFilter.GaussianBlur(r))
-    diff = ImageChops.subtract(bg, g)          # 背景比原图亮 = 暗斑
-    spot = diff.point(lambda v: 0 if v < 4 else min(255, (v - 4) * 20))
-    spot = ImageChops.multiply(spot, skin)
+    fine = g.filter(ImageFilter.GaussianBlur(max(0.8, size * 0.22)))
+    coarse = g.filter(ImageFilter.GaussianBlur(max(4.0, size * 2.8)))
+    dark = ImageChops.subtract(coarse, fine)      # 暗点：周围比中心亮
+    # 红痘印：Cr 比周围高，但范围同样要小
+    cr = rgb.convert("YCbCr").split()[2]
+    cr_c = cr.filter(ImageFilter.GaussianBlur(max(4.0, size * 2.2)))
+    red = ImageChops.subtract(cr, cr_c)
+
+    def _spot(v, lo, gain):
+        return 0 if v < lo else min(255, int((v - lo) * gain))
+
+    spot = dark.point(lambda v: _spot(v, 7, 18))
+    red = red.point(lambda v: _spot(v, 5, 22))
+    # 肤色边界上的红边/阴影不是痘印；先腐蚀一圈再检测
+    guard = skin.filter(ImageFilter.MinFilter(5))
+    dark = _spot_filter(ImageChops.multiply(spot, guard))
+    red = _spot_filter(ImageChops.multiply(red, guard))
+    spot = ImageChops.lighter(dark, red)
     if spot.getbbox() is None:
         return img
-    spot = spot.filter(ImageFilter.GaussianBlur(1.5))
-    spot = spot.point(lambda v: int(v * (k ** 0.55)))
-    # 修补：用同一套背景（大半径模糊）填充斑点区域
-    patch = rgb.filter(ImageFilter.GaussianBlur(r * 0.85))
+    spot = spot.filter(ImageFilter.GaussianBlur(max(1.0, size * 0.22)))
+    spot = spot.point(lambda v: int(v * (k ** 0.55) * 1.0))
+    # 用只含肤色的局部背景替换；半径必须大于斑点本身，否则补丁里仍是斑点颜色
+    patch = _skin_patch(rgb, skin, max(2.0, size * 2.35))
     return Image.composite(patch, rgb, spot)
 
 
-def _eye_care(img, skin, strength, spread=50, bbox=None):
-    """黑眼圈 / 眼袋：在眼下区域提亮暗部并压低蓝调。"""
+def _eye_care(img, skin, strength, spread=50, bbox=None, centers=None):
+    """黑眼圈 / 眼袋：只提亮眼下这条窄带，并压掉一点青紫。
+
+    旧版用「脸框 44% 高度 + 大椭圆」估计眼下，脸框稍大就会把颧骨一起刷亮。
+    现在以实际眼睛中心为锚点，范围只覆盖眼下的皮肤，并保留眼下纹理。
+    """
     k = max(0.0, min(1.0, float(strength or 0) / 100.0))
     if k <= 0:
         return img
@@ -2624,33 +2815,101 @@ def _eye_care(img, skin, strength, spread=50, bbox=None):
     x, y, w, h = bbox
     W, H = img.size
     rgb = img.convert("RGB")
-    # 眼下区域：左右各一个横向椭圆，位置取人脸高度的 36%~52%
-    m = Image.new("L", (W, H), 0)
+    if centers is None:
+        centers = _eye_centers(rgb, bbox)
+    if not centers:
+        return rgb
+    sr = max(0.0, min(1.0, float(spread or 0) / 100.0))
+    rx = w * (0.088 + 0.038 * sr)
+    ry = h * (0.030 + 0.020 * sr)
+    # 只在两眼周围的小块里建蒙版，不分配整图 L 通道
+    pad = max(6.0, w * 0.06)
+    x0 = max(0, int(min(ex for ex, _ey in centers) - rx - pad))
+    x1 = min(W, int(max(ex for ex, _ey in centers) + rx + pad))
+    y0 = max(0, int(min(ey for _ex, ey in centers) + h * 0.005 - pad))
+    y1 = min(H, int(max(ey for _ex, ey in centers) + h * 0.010 + ry * 2 + pad))
+    if x1 - x0 < 8 or y1 - y0 < 8:
+        return rgb
+    sub = rgb.crop((x0, y0, x1, y1))
+    sm = skin.crop((x0, y0, x1, y1))
+    m = Image.new("L", (x1 - x0, y1 - y0), 0)
     d = ImageDraw.Draw(m)
-    rx = w * (0.16 + 0.10 * (spread / 100.0))
-    ry = h * (0.055 + 0.030 * (spread / 100.0))
-    for fx in (0.32, 0.68):
-        cx, cy = x + w * fx, y + h * 0.44
-        d.ellipse([cx - rx, cy - ry, cx + rx, cy + ry], fill=255)
-    m = m.filter(ImageFilter.GaussianBlur(max(2.0, w * 0.05)))
-    m = ImageChops.multiply(m, skin)
+    for (ex, ey) in centers:
+        top = ey + h * 0.004
+        d.ellipse([ex - rx - x0, top - y0,
+                   ex + rx - x0, top + ry * 2.0 - y0], fill=255)
+    m = m.filter(ImageFilter.GaussianBlur(max(2.0, w * 0.035)))
+    m = ImageChops.multiply(m, sm)
+    # 只提亮「明显比周围暗」的眼周，正常肤色不跟着变白
+    g = sub.convert("L")
+    bg = g.filter(ImageFilter.GaussianBlur(max(3.0, w * 0.08)))
+    dark = ImageChops.subtract(bg, g)
+    dark = dark.point(lambda v: 0 if v < 4 else min(255, (v - 4) * 16))
+    dark = dark.filter(ImageFilter.GaussianBlur(max(1.0, w * 0.02)))
+    m = ImageChops.multiply(m, dark)
+    if m.getbbox() is None:
+        return rgb
 
-    # 暗部提亮：只抬低亮度区域（v + (255-v)*系数），亮处几乎不动
-    r0, g0, b0 = rgb.split()
+    r0, g0, b0 = sub.split()
 
     def _lift(ch):
-        return ch.point(lambda v: int(v + (255 - v) * 0.40 * k))
+        # 只抬暗部，亮部几乎不动；上限避免把眼袋刷成白斑
+        return ch.point(lambda v: int(v + (255 - v) * 0.24 * k))
 
     lit = Image.merge("RGB", (_lift(r0), _lift(g0), _lift(b0)))
-    # 再单独压蓝，抵消黑眼圈常见的青紫
+    # 眼下青紫主要落在蓝通道，轻微压蓝并补一点暖红
     lr, lg, lb = lit.split()
-    cooled = Image.merge("RGB", (lr, lg,
-                                 lb.point(lambda v: int(v * (1.0 - 0.12 * k)))))
-    return Image.composite(cooled, rgb, m)
+    neutral = Image.merge("RGB", (
+        lr.point(lambda v: min(255, int(v * (1.0 + 0.018 * k)))),
+        lg,
+        lb.point(lambda v: int(v * (1.0 - 0.075 * k)))))
+    rgb.paste(Image.composite(neutral, sub, m), (x0, y0))
+    return rgb
+
+
+def _mouth_region(rgb, bbox):
+    """从下半张脸里找红色嘴唇区域，返回嘴部裁剪框。
+
+    不能用固定比例：脸框稍大或稍小，嘴唇就会落到框外。
+    """
+    fx, fy, fw, fh = bbox
+    W, H = rgb.size
+    x0 = max(0, int(fx + fw * 0.22))
+    x1 = min(W, int(fx + fw * 0.78))
+    y0 = max(0, int(fy + fh * 0.54))
+    y1 = min(H, int(fy + fh * 0.90))
+    if x1 - x0 < 8 or y1 - y0 < 8:
+        return None
+    crop = rgb.crop((x0, y0, x1, y1))
+    r, g, _b = crop.split()
+    red = ImageChops.subtract(r, g)
+    red = red.filter(ImageFilter.GaussianBlur(max(1.0, fw * 0.012)))
+    import numpy as np
+    arr = np.asarray(red, dtype=np.float32)
+    lo = float(np.percentile(arr, 55))
+    hi = float(np.percentile(arr, 97))
+    if hi - lo < 7:
+        return None
+    # 皮肤本身也有红绿差；用这张脸自己的 55/97 分位做自适应阈值，
+    # 只留下明显比周围皮肤更红的嘴唇，不能全脸都算。
+    thr = lo + (hi - lo) * 0.42
+    m = red.point(lambda v: 255 if v >= thr else 0)
+    bb = m.getbbox()
+    if bb is None:
+        return None
+    bw, bh = bb[2] - bb[0], bb[3] - bb[1]
+    if bw < fw * 0.10 or bh < fh * 0.018:
+        return None
+    # 嘴唇不可能横跨大半张脸；这是深肤色下红绿差阈值失效时的兜底
+    if bw > fw * 0.58 or bh > fh * 0.22:
+        return None
+    padx, pady = int(bw * 0.16), int(bh * 0.30)
+    return (max(0, x0 + bb[0] - padx), max(0, y0 + bb[1] - pady),
+            min(W, x0 + bb[2] + padx), min(H, y0 + bb[3] + pady))
 
 
 def _lip_teeth(img, skin, lip, teeth, bbox=None):
-    """牙齿美白 + 唇色增强。在嘴部区域按像素特征区分牙齿与嘴唇。"""
+    """牙齿美白 + 唇色增强，只在检测到的嘴部区域内按颜色区分。"""
     lip = max(0.0, min(100.0, float(lip or 0)))
     teeth = max(0.0, min(100.0, float(teeth or 0)))
     if lip <= 0 and teeth <= 0:
@@ -2662,50 +2921,62 @@ def _lip_teeth(img, skin, lip, teeth, bbox=None):
     fx, fy, fw, fh = bbox
     W, H = img.size
     rgb = img.convert("RGB")
-
-    # 嘴部区域
-    mx0 = fx + fw * 0.28
-    mx1 = fx + fw * 0.72
-    my0 = fy + fh * 0.60
-    my1 = fy + fh * 0.82
-    box = (max(0, int(mx0)), max(0, int(my0)),
-           min(W, int(mx1)), min(H, int(my1)))
+    box = _mouth_region(rgb, bbox)
+    if box is None:
+        mx0 = int(fx + fw * 0.30)
+        mx1 = int(fx + fw * 0.70)
+        my0 = int(fy + fh * 0.62)
+        my1 = int(fy + fh * 0.80)
+        box = (max(0, mx0), max(0, my0), min(W, mx1), min(H, my1))
     if box[2] - box[0] < 4 or box[3] - box[1] < 4:
         return img
     crop = rgb.crop(box)
     r, g, b = crop.split()
     l = crop.convert("L")
-    rng = ImageChops.subtract(r, g)            # 红-绿：嘴唇明显偏高
+    rng = ImageChops.subtract(r, g)
 
     out = crop
+    # 唇色阈值同样按嘴部自身分布自适应：皮肤的红绿差不应被算成嘴唇
+    import numpy as np
+    ra = np.asarray(rng, dtype=np.float32)
+    r_lo = float(np.percentile(ra, 55))
+    r_hi = float(np.percentile(ra, 97))
+    lip_thr = r_lo + max(10.0, (r_hi - r_lo) * 0.34) if r_hi > r_lo else 30.0
     if teeth > 0:
-        # 牙齿：嘴部里又亮、又接近中性（低饱和）
-        vm = l.point(lambda v: 255 if v > 140 else 0)
-        sm = rng.point(lambda v: 255 if v < 26 else 0)
+        k = teeth / 100.0
+        # 牙齿：亮、低饱和、红绿差小；再限制在嘴部中央，避免牙白沾到唇峰
+        vm = l.point(lambda v: 255 if v > 145 else max(0, int((v - 115) * 8)))
+        sm = rng.point(lambda v: 255 if v < 24 else max(0, 255 - (v - 24) * 12))
         tm = ImageChops.multiply(vm, sm)
-        if tm.getbbox() is not None:
-            tm = tm.filter(ImageFilter.GaussianBlur(1.2))
-            grey = crop.convert("L").convert("RGB")
-            white = Image.blend(crop, grey, 0.55)          # 去黄
-            white = ImageEnhance.Brightness(white).enhance(1.0 + 0.18 * teeth / 100.0)
-            k = tm.point(lambda v: int(v * teeth / 100.0))
-            out = Image.composite(white, out, k)
+        tm = tm.filter(ImageFilter.GaussianBlur(1.0))
+        tm = tm.point(lambda v: int(v * k * 0.95))
+        grey = crop.convert("L").convert("RGB")
+        white = Image.blend(crop, grey, 0.62)
+        white = ImageEnhance.Brightness(white).enhance(1.02 + 0.10 * k)
+        out = Image.composite(white, out, tm)
     if lip > 0:
-        lm = rng.point(lambda v: 0 if v < 28 else min(255, (v - 28) * 8))
-        lm = lm.filter(ImageFilter.GaussianBlur(1.5))
-        k = lm.point(lambda v: int(v * lip / 100.0 * 0.85))
-        rr, gg, bb = out.split()
+        k = lip / 100.0
+        lm = rng.point(lambda v: 0 if v < lip_thr else min(255, (v - lip_thr) * 12))
+        lm = lm.filter(ImageFilter.GaussianBlur(1.2))
+        lm = lm.point(lambda v: int(v * k * 0.92))
+        # 唇色：提高饱和与红调，保持亮度，避免把嘴唇刷成粉色高光
+        hot = ImageEnhance.Color(out).enhance(1.0 + 0.55 * k)
+        hr, hg, hb = hot.split()
         hot = Image.merge("RGB", (
-            rr.point(lambda v: min(255, int(v * 1.10))),
-            gg.point(lambda v: int(v * 0.95)),
-            bb.point(lambda v: int(v * 0.96))))
-        out = Image.composite(hot, out, k)
+            hr.point(lambda v: min(255, int(v * (1.0 + 0.10 * k)))),
+            hg.point(lambda v: int(v * (1.0 - 0.025 * k))),
+            hb.point(lambda v: int(v * (1.0 - 0.035 * k)))))
+        out = Image.composite(hot, out, lm)
     rgb.paste(out, box)
     return rgb
 
 
 def _face_boxes(skin, max_faces=4, min_ratio=0.18):
-    """返回若干人脸包围盒（按面积从大到小）。没有模型，用肤色连通域估计。"""
+    """返回若干人脸包围盒（按面积从大到小）。
+
+    没有模型，只用肤色连通域，但不能把「脸 + 脖子 + 肩膀」整块当成脸：
+    先按行宽切出上方的脸部主瓣，肩膀变宽处就停，脖子变窄处也停。
+    """
     try:
         import numpy as np
     except Exception:
@@ -2740,12 +3011,64 @@ def _face_boxes(skin, max_faces=4, min_ratio=0.18):
                     if 0 <= ny < sh and 0 <= nx < sw and a[ny, nx] and not seen[ny, nx]:
                         seen[ny, nx] = True
                         stack.append((ny, nx))
-            if count < sw * sh * 0.004:
+            if count < sw * sh * 0.003:
                 continue
             bw, bh = maxx - minx + 1, maxy - miny + 1
-            if bh < sh * 0.12 or bw < sw * 0.06:
+            if bh < sh * 0.10 or bw < sw * 0.05:
                 continue
-            boxes.append((minx, miny, bw, bh, count))
+            # 逐行宽度：用于把脸从脖子/肩膀里切出来
+            sub = a[miny:maxy + 1, minx:maxx + 1]
+            widths = sub.sum(axis=1)
+            rows = np.where(widths > 0)[0]
+            if rows.size < 4:
+                continue
+            top, bottom = int(rows[0]), int(rows[-1])
+            span = max(1, bottom - top + 1)
+            upper = widths[top:top + max(4, int(span * 0.55))]
+            upper = upper[upper > 0]
+            if upper.size < 4:
+                continue
+            # 取上半部较宽的行；耳朵/发际线不会像肩膀那样突然翻倍
+            face_w = float(np.percentile(upper, 72))
+            face_w = max(face_w, float(upper.max()) * 0.82)
+            if face_w < sw * 0.05:
+                continue
+            # 从额头向下走：肩膀突然变宽、下巴后突然变窄都视为脸部结束
+            end = bottom
+            face_seen = False
+            for yy in range(top + 1, bottom + 1):
+                ww = int(widths[yy])
+                if ww >= face_w * 0.45:
+                    face_seen = True
+                if not face_seen:
+                    continue
+                if ww > face_w * 1.62:
+                    end = max(top + 4, yy - 1)
+                    break
+                if yy > top + span * 0.45 and ww < face_w * 0.28:
+                    end = max(top + 4, yy - 1)
+                    break
+            # 下巴可能被肩膀挡住；稍微补回一点，避免分区截断
+            end = min(bottom, max(end, top + 4) + int(face_w * 0.06))
+            rows2 = np.where(widths[top:end + 1] > 0)[0]
+            if rows2.size < 4:
+                continue
+            cols = np.where(sub[top:end + 1].any(axis=0))[0]
+            if cols.size < 4:
+                continue
+            fx0, fx1 = int(cols[0]), int(cols[-1])
+            fy0, fy1 = top, end
+            fw, fh = fx1 - fx0 + 1, fy1 - fy0 + 1
+            if fw < sw * 0.05 or fh < sh * 0.10:
+                continue
+            fill = float(sub[fy0:fy1 + 1, fx0:fx1 + 1].mean())
+            ratio = fw / float(max(1, fh))
+            # 侧脸、长发遮挡时会略窄；但仍拒绝横条和细杆
+            if not (0.28 <= ratio <= 1.55):
+                continue
+            if not (0.28 <= fill <= 0.98):
+                continue
+            boxes.append((minx + fx0, miny + fy0, fw, fh, count))
     if not boxes:
         return []
     boxes.sort(key=lambda b: -b[2] * b[3])
@@ -2756,55 +3079,84 @@ def _face_boxes(skin, max_faces=4, min_ratio=0.18):
         area = bw * bh
         if area < biggest * min_ratio:
             continue
-        # 形状校验：人脸框通常高略大于宽，且肤色在框内占比较高；
-        # 手臂、脖子这类细长或空心的色块会被这两条挡掉
-        ratio = bw / float(max(1, bh))
-        fill = cnt / float(max(1, area))
-        if not (0.40 <= ratio <= 1.45):
-            continue
-        if not (0.30 <= fill <= 0.97):
-            continue
-        # 太扁（横跨画面）或太窄（色带）的也排除
-        if bw > W * 0.85 and ratio > 1.15:
-            continue
         out.append((int(bx * sx), int(by * sy), int(bw * sx), int(bh * sy)))
     return out
 
 
 def _eye_centers(img, bbox):
-    """在脸的上半部找最暗的左右两处，当作眼睛中心（比按固定比例可靠）。"""
+    """在脸的上半部找左右对称的两处暗区，当作眼睛中心。
+
+    旧版直接取左右半边的列最暗值，耳朵、鬓角一暗就会把“眼睛”推到脸外。
+    现在把搜索限制在脸中段，并要求左右候选关于脸中线大致对称。
+    """
     try:
         import numpy as np
     except Exception:
         return None
     x, y, w, h = bbox
     W, H = img.size
-    y0 = max(0, int(y + h * 0.18))
-    y1 = max(y0 + 4, int(y + h * 0.58))
-    x0 = max(0, int(x + w * 0.10))
-    x1 = max(x0 + 4, int(x + w * 0.90))
-    g = np.asarray(img.convert("L").crop((x0, y0, x1, y1)), dtype=np.float32)
-    if g.size < 16:
+    x0 = max(0, int(x + w * 0.18))
+    x1 = min(W, int(x + w * 0.82))
+    y0 = max(0, int(y + h * 0.20))
+    y1 = min(H, int(y + h * 0.52))
+    if x1 - x0 < 24 or y1 - y0 < 12:
         return None
-    dark = 255.0 - g
+    g = np.asarray(img.convert("L").crop((x0, y0, x1, y1)), dtype=np.float32)
+    if g.size < 400:
+        return None
+    # 局部暗区：先减掉低频亮度，眉毛/眼窝才会从肤色里浮出来
+    box = Image.fromarray(g.astype(np.uint8), "L")
+    low = np.asarray(box.filter(ImageFilter.GaussianBlur(max(2.0, w * 0.035))),
+                     dtype=np.float32)
+    dark = np.clip(low - g, 0, 255) + np.clip(210 - g, 0, 255) * 0.35
     col = dark.mean(axis=0)
     cw = col.size
-    if cw < 10:
+    if cw < 20:
         return None
-    mid = cw // 2
-    lx = int(np.argmax(col[:mid])) if mid > 2 else 0
-    rx = mid + int(np.argmax(col[mid:])) if cw - mid > 2 else cw - 1
+    # 平滑列曲线，避免单根睫毛决定位置
+    k = np.ones(5, dtype=np.float32) / 5.0
+    col = np.convolve(col, k, mode="same")
+    mid = cw / 2.0
+    lo_end = max(4, int(mid * 0.92))
+    hi_start = min(cw - 4, int(mid * 1.08))
+    if lo_end < 6 or hi_start > cw - 6:
+        return None
+    left_idx = np.arange(2, lo_end)
+    right_idx = np.arange(hi_start, cw - 2)
+    if left_idx.size == 0 or right_idx.size == 0:
+        return None
+    # 眼睛间距通常为脸宽的 0.28~0.52；同时惩罚偏离中线
+    best = None
+    for li in left_idx:
+        for ri in right_idx:
+            sep = (ri - li) / float(cw)
+            if not (0.28 <= sep <= 0.55):
+                continue
+            sym = abs((li + ri) / 2.0 - mid) / float(cw)
+            score = col[li] + col[ri] - sym * 95.0
+            if best is None or score > best[0]:
+                best = (score, int(li), int(ri))
+    if best is None:
+        return None
     out = []
-    for cx in (lx, rx):
-        lo, hi = max(0, cx - 4), min(cw, cx + 5)
-        seg = dark[:, lo:hi]
-        wsum = seg.sum()
-        cy = int((seg.mean(axis=1) * np.arange(seg.shape[0])).sum() / max(1e-6, seg.mean(axis=1).sum()))
+    for cx in (best[1], best[2]):
+        # 眼睛纵坐标：在该列附近找局部暗区重心
+        half = max(4, int(w * 0.055))
+        seg = dark[:, max(0, cx - half):min(cw, cx + half)]
+        if seg.size == 0:
+            return None
+        rows = seg.mean(axis=1)
+        rows = np.maximum(rows - rows.mean() * 0.55, 0)
+        if rows.sum() <= 1e-6:
+            return None
+        cy = int((rows * np.arange(rows.size)).sum() / rows.sum())
         out.append((x0 + cx, y0 + cy))
+    if out[0][0] > out[1][0]:
+        out.reverse()
     return out
 
 
-def _face_warp(img, skin, slim=0, eyes=0, bbox=None):
+def _face_warp(img, skin, slim=0, eyes=0, bbox=None, centers=None):
     """瘦脸 + 大眼（先整体变形，再用蒙版合成，边缘不留台阶）。"""
     slim = max(0.0, min(100.0, float(slim or 0)))
     eyes = max(0.0, min(100.0, float(eyes or 0)))
@@ -2826,6 +3178,14 @@ def _face_warp(img, skin, slim=0, eyes=0, bbox=None):
     if w < 24 or h < 24:
         return img
 
+    # 眼睛中心只算一次；原先像素分支和网格分支各算一次，12MP 上白花 1 秒多
+    if eyes > 0:
+        if centers is None:
+            centers = _eye_centers(img, bbox)
+        if not centers:
+            centers = [(x + w * 0.32, y + h * 0.42),
+                       (x + w * 0.68, y + h * 0.42)]
+
     # 只在人脸区域附近计算：水平外扩 0.30w、垂直外扩 0.14h（与蒙版椭圆一致）
     padx = int(w * 0.30)
     pady = int(h * 0.14)
@@ -2841,22 +3201,18 @@ def _face_warp(img, skin, slim=0, eyes=0, bbox=None):
     sx = xx.astype(np.float32)
     sy = yy.astype(np.float32)
 
-    # ---- 瘦脸：下半张脸整体向中线挤压 ----
+    # ---- 瘦脸：从颧骨下方开始，避免把眼睛一起横向挤扁 ----
     if slim > 0:
-        k = slim / 100.0 * 0.20
+        k = slim / 100.0 * 0.19
         cx = x + w / 2.0
-        t = np.clip((yy - (y + h * 0.30)) / (h * 0.55), 0.0, 1.0)
+        t = np.clip((yy - (y + h * 0.43)) / (h * 0.47), 0.0, 1.0)
         fy = t * t * (3.0 - 2.0 * t)
         sx = sx + (sx - cx) * k * fy
 
-    # ---- 大眼：两只眼睛位置做局部放大 ----
+    # ---- 大眼：两只眼睛位置做局部放大，半径和幅度都收一点，避免鱼眼 ----
     if eyes > 0:
-        k = eyes / 100.0 * 0.45
-        R = max(10.0, w * 0.18)
-        centers = _eye_centers(img, bbox)
-        if not centers:
-            centers = [(x + w * 0.32, y + h * 0.42),
-                       (x + w * 0.68, y + h * 0.42)]
+        k = eyes / 100.0 * 0.36
+        R = max(9.0, w * 0.16)
         for (ex, ey) in centers:
             d = np.sqrt((xx - ex) ** 2 + (yy - ey) ** 2)
             g = np.clip(1.0 - (d / R) ** 2, 0.0, 1.0)
@@ -2875,17 +3231,15 @@ def _face_warp(img, skin, slim=0, eyes=0, bbox=None):
     px = grid_x + rx0
     py = grid_y + ry0
     if slim > 0:
-        k = slim / 100.0 * 0.20
+        k = slim / 100.0 * 0.19
         cx = x + w / 2.0
-        t = np.clip((py - (y + h * 0.30)) / (h * 0.55), 0.0, 1.0)
+        t = np.clip((py - (y + h * 0.43)) / (h * 0.47), 0.0, 1.0)
         fy = t * t * (3.0 - 2.0 * t)
         px = px + (px - cx) * k * fy
     if eyes > 0:
-        k = eyes / 100.0 * 0.45
-        R = max(10.0, w * 0.18)
-        cs = _eye_centers(img, bbox) or [(x + w * 0.32, y + h * 0.42),
-                                         (x + w * 0.68, y + h * 0.42)]
-        for (ex, ey) in cs:
+        k = eyes / 100.0 * 0.36
+        R = max(9.0, w * 0.16)
+        for (ex, ey) in centers:
             d = np.sqrt((px - ex) ** 2 + (py - ey) ** 2)
             g = np.clip(1.0 - (d / R) ** 2, 0.0, 1.0)
             px = px + (ex - px) * (k * g)
@@ -2911,23 +3265,99 @@ def _face_warp(img, skin, slim=0, eyes=0, bbox=None):
     except Exception:
         warped = region
 
-    # ---- 合成：只覆盖这块区域 ----
-    m2_full = Image.new("L", (W, H), 0)
-    ImageDraw.Draw(m2_full).ellipse(
-        [x - w * 0.28, y - h * 0.10, x + w * 1.28, y + h * 1.12], fill=255)
-    m2_full = m2_full.filter(ImageFilter.GaussianBlur(max(2.0, w * 0.05)))
+    # ---- 合成：只在裁剪区域内做蒙版，避免为一张 12MP 图分配全尺寸 L 通道 ----
+    m2 = Image.new("L", (rw, rh), 0)
+    ImageDraw.Draw(m2).ellipse(
+        [x - w * 0.28 - rx0, y - h * 0.10 - ry0,
+         x + w * 1.28 - rx0, y + h * 1.12 - ry0], fill=255)
+    # 人脸内圈始终参与（把眼睛/嘴唇补进肤色蒙版），外围只允许真实肤色，
+    # 这样背景、衣服和手臂不会被瘦脸变形拖进来。
+    inner = Image.new("L", (rw, rh), 0)
+    ImageDraw.Draw(inner).ellipse(
+        [x + w * 0.05 - rx0, y + h * 0.02 - ry0,
+         x + w * 0.95 - rx0, y + h * 0.98 - ry0], fill=255)
+    support = ImageChops.lighter(inner, skin.crop((rx0, ry0, rx1, ry1)))
+    support = support.filter(ImageFilter.GaussianBlur(max(1.0, w * 0.035)))
+    m2 = ImageChops.multiply(m2, support)
+    m2 = m2.filter(ImageFilter.GaussianBlur(max(2.0, w * 0.05)))
     if slim > 0 and eyes <= 0:
-        band = Image.new("L", (W, H), 0)
-        ImageDraw.Draw(band).rectangle([0, y + h * 0.30, W, H], fill=255)
+        band = Image.new("L", (rw, rh), 0)
+        ImageDraw.Draw(band).rectangle(
+            [0, y + h * 0.30 - ry0, rw, rh], fill=255)
         band = band.filter(ImageFilter.GaussianBlur(max(2.0, h * 0.06)))
-        m2_full = ImageChops.multiply(m2_full, band)
+        m2 = ImageChops.multiply(m2, band)
 
     base = img.convert("RGB")
     region = base.crop((rx0, ry0, rx1, ry1))
-    mask = m2_full.crop((rx0, ry0, rx1, ry1))
-    base.paste(Image.composite(warped, region, mask), (rx0, ry0))
+    base.paste(Image.composite(warped, region, m2), (rx0, ry0))
     return base
 
+
+
+def _shine_skin(img, mask, amount):
+    """去油光：只压局部比周围亮的高光，不把整张脸调暗。"""
+    k = max(0.0, min(1.0, float(amount or 0) / 100.0))
+    if k <= 0:
+        return img
+    g = img.convert("L")
+    r = max(2.0, min(img.size) / 220.0)
+    bg = g.filter(ImageFilter.GaussianBlur(r))
+    hp = ImageChops.subtract(g, bg, scale=1, offset=128)
+    hot = hp.point(lambda v: 0 if v < 134 else min(255, (v - 134) * 7))
+    # 太暗的毛孔/胡渣即使局部对比高也不该被当成油光
+    hot = ImageChops.multiply(hot, g.point(lambda v: 0 if v < 145 else 255))
+    hot = ImageChops.multiply(hot, mask)
+    hot = hot.filter(ImageFilter.GaussianBlur(max(1.0, min(img.size) / 700.0)))
+    hot = hot.point(lambda v: int(v * k * 0.90))
+    dull = ImageEnhance.Brightness(img).enhance(1.0 - 0.14 * k)
+    return Image.composite(dull, img, hot)
+
+
+def _warm_skin(img, mask, amount):
+    """冷暖：在 YCbCr 上偏移 Cr/Cb，保持亮度，避免 RGB 增益裁切。"""
+    k = max(-1.0, min(1.0, float(amount or 0) / 100.0))
+    if abs(k) < 0.005:
+        return img
+    ycc = img.convert("YCbCr")
+    y, cb, cr = ycc.split()
+    cr = cr.point(lambda v: max(0, min(255, int(v + 11.0 * k))))
+    cb = cb.point(lambda v: max(0, min(255, int(v - 3.0 * k))))
+    tinted = Image.merge("YCbCr", (y, cb, cr)).convert("RGB")
+    w = mask.point(lambda v: int(v * abs(k) * 0.62))
+    return Image.composite(tinted, img, w)
+
+
+def _soft_glow(img, mask, amount):
+    """柔光：只让高光泛开，不把阴影一起提亮。"""
+    k = max(0.0, min(1.0, float(amount or 0) / 100.0))
+    if k <= 0:
+        return img
+    g = img.convert("L")
+    hm = g.point(lambda v: 0 if v < 158 else min(255, (v - 158) * 4))
+    black = Image.new("RGB", img.size, (0, 0, 0))
+    hi = Image.composite(img, black, hm)
+    r = max(1.0, min(img.size) / 240.0)
+    bloom = hi.filter(ImageFilter.GaussianBlur(r))
+    bloom = ImageEnhance.Brightness(bloom).enhance(0.55 * k)
+    lit = ImageChops.add(img, bloom, scale=1, offset=0)
+    w = mask.point(lambda v: int(v * min(1.0, k * 1.15)))
+    return Image.composite(lit, img, w)
+
+
+def _lift_skin(img, mask, amount):
+    """按亮度曲线提亮皮肤：暗部多抬、亮部保护，避免整张脸发白。"""
+    k = max(0.0, min(1.0, float(amount or 0) / 100.0)) ** 0.90
+    if k <= 0:
+        return img
+    import numpy as np
+    a = np.asarray(img.convert("RGB"), dtype=np.float32)
+    l = np.asarray(img.convert("L"), dtype=np.float32)
+    hot = np.clip((l - 188.0) / 62.0, 0.0, 1.0)
+    lift = (255.0 - l) * 0.19 * k * (1.0 - 0.88 * hot)
+    ratio = (l + lift) / np.maximum(l, 1.0)
+    out = np.clip(a * ratio[:, :, None], 0, 255)
+    w = np.asarray(mask, dtype=np.float32)[:, :, None] / 255.0
+    return Image.fromarray((a * (1.0 - w) + out * w).astype(np.uint8), "RGB")
 
 
 def _beautify(img, smooth, radius, bright, even, shine=0, warm=0,
@@ -2970,30 +3400,31 @@ def _beautify(img, smooth, radius, bright, even, shine=0, warm=0,
     if not ok:
         return img
 
-    need_face = bool(slim or eyes or eye_care or lip or teeth)
-    faces = _face_boxes(skin) if need_face else []
-    if not faces:
-        fb = _face_bbox(skin)
-        faces = [fb] if fb else []
+    # 人脸框现在也用于「只美化脸」；没有检出时不强行套一个巨大的 fallback 框
+    faces = _face_boxes(skin)
+    face_meta = [(fb, _eye_centers(rgb, fb)) for fb in faces]
+    face_mask = _face_region_mask(rgb.size, faces) if faces else None
+    skin_face = ImageChops.multiply(skin, face_mask) if face_mask is not None else skin
 
     # 几何变形先做，后续所有颜色处理都基于变形后的肤色区域
-    if slim > 2 or eyes > 2:
-        for fb in faces:
-            rgb = _face_warp(rgb, skin, slim, eyes, fb)
+    if (slim > 2 or eyes > 2) and faces:
+        for fb, cs in face_meta:
+            rgb = _face_warp(rgb, skin, slim, eyes, fb, centers=cs)
         skin = _skin_mask(rgb, max(2.0, h / 320.0))
+        if face_mask is not None:
+            skin_face = ImageChops.multiply(skin, face_mask)
 
     out = rgb
     # 分区权重只生成一次；没有脸时就是全图 1.0
     zone_w = None
-    if zones and (smooth > 0 or even > 0):
-        fb = _face_bbox(skin)
-        if fb:
-            zone_w = _zone_weight(rgb.size, fb, *zones)
+    if zones and (smooth > 0 or even > 0) and faces:
+        zone_w = _zone_weight(rgb.size, faces[0], *zones,
+                              eyes=face_meta[0][1])
 
     if smooth > 0 or even > 0:
         r = (1.0 + radius_lv / 100.0 * 8.0) * (0.65 + 0.55 * smooth / 100.0)             * max(0.6, h / 900.0)
         edge = _edge_weight(rgb, r * 0.6)
-        base = skin
+        base = skin_face
         if zone_w is not None:
             base = ImageChops.multiply(base, zone_w)
         if smooth > 0:
@@ -3003,54 +3434,29 @@ def _beautify(img, smooth, radius, bright, even, shine=0, warm=0,
             w = w.point(lambda v: int(v * ((smooth / 100.0) ** 0.55) * 0.97))
             out = Image.composite(soft, out, w)
         if even > 0:
-            # 均匀肤色用更大尺度的低频，只减少色斑/肤色不匀，保留纹理
-            flat = _freq_smooth(rgb, r * 1.35, even)
-            w = ImageChops.multiply(base, edge)
-            w = w.point(lambda v: int(v * (even / 100.0) * 0.62))
-            out = Image.composite(flat, out, w)
+            # 均匀肤色拆成两层：色度在 Cb/Cr 上单独均匀，亮度只做很轻的低频整理
+            out = _even_chroma(out, skin_face, r * 1.15, even)
 
     if blemish > 0:
-        out = _blemish_fix(out, skin, blemish, spot_size)
+        out = _blemish_fix(out, skin_face, blemish, spot_size)
     if eye_care > 0:
-        for fb in faces:
-            out = _eye_care(out, skin, eye_care, eye_spread, fb)
+        for fb, cs in face_meta:
+            out = _eye_care(out, skin, eye_care, eye_spread, fb, centers=cs)
     if lip > 0 or teeth > 0:
-        for fb in faces:
+        for fb, _cs in face_meta:
             out = _lip_teeth(out, skin, lip, teeth, fb)
 
     if bright > 0:
-        k = (bright / 100.0) ** 1.35
-        lit = ImageEnhance.Brightness(out).enhance(1.0 + 0.16 * k)
-        w = skin.point(lambda v: int(v * k * 0.7))
-        out = Image.composite(lit, out, w)
+        out = _lift_skin(out, skin_face, bright)
 
     if shine > 0:
-        k = shine / 100.0
-        g = out.convert("L")
-        hot = g.point(lambda v: 0 if v < 180 else min(255, (v - 180) * 4))
-        hot = ImageChops.multiply(hot, skin)
-        hot = hot.point(lambda v: int(v * k * 0.85))
-        dull = ImageEnhance.Brightness(out).enhance(0.82)
-        out = Image.composite(dull, out, hot)
+        out = _shine_skin(out, skin_face, shine)
 
     if abs(warm) > 0.5:
-        k = warm / 100.0
-        w = skin.point(lambda v: int(v * min(1.0, abs(k)) * 0.6))
-        r, gg, b = out.split()
-        tinted = Image.merge("RGB", (
-            r.point(lambda v: min(255, int(v * (1.0 + 0.08 * k)))),
-            gg.point(lambda v: int(v * (1.0 + 0.02 * k))),
-            b.point(lambda v: min(255, int(v * (1.0 - 0.08 * k))))))
-        out = Image.composite(tinted, out, w)
+        out = _warm_skin(out, skin_face, warm)
 
     if softness > 0:
-        k = softness / 100.0
-        r2 = max(1.0, min(img.size) / 260.0)
-        blur = out.filter(ImageFilter.GaussianBlur(r2))
-        glow = Image.blend(out, blur, 0.55)
-        glow = ImageEnhance.Brightness(glow).enhance(1.06)
-        w = skin.point(lambda v: int(v * k * 0.55))
-        out = Image.composite(glow, out, w)
+        out = _soft_glow(out, skin_face, softness)
     return out
 
 
@@ -8287,18 +8693,18 @@ class QPEApp(_BASE):
                    "zone_eye")
 
     BEAUTY_PRESETS = {
-        "自然": dict(skin_smooth=35, skin_radius=40, skin_glow=15, skin_even=20,
-                   skin_blemish=25, skin_eye_care=0, skin_lip=10, skin_teeth=20,
-                   skin_slim=0, skin_eyes=0, skin_shine=20, skin_warm=0,
+        "自然": dict(skin_smooth=24, skin_radius=36, skin_glow=8, skin_even=15,
+                   skin_blemish=20, skin_eye_care=0, skin_lip=6, skin_teeth=10,
+                   skin_slim=0, skin_eyes=0, skin_shine=12, skin_warm=0,
                    skin_soft=0),
-        "人像": dict(skin_smooth=60, skin_radius=50, skin_glow=30, skin_even=45,
-                   skin_blemish=50, skin_eye_care=35, skin_lip=25, skin_teeth=40,
-                   skin_slim=15, skin_eyes=15, skin_shine=35, skin_warm=10,
-                   skin_soft=15),
-        "网红": dict(skin_smooth=85, skin_radius=65, skin_glow=55, skin_even=70,
-                   skin_blemish=70, skin_eye_care=60, skin_lip=55, skin_teeth=70,
-                   skin_slim=45, skin_eyes=40, skin_shine=55, skin_warm=25,
-                   skin_soft=35),
+        "人像": dict(skin_smooth=42, skin_radius=42, skin_glow=15, skin_even=28,
+                   skin_blemish=40, skin_eye_care=28, skin_lip=18, skin_teeth=28,
+                   skin_slim=8, skin_eyes=8, skin_shine=22, skin_warm=4,
+                   skin_soft=5),
+        "网红": dict(skin_smooth=65, skin_radius=52, skin_glow=35, skin_even=50,
+                   skin_blemish=60, skin_eye_care=48, skin_lip=42, skin_teeth=52,
+                   skin_slim=25, skin_eyes=22, skin_shine=40, skin_warm=12,
+                   skin_soft=18),
         "素颜": {k: 0 for k in ("skin_smooth", "skin_glow", "skin_even",
                                "skin_blemish", "skin_eye_care", "skin_lip",
                                "skin_teeth", "skin_slim", "skin_eyes",

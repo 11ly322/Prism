@@ -1,0 +1,85 @@
+{
+  "fair": {
+    "skin_face": 0.9844,
+    "skin_out": 0.1427,
+    "faces": 1,
+    "inside_delta": 3.716,
+    "outside_delta": 0.0,
+    "tone_std": [
+      15.07,
+      6.49
+    ],
+    "texture_ratio": 0.587,
+    "spot_contrast": [
+      21.68,
+      5.85
+    ],
+    "clip_added": 0
+  },
+  "medium": {
+    "skin_face": 0.9849,
+    "skin_out": 0.1441,
+    "faces": 1,
+    "inside_delta": 3.028,
+    "outside_delta": 0.0,
+    "tone_std": [
+      12.05,
+      5.52
+    ],
+    "texture_ratio": 0.639,
+    "spot_contrast": [
+      17.25,
+      2.29
+    ],
+    "clip_added": 0
+  },
+  "olive": {
+    "skin_face": 0.9846,
+    "skin_out": 0.1436,
+    "faces": 1,
+    "inside_delta": 3.127,
+    "outside_delta": 0.0,
+    "tone_std": [
+      11.63,
+      5.4
+    ],
+    "texture_ratio": 0.652,
+    "spot_contrast": [
+      16.57,
+      2.23
+    ],
+    "clip_added": 0
+  },
+  "deep": {
+    "skin_face": 0.9844,
+    "skin_out": 0.1425,
+    "faces": 1,
+    "inside_delta": 4.98,
+    "outside_delta": 0.0,
+    "tone_std": [
+      7.58,
+      4.25
+    ],
+    "texture_ratio": 0.777,
+    "spot_contrast": [
+      10.44,
+      -1.83
+    ],
+    "clip_added": 0
+  },
+  "lowlight": {
+    "skin_face": 1.0,
+    "faces": 1,
+    "face_luma": [
+      107.38,
+      125.8
+    ],
+    "clip_added": 0
+  },
+  "perf": {
+    "mp": 12.0,
+    "seconds": 6.23,
+    "changed": true
+  },
+  "version": "9.15.8"
+}

@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 r"""Prism 自解压安装器。
 
 双击后由你选择：
@@ -12,7 +12,7 @@ import time
 import subprocess
 import zipfile
 
-VER = "9.15.7"
+VER = "9.15.8"
 APP = "Prism"
 FRIENDLY = "Prism"
 DISPLAY = "Prism %s" % VER

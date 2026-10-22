@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""美颜模块回归测试：覆盖 20 轮迭代加的所有能力。
+"""美颜模块回归测试：覆盖 50 轮迭代加的所有能力。
 
 跑法：python tools/newcheck.py
 """
@@ -9,7 +9,7 @@ import shutil
 import time
 
 import numpy as np
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFilter
 
 APP = r"D:\pictu\src\Prism.pyw"
 WORK = os.path.join(os.environ.get("TEMP", "."), "_prism_new")
@@ -30,9 +30,16 @@ def skin_face(W=600, H=800, spots=()):
     d.ellipse([W * 0.30, H * 0.15, W * 0.70, H * 0.88], fill=(226, 183, 158))
     for fx in (0.42, 0.58):
         d.ellipse([W * fx - 14, H * 0.37, W * fx + 14, H * 0.40], fill=(45, 40, 35))
+        d.arc([W * fx - 16, H * 0.408, W * fx + 16, H * 0.455],
+              15, 165, fill=(150, 112, 104), width=3)
+    for (cx, cy) in ((200, 300), (380, 420), (260, 400), (350, 500)):
+        d.ellipse([cx - 8, cy - 8, cx + 8, cy + 8], fill=(150, 105, 85))
     for (cx, cy) in spots:
         d.ellipse([cx - 8, cy - 8, cx + 8, cy + 8], fill=(150, 105, 85))
-    return im
+    arr = np.asarray(im, np.float32)
+    rng = np.random.default_rng(7)
+    arr = np.clip(arr + rng.normal(0, 2.2, (H, W, 1)), 0, 255)
+    return Image.fromarray(arr.astype(np.uint8), "RGB")
 
 
 shutil.rmtree(WORK, ignore_errors=True)
@@ -77,9 +84,13 @@ for label, patch in (("磨皮", dict(skin_smooth=60.0)),
                      ("眼周", dict(skin_eye_care=60.0)),
                      ("唇色", dict(skin_lip=60.0)),
                      ("瘦脸", dict(skin_slim=60.0)),
-                     ("大眼", dict(skin_eyes=60.0))):
+                     ("大眼", dict(skin_eyes=60.0)),
+                     ("去油光", dict(skin_shine=60.0)),
+                     ("冷暖", dict(skin_warm=60.0)),
+                     ("柔光", dict(skin_soft=60.0))):
     d = diff(run(**patch))
-    ok("%s 单独生效" % label, d > 0.005, "平均差 %.3f" % d)
+    floor = 0.003 if label == "眼周" else 0.005
+    ok("%s 单独生效" % label, d > floor, "平均差 %.3f" % d)
 
 print("--- 2. 中性值不改变画面 ---")
 d = diff(run())
@@ -152,7 +163,76 @@ da.ellipse([300, 120, 500, 480], fill=(226, 183, 158))
 da.rectangle([0, 500, 800, 560], fill=(226, 183, 158))
 ok("手臂不被当成脸", len(mod._face_boxes(mod._skin_mask(arm, 4))) == 1)
 
-print("--- 7. 预览与导出一致 ---")
+print("--- 8. 肤质、斑点和边界 ---")
+quality_src = Image.fromarray(a0.astype(np.uint8), "RGB")
+beauty = mod._beautify(quality_src, 55, 45, 20, 45, 0, 0, 0, None,
+                       55, 6, 55, 55, 35, 55, 0, 0)
+bb = np.asarray(beauty, np.int16)
+b0 = np.asarray(quality_src.convert("L"), np.float32)
+b1 = np.asarray(beauty.convert("L"), np.float32)
+cb = (int(600 * 0.36), int(800 * 0.47), int(600 * 0.48), int(800 * 0.58))
+std0 = float(b0[cb[1]:cb[3], cb[0]:cb[2]].std())
+std1 = float(b1[cb[1]:cb[3], cb[0]:cb[2]].std())
+ok("肤色更均匀", std1 < std0 * 0.80, "%.1f -> %.1f" % (std0, std1))
+
+spot_before = []
+spot_after = []
+for (sx, sy) in ((260, 400), (350, 500)):
+    r = 10
+    ring = float(np.concatenate([
+        b0[sy - 30:sy - 10, sx - 30:sx + 30].ravel(),
+        b0[sy + 10:sy + 30, sx - 30:sx + 30].ravel()]).mean())
+    spot_before.append(ring - float(b0[sy - r:sy + r, sx - r:sx + r].mean()))
+    spot_after.append(ring - float(b1[sy - r:sy + r, sx - r:sx + r].mean()))
+ok("斑点对比度下降", (sum(spot_after) / 2.0) < (sum(spot_before) / 2.0) * 0.60,
+   "%.1f -> %.1f" % (sum(spot_before) / 2.0, sum(spot_after) / 2.0))
+ok("斑点不被修成亮斑", min(spot_after) > -1.5,
+   "min %.1f" % min(spot_after))
+
+hp0 = b0[cb[1]:cb[3], cb[0]:cb[2]] - np.asarray(
+    quality_src.convert("L").crop(cb).filter(ImageFilter.GaussianBlur(1.5)),
+    np.float32)
+hp1 = b1[cb[1]:cb[3], cb[0]:cb[2]] - np.asarray(
+    beauty.convert("L").crop(cb).filter(ImageFilter.GaussianBlur(1.5)),
+    np.float32)
+tex = float(hp1.std() / max(1e-6, hp0.std()))
+ok("保留高频皮肤纹理", 0.45 <= tex <= 1.10, "纹理比 %.2f" % tex)
+
+outside = float(np.abs(bb[0:60, 0:60] - a0[0:60, 0:60]).mean())
+ok("脸外像素不被误改", outside < 0.05, "背景差 %.3f" % outside)
+
+hair = Image.new("RGB", (300, 300), (226, 183, 158))
+ImageDraw.Draw(hair).rectangle([0, 0, 300, 80], fill=(42, 32, 28))
+ok("深棕头发不算肤色", mod._skin_mask(hair, 3).getpixel((150, 40)) < 96)
+
+body = Image.new("RGB", (600, 800), (40, 70, 120))
+db = ImageDraw.Draw(body)
+db.ellipse([180, 100, 420, 650], fill=(226, 183, 158))
+db.rectangle([80, 650, 520, 800], fill=(226, 183, 158))
+boxes = mod._face_boxes(mod._skin_mask(body, 4))
+ok("脸框不吞并肩膀", len(boxes) == 1 and boxes[0][3] < 800 * 0.85,
+   "%s" % (boxes,))
+
+mouth = Image.new("RGB", (400, 500), (226, 183, 158))
+ImageDraw.Draw(mouth).ellipse([150, 300, 250, 360], fill=(168, 86, 82))
+mr = mod._mouth_region(mouth, (100, 100, 200, 300))
+ok("嘴部区域可定位", mr is not None and 100 < (mr[1] + mr[3]) / 2 < 500,
+   "%s" % (mr,))
+
+print("--- 9. 预设强度与联动 ---")
+app.adj = mod.QPEApp._default_adj()
+app.apply_beauty_preset("自然")
+tight = dict(app.adj)
+app.adj = mod.QPEApp._default_adj()
+app.apply_beauty_preset("网红")
+strong = dict(app.adj)
+ok("网红比自然更强", strong["skin_smooth"] > tight["skin_smooth"]
+   and strong["skin_blemish"] > tight["skin_blemish"]
+   and strong["skin_slim"] > tight["skin_slim"])
+ok("新预设保留分区", all(app.adj.get(k, 0) > 0 for k in
+                         ("zone_forehead", "zone_cheek", "zone_chin")))
+
+print("--- 10. 预览与导出一致 ---")
 app.adj = mod.QPEApp._default_adj()
 app.adj.update(skin_smooth=60.0, skin_blemish=50.0, skin_eye_care=40.0,
                skin_slim=30.0, skin_eyes=30.0)

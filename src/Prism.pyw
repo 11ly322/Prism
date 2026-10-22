@@ -2079,7 +2079,10 @@ class _QpeRoundButton(tk.Canvas):
         ms = max(1, MOTION_HOVER_MS)
 
         def step():
-            if not self.winfo_exists():
+            try:
+                if not self.winfo_exists():
+                    return
+            except Exception:
                 return
             if not MOTION_ENABLED:
                 self._hover_t = target
@@ -2109,7 +2112,10 @@ class _QpeRoundButton(tk.Canvas):
         ms = max(1, int(ms or (MOTION_PRESS_MS if target > start else MOTION_RELEASE_MS)))
 
         def step():
-            if not self.winfo_exists():
+            try:
+                if not self.winfo_exists():
+                    return
+            except Exception:
                 return
             if not MOTION_ENABLED:
                 self._press_t = target
@@ -2143,7 +2149,10 @@ class _QpeRoundButton(tk.Canvas):
         ms = max(1, MOTION_RIPPLE_MS)
 
         def step():
-            if not self.winfo_exists():
+            try:
+                if not self.winfo_exists():
+                    return
+            except Exception:
                 return
             if not MOTION_ENABLED:
                 self._ripple_t = 0.0
@@ -2356,7 +2365,10 @@ class _QpeSwitch(tk.Canvas):
         ms = 170
 
         def step():
-            if not self.winfo_exists():
+            try:
+                if not self.winfo_exists():
+                    return
+            except Exception:
                 return
             if not MOTION_ENABLED:
                 self._t = target
@@ -2420,7 +2432,10 @@ class _QpeSwitch(tk.Canvas):
         t0 = time.perf_counter()
 
         def step():
-            if not self.winfo_exists():
+            try:
+                if not self.winfo_exists():
+                    return
+            except Exception:
                 return
             k = min(1.0, (time.perf_counter() - t0) * 1000.0 / 130.0)
             self._hover_t = start + (target - start) * _ease_out_cubic(k)
@@ -7703,7 +7718,10 @@ class QPEApp(_BASE):
         ms = 360.0
 
         def step():
-            if not btn.winfo_exists():
+            try:
+                if not btn.winfo_exists():
+                    return
+            except Exception:
                 return
             if not getattr(self, "motion", True):
                 try:
@@ -14391,6 +14409,16 @@ def run(img, **params):
         否则窗口销毁后它们还会触发，在终端里刷出一堆 invalid command name。
         """
         self.alive = False
+        # 控件级的 hover / press / ripple 任务不一定挂在已知属性上；
+        # 销毁根窗口前统一取消所有 after，避免 Tcl 解释器退出后回调再摸 winfo。
+        try:
+            for _jid in self.tk.splitlist(self.tk.call("after", "info")):
+                try:
+                    self.after_cancel(_jid)
+                except Exception:
+                    pass
+        except Exception:
+            pass
         try:
             self.save_settings()
         except Exception:

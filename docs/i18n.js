@@ -320,7 +320,9 @@ window.PRISM_I18N = {
 "磨皮 42 · 祛斑 40 · 眼周 28 · 瘦脸 8": "Smooth 42 · Blemish 40 · Eye care 28 · Slim 8",
 "磨皮 65 · 祛斑 60 · 眼周 48 · 瘦脸 25": "Smooth 65 · Blemish 60 · Eye care 48 · Slim 25",
 "局部蒙版保护背景；斑点不会修成亮斑；极小图 / 纯色 / 黑白 / 极端比例自动跳过": "Local masks protect the background; blemishes never turn into bright spots; tiny, flat, grayscale and extreme-ratio images are skipped automatically",
-"12MP 全尺寸约 6.4 秒，预览只算可见区域": "About 6.4 s for a full 12MP export; preview only computes the visible area"
+"12MP 全尺寸约 6.4 秒，预览只算可见区域": "About 6.4 s for a full 12MP export; preview only computes the visible area",
+"悬停渐变、按压回弹、点击涟漪与状态过渡可一键关闭；开关本身带缓动；关闭后立即响应、不做动画": "Hover fades, press rebound, click ripples and state transitions can all be disabled; the switch itself is animated; when off, everything responds instantly",
+"动态效果能关闭吗？ 可以。设置 →「动效与反馈」关掉开关；关闭后按钮仍立即执行，只是不做悬停渐变、回弹与涟漪。": "Can motion be disabled? Yes. Turn off the switch in Settings → Motion & feedback. Buttons still work instantly, just without hover fades, rebound or ripples."
 },
 "ja": {
 "Prism — 简约图片查看器": "Prism — ミニマルな画像ビューア",
@@ -642,7 +644,9 @@ window.PRISM_I18N = {
 "磨皮 42 · 祛斑 40 · 眼周 28 · 瘦脸 8": "スムーズ 42 · シミ 40 · 目元 28 · 小顔 8",
 "磨皮 65 · 祛斑 60 · 眼周 48 · 瘦脸 25": "スムーズ 65 · シミ 60 · 目元 48 · 小顔 25",
 "局部蒙版保护背景；斑点不会修成亮斑；极小图 / 纯色 / 黑白 / 极端比例自动跳过": "ローカルマスクで背景を保護。シミを明るい点に変えません。極小・単色・モノクロ・極端な比率は自動でスキップ",
-"12MP 全尺寸约 6.4 秒，预览只算可见区域": "12MP のフル書き出しは約 6.4 秒。プレビューは表示領域のみ計算"
+"12MP 全尺寸约 6.4 秒，预览只算可见区域": "12MP のフル書き出しは約 6.4 秒。プレビューは表示領域のみ計算",
+"悬停渐变、按压回弹、点击涟漪与状态过渡可一键关闭；开关本身带缓动；关闭后立即响应、不做动画": "ホバー漸変・押下の戻り・クリック波紋・状態遷移を一括でオフにできます。スイッチ自体もアニメーション。オフ時は即時応答のみ",
+"动态效果能关闭吗？ 可以。设置 →「动效与反馈」关掉开关；关闭后按钮仍立即执行，只是不做悬停渐变、回弹与涟漪。": "動きはオフにできますか？ はい。設定 →「動きとフィードバック」でスイッチをオフに。ボタンは即時動作し、ホバー漸変・戻り・波紋のみ無効になります。"
 }
 };
 window.PRISM_LANGS = [["zh", "中文"], ["en", "EN"], ["ja", "日本語"]];

@@ -1,4 +1,4 @@
-<div align="center">
+﻿<div align="center">
 
 <img src="src/Prism.png" width="96" alt="Prism">
 
@@ -15,7 +15,7 @@
 
 <div align="center">
 
-![version](https://img.shields.io/badge/version-9.15.8-3d7dff?style=flat-square)
+![version](https://img.shields.io/badge/version-9.15.9-3d7dff?style=flat-square)
 ![platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-2b2f36?style=flat-square)
 ![python](https://img.shields.io/badge/python-3.9%2B-3776ab?style=flat-square&logo=python&logoColor=white)
 ![license](https://img.shields.io/badge/license-MIT-3ddc84?style=flat-square)
@@ -60,7 +60,7 @@ Prism 服务两种场景 ——
 | **色彩管理** | 读 ICC 转 sRGB 预览，导出写入 sRGB profile；Display P3 / AdobeRGB 不再被当 sRGB；可选 ICC 软打样 |
 | **默认应用** | 安装器注册默认应用候选；安装完成页「一键设为默认」登记全部支持格式，Windows 10 确认一次，Windows 11 按格式确认；完整版/看图版/大屏版各自独立 |
 | **主题** | 10 套配色：深色 / 浅色 / 高对比 / 炭橙 / 深海 / 森林 / 玫瑰 / 极夜 / 霓虹 / 暖纸；另有 2px 高对比描边开关，可叠加在任意主题上 |
-| **动效与反馈** | 悬停、按压、状态过渡和窗口淡入都可一键关闭；主题网格有选中竖条，关闭后立即响应、不做动画 |
+| **动效与反馈** | 悬停渐变、按压回弹、点击涟漪和状态过渡都可一键关闭；设置里的开关本身也带缓动；关闭后立即响应、不做动画 |
 | **右侧栏** | 六个分类标签（调整/颜色/细节/效果/预设/工具）；直方图与底栏固定，工具与历史独立分类，面板默认 260px 可拖宽 |
 | **大屏版** | 纯看图 · 底部大按钮 · 无快捷键 · 无调色面板，装完即用，适合展陈/会议室大屏 |
 
@@ -70,12 +70,12 @@ Prism 服务两种场景 ——
 
 | 平台 | 文件 | 说明 |
 | :--- | :--- | :--- |
-| Windows | `Prism-Setup-9.15.8.exe` | 安装包 · 含修图面板与插件 · 40.1 MB |
-| Windows | `Prism-Viewer-9.15.8.zip` | 纯看图版 · 便携免安装 · 30.1 MB |
-| Windows | `Prism-BigScreen-Setup-9.15.8.exe` | **大屏版**安装包 · 底栏大按钮 · 无快捷键 · 纯看图 |
-| Windows | `Prism-BigScreen-9.15.8.zip` | 大屏版 · 便携免安装 |
-| macOS | `Prism-macOS-9.15.8.zip` | 源码运行 · 需 Python 3 + Pillow · 227 KB |
-| Linux | `Prism-Linux-9.15.8.zip` | 源码运行 · 带 `.desktop` · 227 KB |
+| Windows | `Prism-Setup-9.15.9.exe` | 安装包 · 含修图面板与插件 · 40.1 MB |
+| Windows | `Prism-Viewer-9.15.9.zip` | 纯看图版 · 便携免安装 · 30.1 MB |
+| Windows | `Prism-BigScreen-Setup-9.15.9.exe` | **大屏版**安装包 · 底栏大按钮 · 无快捷键 · 纯看图 |
+| Windows | `Prism-BigScreen-9.15.9.zip` | 大屏版 · 便携免安装 |
+| macOS | `Prism-macOS-9.15.9.zip` | 源码运行 · 需 Python 3 + Pillow · 227 KB |
+| Linux | `Prism-Linux-9.15.9.zip` | 源码运行 · 带 `.desktop` · 227 KB |
 
 <div align="center">
 
@@ -117,7 +117,7 @@ chmod +x prism.sh
 ## 人像美化
 
 > 纯算法实现，**不依赖任何模型文件**、不联网、不上传照片。
-> 9.15.8 以 50 轮质量台架迭代重写了肤色蒙版、磨皮、祛斑、眼周、嘴部与瘦脸路径。
+> 9.15.9 以 50 轮质量台架迭代重写了肤色蒙版、磨皮、祛斑、眼周、嘴部与瘦脸路径。
 
 ### 怎么找到它
 

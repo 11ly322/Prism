@@ -78,7 +78,7 @@ IS_WIN = sys.platform.startswith("win")
 K = "Command" if IS_MAC else "Control"
 
 APP_NAME = "Prism"
-APP_VERSION = "9.15.8"
+APP_VERSION = "9.15.9"
 APP_BUILD = "2025-12.9"
 # ---------------------------------------------------------------- 运行模式
 # 同一份源码编出三个版本：
@@ -508,8 +508,27 @@ def _theme_delta(old_name, new_name):
 
 # 动效总开关。设置里可关闭；关闭后控件仍即时响应，只是不做过渡/按压动画。
 MOTION_ENABLED = True
-MOTION_HOVER_MS = 130
+MOTION_HOVER_MS = 150
 MOTION_PRESS_MS = 90
+MOTION_RELEASE_MS = 180
+MOTION_RIPPLE_MS = 300
+
+
+def _ease_out_cubic(t):
+    t = max(0.0, min(1.0, float(t)))
+    return 1.0 - (1.0 - t) ** 3
+
+
+def _ease_out_quint(t):
+    t = max(0.0, min(1.0, float(t)))
+    return 1.0 - (1.0 - t) ** 5
+
+
+def _ease_in_out_cubic(t):
+    t = max(0.0, min(1.0, float(t)))
+    if t < 0.5:
+        return 4.0 * t * t * t
+    return 1.0 - (-2.0 * t + 2.0) ** 3 / 2.0
 
 
 def _mix_hex(a, b, t):
@@ -1954,7 +1973,12 @@ class _QpeRoundButton(tk.Canvas):
         self._hover = False
         self._hover_t = 0.0
         self._press = False
+        self._press_t = 0.0
+        self._ripple_t = 0.0
+        self._ripple_xy = (0.0, 0.0)
         self._anim_job = None
+        self._press_job = None
+        self._ripple_job = None
         self._feedback_job = None
         self._measure()
         self.bind("<Enter>", self._on_enter)
@@ -1991,18 +2015,32 @@ class _QpeRoundButton(tk.Canvas):
                 1.0 if self._hover else 0.0)
             fill = _mix_hex(self._bg, self._hover_bg, t)
             ink = _mix_hex(self._fg, self._hover_fg, t)
-            if self._press and MOTION_ENABLED:
-                fill = _mix_hex(fill, ACCENT, 0.18)
-                ink = _mix_hex(ink, ON_BG, 0.28)
-        pressed = bool(self._press and MOTION_ENABLED)
-        outline = ACCENT if pressed else (
+            p = self._press_t if MOTION_ENABLED else 0.0
+            if p > 0:
+                fill = _mix_hex(fill, ACCENT, 0.20 * p)
+                ink = _mix_hex(ink, ON_BG, 0.28 * p)
+        p = self._press_t if (MOTION_ENABLED and self._state != "disabled") else 0.0
+        outline = ACCENT if p > 0.03 else (
             OUTLINE_COLOR if OUTLINE_ON else "")
-        outline_w = max(1, px(2)) if (pressed or OUTLINE_ON) else 0
+        outline_w = max(1, px(2)) if (p > 0.03 or OUTLINE_ON) else 0
         self.create_polygon(self._round_pts(0, 0, w, h, self._radius),
                             smooth=True, fill=fill,
                             outline=outline, width=outline_w)
-        # 按下时文字轻微下沉 1px，给出明确的点击确认；松手/关闭动效即复位。
-        self.create_text(w / 2, h / 2 + (1 if pressed else 0),
+
+        # 点击涟漪：从按下位置向外扩散一圈，随动画淡出；只在按钮内可见。
+        if MOTION_ENABLED and 0.0 < self._ripple_t < 1.0:
+            rt = _ease_out_quint(self._ripple_t)
+            cx, cy = self._ripple_xy
+            rr = max(3.0, max(w, h) * (0.10 + 0.62 * rt))
+            ring = _mix_hex(self._bg, ACCENT, 0.48 * (1.0 - self._ripple_t))
+            self.create_oval(cx - rr, cy - rr, cx + rr, cy + rr,
+                             outline=ring, width=max(1, px(1.4)))
+
+        # 悬停时文字轻轻上浮 1px；按下再下沉 2px，形成可感知的回弹。
+        lift = 0.0
+        if MOTION_ENABLED and self._state != "disabled":
+            lift = -1.0 * self._hover_t + 2.0 * p
+        self.create_text(w / 2, h / 2 + lift,
                          text=self._text, fill=ink, font=self._font)
 
     # --- 事件 ---
@@ -2014,6 +2052,22 @@ class _QpeRoundButton(tk.Canvas):
                 pass
             self._anim_job = None
 
+    def _cancel_press(self):
+        if self._press_job is not None:
+            try:
+                self.after_cancel(self._press_job)
+            except Exception:
+                pass
+            self._press_job = None
+
+    def _cancel_ripple(self):
+        if self._ripple_job is not None:
+            try:
+                self.after_cancel(self._ripple_job)
+            except Exception:
+                pass
+            self._ripple_job = None
+
     def _animate_hover(self, target):
         self._cancel_anim()
         if not MOTION_ENABLED:
@@ -2021,22 +2075,92 @@ class _QpeRoundButton(tk.Canvas):
             self._draw()
             return
         start = self._hover_t
-        steps = 6
+        t0 = time.perf_counter()
+        ms = max(1, MOTION_HOVER_MS)
 
-        def step(i):
+        def step():
             if not self.winfo_exists():
                 return
-            k = i / float(steps)
-            # ease-out：起步快、收尾稳，短交互不会显得拖沓
-            k = 1.0 - (1.0 - k) ** 3
-            self._hover_t = start + (target - start) * k
+            if not MOTION_ENABLED:
+                self._hover_t = target
+                self._anim_job = None
+                self._draw()
+                return
+            k = min(1.0, (time.perf_counter() - t0) * 1000.0 / ms)
+            self._hover_t = start + (target - start) * _ease_out_cubic(k)
             self._draw()
-            if i < steps:
-                self._anim_job = self.after(14, lambda: step(i + 1))
+            if k < 1.0:
+                self._anim_job = self.after(16, step)
             else:
                 self._anim_job = None
 
-        step(1)
+        step()
+
+    def _animate_press(self, target, ms=None):
+        self._cancel_press()
+        if not self.winfo_exists():
+            return
+        if not MOTION_ENABLED:
+            self._press_t = target
+            self._draw()
+            return
+        start = self._press_t
+        t0 = time.perf_counter()
+        ms = max(1, int(ms or (MOTION_PRESS_MS if target > start else MOTION_RELEASE_MS)))
+
+        def step():
+            if not self.winfo_exists():
+                return
+            if not MOTION_ENABLED:
+                self._press_t = target
+                self._press_job = None
+                self._draw()
+                return
+            k = min(1.0, (time.perf_counter() - t0) * 1000.0 / ms)
+            self._press_t = start + (target - start) * _ease_out_cubic(k)
+            self._draw()
+            if k < 1.0:
+                self._press_job = self.after(16, step)
+            else:
+                self._press_job = None
+
+        step()
+
+    def _start_ripple(self, x=None, y=None):
+        self._cancel_ripple()
+        if not MOTION_ENABLED or not self.winfo_exists():
+            self._ripple_t = 0.0
+            return
+        w = max(2, self.winfo_width() or int(self.cget("width")))
+        h = max(2, self.winfo_height() or int(self.cget("height")))
+        if x is None:
+            x = w / 2.0
+        if y is None:
+            y = h / 2.0
+        self._ripple_xy = (x, y)
+        self._ripple_t = 0.001
+        t0 = time.perf_counter()
+        ms = max(1, MOTION_RIPPLE_MS)
+
+        def step():
+            if not self.winfo_exists():
+                return
+            if not MOTION_ENABLED:
+                self._ripple_t = 0.0
+                self._ripple_job = None
+                self._draw()
+                return
+            k = min(1.0, (time.perf_counter() - t0) * 1000.0 / ms)
+            self._ripple_t = k
+            self._draw()
+            if k < 1.0:
+                self._ripple_job = self.after(16, step)
+            else:
+                self._ripple_t = 0.0
+                self._ripple_job = None
+                self._draw()
+
+        step()
 
     def _on_enter(self, _e=None):
         if self._state != "disabled":
@@ -2048,13 +2172,16 @@ class _QpeRoundButton(tk.Canvas):
         self._hover = False
         self._animate_hover(0.0)
 
-    def _on_click(self, _e=None):
+    def _on_click(self, event=None):
         if self._state == "disabled":
             return
         if callable(self._command):
             if MOTION_ENABLED:
                 self._press = True
-                self._draw()
+                self._animate_press(1.0, MOTION_PRESS_MS)
+                ex = getattr(event, "x", None) if event is not None else None
+                ey = getattr(event, "y", None) if event is not None else None
+                self._start_ripple(ex, ey)
                 if self._feedback_job is not None:
                     try:
                         self.after_cancel(self._feedback_job)
@@ -2066,12 +2193,15 @@ class _QpeRoundButton(tk.Canvas):
 
     def _release_press(self):
         self._feedback_job = None
-        self._press = False
+        if not self._press:
+            return
         try:
-            if self.winfo_exists():
-                self._draw()
+            if not self.winfo_exists():
+                return
         except Exception:
-            pass
+            return
+        self._press = False
+        self._animate_press(0.0, MOTION_RELEASE_MS)
 
     # --- 兼容 tk.Button 的少量接口 ---
     def configure(self, **kw):
@@ -2084,10 +2214,16 @@ class _QpeRoundButton(tk.Canvas):
             elif k == "state":
                 self._state = v
                 self._press = False
+                self._press_t = 0.0
                 redraw = True
             elif k == "bg":
                 self._bg = v
                 self._cancel_anim()
+                self._cancel_press()
+                self._cancel_ripple()
+                self._press = False
+                self._press_t = 0.0
+                self._ripple_t = 0.0
                 self._hover_t = 1.0 if self._hover else 0.0
                 role = _qpe_theme_role(v)
                 if role is not None:
@@ -2124,6 +2260,216 @@ class _QpeRoundButton(tk.Canvas):
 
     def invoke(self):
         self._on_click()
+
+    def destroy(self):
+        for job in (self._anim_job, self._press_job, self._ripple_job,
+                    self._feedback_job):
+            if job is not None:
+                try:
+                    self.after_cancel(job)
+                except Exception:
+                    pass
+        self._anim_job = self._press_job = self._ripple_job = None
+        self._feedback_job = None
+        try:
+            tk.Canvas.destroy(self)
+        except Exception:
+            pass
+
+
+class _QpeSwitch(tk.Canvas):
+    """自绘开关：轨道与圆钮都做缓动，关闭动效时瞬切。"""
+
+    def __init__(self, parent, variable, command=None, bg=CARD_BG, **kw):
+        try:
+            host_bg = parent.cget("bg")
+        except Exception:
+            host_bg = bg
+        kw.setdefault("width", px(46))
+        kw.setdefault("height", px(24))
+        tk.Canvas.__init__(self, parent, bg=host_bg, highlightthickness=0,
+                           bd=0, takefocus=1, cursor="hand2", **kw)
+        self._var = variable
+        self._command = command
+        self._on = bool(variable.get())
+        self._t = 1.0 if self._on else 0.0
+        self._hover = False
+        self._hover_t = 0.0
+        self._job = None
+        self._hover_job = None
+        self._trace = None
+        try:
+            self._trace = variable.trace_add("write", self._on_var)
+        except Exception:
+            pass
+        self.bind("<Button-1>", self._toggle)
+        self.bind("<Enter>", self._enter)
+        self.bind("<Leave>", self._leave)
+        self.bind("<space>", self._toggle)
+        self.bind("<Return>", self._toggle)
+        self.bind("<Configure>", lambda e: self._draw())
+        self._draw()
+
+    def _draw(self):
+        self.delete("all")
+        w = max(8, self.winfo_width() or int(self.cget("width")))
+        h = max(8, self.winfo_height() or int(self.cget("height")))
+        pad = max(2.0, px(2))
+        r = (h - 2 * pad) / 2.0
+        t = self._t if MOTION_ENABLED else (1.0 if self._on else 0.0)
+        hover = self._hover_t if MOTION_ENABLED else (1.0 if self._hover else 0.0)
+        off = _mix_hex(BTN_BG, FG_DIM, 0.20 + 0.06 * hover)
+        track = _mix_hex(off, ACCENT, t)
+        self.create_oval(pad, pad, pad + 2 * r, h - pad, fill=track, outline="")
+        self.create_oval(w - pad - 2 * r, pad, w - pad, h - pad, fill=track, outline="")
+        self.create_rectangle(pad + r, pad, w - pad - r, h - pad, fill=track, outline="")
+        kx = pad + r + (w - 2 * pad - 2 * r) * t
+        ky = h / 2.0
+        # 圆钮带一圈很浅的阴影，深浅主题下都能看出边界
+        self.create_oval(kx - r + 1, ky - r + 1, kx + r + 1, ky + r + 1,
+                         fill=_mix_hex(track, "#000000", 0.12), outline="")
+        self.create_oval(kx - r, ky - r, kx + r, ky + r,
+                         fill="#ffffff", outline=_mix_hex(track, "#000000", 0.16))
+
+    def _cancel(self):
+        if self._job is not None:
+            try:
+                self.after_cancel(self._job)
+            except Exception:
+                pass
+            self._job = None
+
+    def _animate(self, target):
+        self._cancel()
+        try:
+            if not self.winfo_exists():
+                return
+        except Exception:
+            return
+        if not MOTION_ENABLED:
+            self._t = 1.0 if target else 0.0
+            self._draw()
+            return
+        start = self._t
+        target = 1.0 if target else 0.0
+        t0 = time.perf_counter()
+        ms = 170
+
+        def step():
+            if not self.winfo_exists():
+                return
+            if not MOTION_ENABLED:
+                self._t = target
+                self._job = None
+                self._draw()
+                return
+            k = min(1.0, (time.perf_counter() - t0) * 1000.0 / ms)
+            self._t = start + (target - start) * _ease_in_out_cubic(k)
+            self._draw()
+            if k < 1.0:
+                self._job = self.after(16, step)
+            else:
+                self._job = None
+
+        step()
+
+    def _on_var(self, *_args):
+        try:
+            if not self.winfo_exists():
+                return
+        except Exception:
+            return
+        on = bool(self._var.get())
+        if on == self._on:
+            return
+        self._on = on
+        self._animate(1.0 if on else 0.0)
+
+    def _toggle(self, _e=None):
+        self._var.set(0 if self._on else 1)
+        if callable(self._command):
+            self._command()
+        return "break"
+
+    def _enter(self, _e=None):
+        self._hover = True
+        if MOTION_ENABLED:
+            self._animate_hover(1.0)
+        else:
+            self._draw()
+
+    def _leave(self, _e=None):
+        self._hover = False
+        if MOTION_ENABLED:
+            self._animate_hover(0.0)
+        else:
+            self._draw()
+
+    def _animate_hover(self, target):
+        if self._hover_job is not None:
+            try:
+                self.after_cancel(self._hover_job)
+            except Exception:
+                pass
+            self._hover_job = None
+        if not MOTION_ENABLED:
+            self._hover_t = target
+            self._draw()
+            return
+        start = self._hover_t
+        t0 = time.perf_counter()
+
+        def step():
+            if not self.winfo_exists():
+                return
+            k = min(1.0, (time.perf_counter() - t0) * 1000.0 / 130.0)
+            self._hover_t = start + (target - start) * _ease_out_cubic(k)
+            self._draw()
+            if k < 1.0:
+                self._hover_job = self.after(16, step)
+            else:
+                self._hover_job = None
+
+        step()
+
+    def set(self, on):
+        self._var.set(1 if on else 0)
+
+    def configure(self, **kw):
+        result = tk.Canvas.configure(self, **kw)
+        if "bg" in kw or "highlightbackground" in kw:
+            try:
+                self._draw()
+            except Exception:
+                pass
+        return result
+
+    config = configure
+
+    def invoke(self):
+        self._toggle()
+
+    def destroy(self):
+        self.detach()
+        try:
+            tk.Canvas.destroy(self)
+        except Exception:
+            pass
+
+    def detach(self):
+        if self._trace is not None:
+            try:
+                self._var.trace_remove("write", self._trace)
+            except Exception:
+                pass
+            self._trace = None
+        for job in (self._job, self._hover_job):
+            if job is not None:
+                try:
+                    self.after_cancel(job)
+                except Exception:
+                    pass
+        self._job = self._hover_job = None
 
 
 class _QpeSlider(tk.Canvas):
@@ -3996,9 +4342,12 @@ class QPEApp(_BASE):
             if _item != _bg:
                 cv.addtag_withtag("icon", _item)
 
-        def paint(hover=False, pressed=False):
-            bg = ACCENT if pressed else (BAR_HOVER if hover else BAR_BG)
-            ink = ON_BG if pressed else FG
+        anim = {"h": 0.0, "p": 0.0, "job": None, "hover": False, "press": False}
+
+        def apply(h, p):
+            bg = _mix_hex(BAR_BG, BAR_HOVER, h)
+            bg = _mix_hex(bg, ACCENT, p)
+            ink = _mix_hex(FG, ON_BG, p)
             try:
                 cv.itemconfigure(_bg, fill=bg)
                 cv.configure(bg=bg)
@@ -4006,12 +4355,57 @@ class QPEApp(_BASE):
                     typ = cv.type(item)
                     if typ == "arc":
                         cv.itemconfigure(item, outline=ink)
-                    elif typ == "line":
-                        cv.itemconfigure(item, fill=ink)
                     else:
                         cv.itemconfigure(item, fill=ink)
             except Exception:
                 pass
+
+        def animate():
+            if anim["job"] is not None:
+                try:
+                    cv.after_cancel(anim["job"])
+                except Exception:
+                    pass
+                anim["job"] = None
+            if not MOTION_ENABLED:
+                anim["h"] = 1.0 if anim["hover"] else 0.0
+                anim["p"] = 1.0 if anim["press"] else 0.0
+                apply(anim["h"], anim["p"])
+                return
+            start_h, start_p = anim["h"], anim["p"]
+            target_h = 1.0 if anim["hover"] else 0.0
+            target_p = 1.0 if anim["press"] else 0.0
+            t0 = time.perf_counter()
+            ms = 105.0 if target_p else 135.0
+
+            def step():
+                try:
+                    if not cv.winfo_exists():
+                        return
+                except Exception:
+                    return
+                if not MOTION_ENABLED:
+                    anim["h"] = target_h
+                    anim["p"] = target_p
+                    anim["job"] = None
+                    apply(anim["h"], anim["p"])
+                    return
+                k = min(1.0, (time.perf_counter() - t0) * 1000.0 / ms)
+                e = _ease_out_cubic(k)
+                anim["h"] = start_h + (target_h - start_h) * e
+                anim["p"] = start_p + (target_p - start_p) * e
+                apply(anim["h"], anim["p"])
+                if k < 1.0:
+                    anim["job"] = cv.after(16, step)
+                else:
+                    anim["job"] = None
+
+            step()
+
+        def paint(hover=False, pressed=False):
+            anim["hover"] = bool(hover)
+            anim["press"] = bool(pressed)
+            animate()
 
         def on_enter(_e=None):
             paint(True, False)
@@ -7227,33 +7621,71 @@ class QPEApp(_BASE):
 
     def _wire_press(self, widget, base_bg, press_bg, press_fg=None,
                     base_fg=None):
-        """给原生 Tk 按钮补一个按下反馈；关闭动效时完全不改颜色。"""
+        """给原生 Tk 按钮补按下反馈；颜色做短缓动，关闭动效时完全不改色。"""
         if getattr(widget, "_press_wired", False):
             return
         widget._press_wired = True
         base_fg = base_fg if base_fg is not None else widget.cget("fg")
         press_fg = press_fg if press_fg is not None else base_fg
+        state = {"t": 0.0, "job": None}
+
+        def paint(t):
+            try:
+                widget.configure(
+                    bg=_mix_hex(base_bg, press_bg, t),
+                    fg=_mix_hex(base_fg, press_fg, t))
+            except Exception:
+                pass
+
+        def animate(target, ms):
+            if state["job"] is not None:
+                try:
+                    widget.after_cancel(state["job"])
+                except Exception:
+                    pass
+                state["job"] = None
+            if not getattr(self, "motion", MOTION_ENABLED):
+                state["t"] = 0.0
+                if target <= 0:
+                    paint(0.0)
+                return
+            start = state["t"]
+            t0 = time.perf_counter()
+
+            def step():
+                try:
+                    if not widget.winfo_exists():
+                        return
+                except Exception:
+                    return
+                if not getattr(self, "motion", MOTION_ENABLED):
+                    state["t"] = 0.0
+                    state["job"] = None
+                    paint(0.0)
+                    return
+                k = min(1.0, (time.perf_counter() - t0) * 1000.0 / max(1, ms))
+                state["t"] = start + (target - start) * _ease_out_cubic(k)
+                paint(state["t"])
+                if k < 1.0:
+                    state["job"] = widget.after(16, step)
+                else:
+                    state["job"] = None
+
+            step()
 
         def down(_e=None):
-            if not getattr(self, "motion", MOTION_ENABLED):
-                return
-            try:
-                widget.configure(bg=press_bg, fg=press_fg)
-            except Exception:
-                pass
+            if getattr(self, "motion", MOTION_ENABLED):
+                animate(1.0, 85)
 
         def up(_e=None):
-            try:
-                widget.configure(bg=base_bg, fg=base_fg)
-            except Exception:
-                pass
+            animate(0.0, 170)
 
         widget.bind("<ButtonPress-1>", down, add="+")
         widget.bind("<ButtonRelease-1>", up, add="+")
         widget.bind("<Leave>", lambda e: up(), add="+")
 
     def _preview_motion(self):
-        """设置页的小预览：按钮闪一次 + 状态行提示。"""
+        """设置页的小预览：按钮做一次缓动脉冲，状态行提示。"""
         if not getattr(self, "motion", True):
             self._flash(_tr("动态效果已关闭"))
             return
@@ -7261,13 +7693,16 @@ class QPEApp(_BASE):
         btn = getattr(self, "motion_preview_btn", None)
         if btn is None or not btn.winfo_exists():
             return
-        try:
-            btn.configure(bg=ACCENT, fg=ON_BG)
-        except Exception:
-            return
-        steps = 6
+        job = getattr(self, "_motion_preview_job", None)
+        if job is not None:
+            try:
+                self.after_cancel(job)
+            except Exception:
+                pass
+        t0 = time.perf_counter()
+        ms = 360.0
 
-        def step(i):
+        def step():
             if not btn.winfo_exists():
                 return
             if not getattr(self, "motion", True):
@@ -7276,15 +7711,25 @@ class QPEApp(_BASE):
                 except Exception:
                     pass
                 return
-            k = i / float(steps)
+            k = min(1.0, (time.perf_counter() - t0) * 1000.0 / ms)
+            # 0 → 1 → 0 的三角波，再用缓动柔化两端
+            tri = 1.0 - abs(2.0 * k - 1.0)
+            m = _ease_in_out_cubic(tri)
             try:
-                btn.configure(bg=_mix_hex(BTN_BG, ACCENT, k), fg=FG)
+                btn.configure(bg=_mix_hex(BTN_BG, ACCENT, m),
+                              fg=_mix_hex(FG, ON_BG, m))
             except Exception:
                 return
-            if i < steps:
-                self.after(18, lambda: step(i + 1))
+            if k < 1.0:
+                self._motion_preview_job = self.after(16, step)
+            else:
+                self._motion_preview_job = None
+                try:
+                    btn.configure(bg=BTN_BG, fg=FG)
+                except Exception:
+                    pass
 
-        step(1)
+        step()
 
     def _panel_btn(self, parent, text, cmd, side="left", wide=False):
         # 圆角按钮：Tk 的 Button 只能画直角，这里换成 Canvas 自绘控件
@@ -9996,6 +10441,17 @@ class QPEApp(_BASE):
         win.after(60, lambda: _round_window(win))
         win.transient(self)
         self.after(40, self._apply_lang)
+
+        def _cleanup_motion_switch(event=None):
+            if event is not None and event.widget is not win:
+                return
+            sw = getattr(self, "motion_switch", None)
+            if sw is not None:
+                try:
+                    sw.detach()
+                except Exception:
+                    pass
+        win.bind("<Destroy>", _cleanup_motion_switch, add="+")
         try:
             win.iconbitmap(os.path.join(_res_dir(), "Prism.ico"))
         except Exception:
@@ -10175,12 +10631,15 @@ class QPEApp(_BASE):
 
         mrow = tk.Frame(motion_card, bg=CARD_BG)
         mrow.pack(fill="x", padx=px(SPACE_MD), pady=(px(2), 0))
-        tk.Checkbutton(
-            mrow, text="动态效果与点击反馈", variable=motion_var,
-            command=on_motion, font=self.ui_font, bg=CARD_BG, fg=FG,
-            activebackground=CARD_BG, activeforeground=FG_HI,
-            selectcolor=DEEP_BG, anchor="w", bd=0, highlightthickness=0,
-            cursor="hand2").pack(side="left")
+        motion_lbl = tk.Label(
+            mrow, text="动态效果与点击反馈", font=self.ui_font, bg=CARD_BG,
+            fg=FG, anchor="w", cursor="hand2")
+        motion_lbl.pack(side="left")
+        motion_switch = _QpeSwitch(
+            mrow, variable=motion_var, command=on_motion, bg=CARD_BG)
+        motion_switch.pack(side="left", padx=(px(10), 0))
+        self.motion_switch = motion_switch
+        motion_lbl.bind("<Button-1>", lambda e: motion_switch.invoke())
         preview_btn = tk.Button(
             mrow, text="预览", font=self.ui_font_s, command=self._preview_motion,
             bg=BTN_BG, fg=FG, activebackground=BAR_HOVER,
@@ -10191,7 +10650,7 @@ class QPEApp(_BASE):
         self.motion_preview_btn = preview_btn
         self._wire_press(preview_btn, BTN_BG, ACCENT, ON_BG)
         tk.Label(motion_card,
-                 text="开：悬停、按压与状态过渡；关：立即切换，无动画",
+                 text="开：悬停渐变、按压回弹与点击涟漪；关：立即切换",
                  font=self.ui_font_s, bg=CARD_BG, fg=FG_DIM,
                  anchor="w", justify="left").pack(
                      fill="x", padx=px(SPACE_MD), pady=(0, px(SPACE_SM)))
@@ -13197,23 +13656,45 @@ def run(img, **params):
                 self.meta_lbl.configure(fg=ACCENT)
             except Exception:
                 pass
-            steps = 6
+            t0 = None
 
-            def fade(i):
+            def begin():
+                nonlocal t0
                 if not getattr(self, "alive", True):
                     return
-                k = i / float(steps)
-                try:
-                    self.meta_lbl.configure(fg=_mix_hex(ACCENT, FG_DIM, k))
-                except Exception:
+                if not getattr(self, "motion", True):
+                    try:
+                        self.meta_lbl.configure(fg=FG_DIM)
+                    except Exception:
+                        pass
+                    self.flash_color_job = None
                     return
-                if i < steps:
-                    self.flash_color_job = self.after(
-                        32, lambda: fade(i + 1))
+                t0 = time.perf_counter()
+                fade()
+
+            def fade():
+                if not getattr(self, "alive", True):
+                    return
+                if not getattr(self, "motion", True):
+                    try:
+                        self.meta_lbl.configure(fg=FG_DIM)
+                    except Exception:
+                        pass
+                    self.flash_color_job = None
+                    return
+                k = min(1.0, (time.perf_counter() - t0) * 1000.0 / 240.0)
+                try:
+                    self.meta_lbl.configure(
+                        fg=_mix_hex(ACCENT, FG_DIM, _ease_out_cubic(k)))
+                except Exception:
+                    self.flash_color_job = None
+                    return
+                if k < 1.0:
+                    self.flash_color_job = self.after(16, fade)
                 else:
                     self.flash_color_job = None
 
-            self.flash_color_job = self.after(16, lambda: fade(1))
+            self.flash_color_job = self.after(45, begin)
         else:
             try:
                 self.meta_lbl.configure(fg=FG_DIM)

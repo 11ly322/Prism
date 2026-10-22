@@ -59,11 +59,21 @@ def main():
                                   hover_bg=mod.BAR_HOVER, hover_fg=mod.FG_HI)
         btn.pack()
         pump(app, 5)
+        btn._on_enter()
+        pump(app, 3)
+        ok("悬停是连续缓动", 0.0 < btn._hover_t < 1.0, "%.2f" % btn._hover_t)
+        pump(app, 22)
+        ok("悬停到达终值", btn._hover_t > 0.98, "%.2f" % btn._hover_t)
         btn.invoke()
         ok("按钮命令执行", state["n"] == 1)
-        ok("按钮按下反馈", btn._press is True)
+        ok("按钮按下反馈", btn._press is True and btn._press_t > 0.0,
+           "%.2f" % btn._press_t)
+        ok("点击有涟漪", btn._ripple_t > 0.0, "%.2f" % btn._ripple_t)
         pump(app, 20)
         ok("按钮反馈复位", btn._press is False)
+        pump(app, 20)
+        ok("按钮回弹结束", btn._press_t == 0.0, "%.2f" % btn._press_t)
+        ok("涟漪淡出结束", btn._ripple_t == 0.0, "%.2f" % btn._ripple_t)
         btn.destroy()
 
         # 原生按钮的按下反馈（设置/插件/工具条菜单共用）
@@ -72,11 +82,11 @@ def main():
         app._wire_press(std, mod.BTN_BG, mod.ACCENT, mod.ON_BG)
         pump(app, 3)
         std.event_generate("<ButtonPress-1>")
-        app.update()
+        pump(app, 10)
         ok("原生按钮按下反馈",
            str(std.cget("bg")).lower() == mod.ACCENT.lower(), std.cget("bg"))
         std.event_generate("<ButtonRelease-1>")
-        app.update()
+        pump(app, 20)
         ok("原生按钮松开复位",
            str(std.cget("bg")).lower() == mod.BTN_BG.lower(), std.cget("bg"))
         std.destroy()
@@ -101,22 +111,26 @@ def main():
         find_icon(app.bar)
         if icon is not None:
             icon.event_generate("<ButtonPress-1>")
-            app.update()
+            pump(app, 8)
             fills = [icon.itemcget(i, "fill")
                      for i in icon.find_withtag("rbg")]
             ok("图标按钮按下反馈",
                bool(fills) and str(fills[0]).lower() == mod.ACCENT.lower(),
                str(fills[:1]))
             icon.event_generate("<ButtonRelease-1>")
-            app.update()
+            pump(app, 12)
         else:
             ok("图标按钮存在", False)
 
-        app.set_motion(False)
-        pump(app, 20)
+        switch = getattr(app, "motion_switch", None)
+        ok("设置页有自绘开关",
+           switch is not None and switch.winfo_exists())
+        switch.invoke()
+        pump(app, 25)
         ok("关闭后总开关同步",
            app.motion is False and mod.MOTION_ENABLED is False)
         ok("关闭后勾选状态同步", app.motion_var.get() == 0)
+        ok("开关圆钮动画到位", switch._t == 0.0, "%.2f" % switch._t)
         with open(os.path.join(tmp, "Prism_settings.json"), "r",
                   encoding="utf-8") as fh:
             saved = json.load(fh)
@@ -130,24 +144,34 @@ def main():
         pump(app, 3)
         btn2.invoke()
         ok("关闭后无按压反馈", btn2._press is False)
+        ok("关闭后无涟漪", btn2._ripple_t == 0.0, "%.2f" % btn2._ripple_t)
         btn2.destroy()
 
         app.set_motion(True)
-        pump(app, 20)
+        pump(app, 25)
         app._flash("动效状态测试")
         app.update()
         ok("状态反馈从强调色开始",
            str(app.meta_lbl.cget("fg")).lower() == mod.ACCENT.lower(),
            app.meta_lbl.cget("fg"))
-        pump(app, 25)
+        pump(app, 30)
         ok("状态反馈渐变回落",
            str(app.meta_lbl.cget("fg")).lower() == mod.FG_DIM.lower(),
            app.meta_lbl.cget("fg"))
         ok("重新开启总开关",
            app.motion is True and mod.MOTION_ENABLED is True)
         ok("重新开启勾选状态", app.motion_var.get() == 1)
+        ok("开关圆钮回到开启位", switch._t > 0.98, "%.2f" % switch._t)
+        try:
+            app.set_win.destroy()
+            pump(app, 4)
+        except Exception:
+            pass
+        ok("关闭设置后解除开关 trace", switch._trace is None)
 
         # 切主题后标记仍跟随；关闭动效不影响主题/A11y
+        app.show_settings()
+        pump(app, 30)
         app.set_theme("paper")
         pump(app, 25)
         marks = getattr(app, "_theme_marks", {})

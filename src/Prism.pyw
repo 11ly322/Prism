@@ -78,7 +78,7 @@ IS_WIN = sys.platform.startswith("win")
 K = "Command" if IS_MAC else "Control"
 
 APP_NAME = "Prism"
-APP_VERSION = "9.15.9"
+APP_VERSION = "9.15.10alpha"
 APP_BUILD = "2025-12.9"
 # ---------------------------------------------------------------- 运行模式
 # 同一份源码编出三个版本：
@@ -2815,6 +2815,18 @@ def _beauty_guard(img, skin=None):
         except Exception:
             pass
     return True, ""
+
+
+def _app_version_key(ver):
+    """比较 9.15.10alpha / 9.15.9 这类版本；stable > rc > beta > alpha。"""
+    s = str(ver or "").strip().lstrip("vV")
+    m = re.match(r"(\d+)\.(\d+)\.(\d+)([A-Za-z]*)(\d*)", s)
+    if not m:
+        return (0, 0, 0, 3, 0)
+    rank = {"alpha": 0, "beta": 1, "rc": 2, "": 3}
+    suffix = (m.group(4) or "").lower()
+    return (int(m.group(1)), int(m.group(2)), int(m.group(3)),
+            rank.get(suffix, 3), int(m.group(5) or 0))
 
 
 def _is_grayish(img):
@@ -14312,8 +14324,7 @@ def run(img, **params):
                                      parent=self)
                 return
             try:
-                newer = (tuple(int(x) for x in tag.split("."))
-                         > tuple(int(x) for x in APP_VERSION.split(".")))
+                newer = _app_version_key(tag) > _app_version_key(APP_VERSION)
             except Exception:
                 newer = tag != APP_VERSION
             if newer:

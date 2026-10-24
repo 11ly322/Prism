@@ -44,7 +44,7 @@ def translate_text(text, d, ver):
         return text
     hit = d.get(t)
     if hit is None:
-        hit = d.get(re.sub(r"\d+\.\d+\.\d+", "{v}", t))
+        hit = d.get(re.sub(r"\d+\.\d+\.\d+(?:alpha|beta|rc\d*)?", "{v}", t))
     if hit is None:
         return text
     return text.replace(t, hit.replace("{v}", ver))

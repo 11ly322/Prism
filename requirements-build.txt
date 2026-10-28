@@ -1,6 +1,6 @@
 # 发版打包环境（Windows，Python 3.12）
 # 安装：<python> -m pip install -r requirements-build.txt
-# 说明：这些只用于打包/构建；源码运行只需 Pillow（numpy 可选）。
+# 说明：这些只用于打包/构建；源码运行只需 Pillow + tkinterdnd2（numpy 可选）。
 pyinstaller==6.22.3
 pillow==12.3.0
 numpy==2.3.5

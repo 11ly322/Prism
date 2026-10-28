@@ -1,4 +1,4 @@
-﻿<div align="center">
+<div align="center">
 
 <img src="src/Prism.png" width="96" alt="Prism">
 
@@ -71,12 +71,12 @@ Prism 服务两种场景 ——
 
 | 平台 | 文件 | 说明 |
 | :--- | :--- | :--- |
-| Windows | `Prism-Setup-9.15.10.exe` | 安装包 · 含修图面板与插件 · 40.1 MB |
-| Windows | `Prism-Viewer-9.15.10.zip` | 纯看图版 · 便携免安装 · 30.1 MB |
+| Windows | `Prism-Setup-9.15.10.exe` | 安装包 · 含修图面板与插件 · 40.6 MB |
+| Windows | `Prism-Viewer-9.15.10.zip` | 纯看图版 · 便携免安装 · 30.6 MB |
 | Windows | `Prism-BigScreen-Setup-9.15.10.exe` | **大屏版**安装包 · 底栏大按钮 · 无快捷键 · 纯看图 |
 | Windows | `Prism-BigScreen-9.15.10.zip` | 大屏版 · 便携免安装 |
-| macOS | `Prism-macOS-9.15.10.zip` | 源码运行 · 需 Python 3 + Pillow · 227 KB |
-| Linux | `Prism-Linux-9.15.10.zip` | 源码运行 · 带 `.desktop` · 227 KB |
+| macOS | `Prism-macOS-9.15.10.zip` | 源码运行 · 需 Python 3 + Pillow + tkinterdnd2 · 246 KB |
+| Linux | `Prism-Linux-9.15.10.zip` | 源码运行 · 带 `.desktop` · 246 KB |
 
 <div align="center">
 

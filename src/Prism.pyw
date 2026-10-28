@@ -78,7 +78,7 @@ IS_WIN = sys.platform.startswith("win")
 K = "Command" if IS_MAC else "Control"
 
 APP_NAME = "Prism"
-APP_VERSION = "9.15.9"
+APP_VERSION = "9.15.10"
 APP_BUILD = "2025-12.9"
 # ---------------------------------------------------------------- 运行模式
 # 同一份源码编出三个版本：
@@ -3858,6 +3858,7 @@ def _run_selftest():
     lines.append("executable  = %s" % sys.executable)
     lines.append("argv0       = %s" % sys.argv[0])
     lines.append("算法 = 肤色蒙版 + 保边磨皮（无模型）")
+    lines.append("拖放支持 = %s" % ("tkinterdnd2" if _DND_OK else "未启用"))
     try:
         from PIL import Image
         probe = Image.new("RGB", (640, 640), (200, 170, 150))
@@ -4830,12 +4831,7 @@ class QPEApp(_BASE):
         self._build_strip()
 
         if _DND_OK:
-            for w in (self.canvas, self):
-                try:
-                    w.drop_target_register(DND_FILES)
-                    w.dnd_bind("<<Drop>>", self._on_drop)
-                except Exception:
-                    pass
+            self._enable_drop_tree(self)
 
     def _setup_mac_menu(self):
         """macOS 需要真正的应用菜单，否则 ⌘Q / ⌘H 这些标准行为不可用。"""
@@ -5096,15 +5092,79 @@ class QPEApp(_BASE):
         messagebox.showwarning("最近打开", "文件已不存在：%s" % path,
                                parent=self)
 
-    def _on_drop(self, event):
-        raw = self.tk.splitlist(event.data)
-        paths = [p for p in raw if os.path.exists(p)]
-        if not paths:
+    def _enable_drop(self, *widgets):
+        """把整个窗口的主要区域都注册成拖放目标；重复注册直接跳过。"""
+        if not _DND_OK:
             return
-        if len(paths) == 1 and os.path.isdir(paths[0]):
-            self.open_folder(paths[0])
-        else:
-            self.open_files(paths)
+        for w in widgets:
+            if w is None or getattr(w, "_drop_registered", False):
+                continue
+            try:
+                w.drop_target_register(DND_FILES)
+                w.dnd_bind("<<Drop>>", self._on_drop)
+                w.dnd_bind("<<DropEnter>>", self._on_drop_enter)
+                w.dnd_bind("<<DropLeave>>", self._on_drop_leave)
+                w._drop_registered = True
+            except Exception:
+                pass
+
+    def _enable_drop_tree(self, root):
+        """递归注册现有控件，拖到工具栏、面板或状态栏也能打开。"""
+        if not _DND_OK:
+            return
+        stack = [root]
+        while stack:
+            w = stack.pop()
+            self._enable_drop(w)
+            try:
+                stack.extend(w.winfo_children())
+            except Exception:
+                pass
+
+    def _on_drop_enter(self, _event=None):
+        if getattr(self, "_dnd_hot", False):
+            return
+        self._dnd_hot = True
+        try:
+            self._flash(_tr("松开以打开文件"), 1200)
+        except Exception:
+            pass
+
+    def _on_drop_leave(self, _event=None):
+        self._dnd_hot = False
+
+    def _on_drop(self, event):
+        self._dnd_hot = False
+        try:
+            raw = self.tk.splitlist(event.data)
+        except Exception:
+            raw = [event.data]
+        paths = []
+        for p in raw:
+            p = str(p).strip().strip('"')
+            if p.lower().startswith("file://"):
+                try:
+                    from urllib.request import url2pathname
+                    from urllib.parse import unquote, urlparse
+                    p = url2pathname(unquote(urlparse(p).path))
+                except Exception:
+                    pass
+            if p and os.path.exists(p):
+                paths.append(os.path.abspath(p))
+        if not paths:
+            return "break"
+        files = [p for p in paths if os.path.isfile(p)]
+        folders = [p for p in paths if os.path.isdir(p)]
+        try:
+            self.deiconify()
+            self.lift()
+        except Exception:
+            pass
+        if files:
+            self.open_files(files)
+        elif folders:
+            self.open_folder(folders[0])
+        return "break"
 
     # ------------------------------------------------------------ 导航
 
@@ -7906,6 +7966,7 @@ class QPEApp(_BASE):
             paint()
             if state["open"]:
                 ensure()
+                self._enable_drop_tree(body)
             self._relayout_panel()
 
         for w in [head, mark] + list(head.winfo_children()):
@@ -7914,6 +7975,7 @@ class QPEApp(_BASE):
             body.pack(fill="x", padx=(px(11), 0), pady=(px(3), 0))
             ensure()
         self.sections[title] = (body, toggle)     # 便于程序化展开 / 定位
+        self._enable_drop_tree(wrap)
         if hasattr(self, "section_wraps"):
             self.section_wraps[title] = wrap
         return body
@@ -8620,6 +8682,7 @@ class QPEApp(_BASE):
         self.set_panel_tab("adjust", scroll=False)
         self._bind_wheel(self.pcan)
         self._update_hist_buttons()
+        self._enable_drop_tree(self.panel)
 
     def _sec_basic(self, parent):
         b = self._section(parent, "基本")

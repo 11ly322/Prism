@@ -33,6 +33,7 @@ SUITES = [
     ("大屏版", "tools/bigscreencheck.py", [], True, 120),
     ("主题", "tools/themecheck.py", [], True, 180),
     ("动效反馈", "tools/motioncheck.py", [], True, 180),
+    ("拖入打开", "tools/dndcheck.py", [], True, 120),
     ("默认应用", "tools/defaultappcheck.py", [], True, 60),
     ("ICC", "tools/icccheck.py", [], True, 60),
     ("ICC 真profile", "tools/iccprofilecheck.py", [], True, 60),

@@ -111,7 +111,7 @@ def main():
         find_icon(app.bar)
         if icon is not None:
             icon.event_generate("<ButtonPress-1>")
-            pump(app, 8)
+            pump(app, 16)
             fills = [icon.itemcget(i, "fill")
                      for i in icon.find_withtag("rbg")]
             ok("图标按钮按下反馈",

@@ -15,7 +15,7 @@
 
 <div align="center">
 
-![version](https://img.shields.io/badge/version-9.15.9-3d7dff?style=flat-square)
+![version](https://img.shields.io/badge/version-9.15.10-3d7dff?style=flat-square)
 ![platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-2b2f36?style=flat-square)
 ![python](https://img.shields.io/badge/python-3.9%2B-3776ab?style=flat-square&logo=python&logoColor=white)
 ![license](https://img.shields.io/badge/license-MIT-3ddc84?style=flat-square)
@@ -59,6 +59,7 @@ Prism 服务两种场景 ——
 | **一致性** | 预览与导出走同一套渲染管，实测平均逐像素差 **0.000** |
 | **色彩管理** | 读 ICC 转 sRGB 预览，导出写入 sRGB profile；Display P3 / AdobeRGB 不再被当 sRGB；可选 ICC 软打样 |
 | **默认应用** | 安装器注册默认应用候选；安装完成页「一键设为默认」登记全部支持格式，Windows 10 确认一次，Windows 11 按格式确认；完整版/看图版/大屏版各自独立 |
+| **拖入打开** | 图片或文件夹拖到窗口任意位置；多文件按文件打开，文件夹自动载入第一张 |
 | **主题** | 10 套配色：深色 / 浅色 / 高对比 / 炭橙 / 深海 / 森林 / 玫瑰 / 极夜 / 霓虹 / 暖纸；另有 2px 高对比描边开关，可叠加在任意主题上 |
 | **动效与反馈** | 悬停渐变、按压回弹、点击涟漪和状态过渡都可一键关闭；设置里的开关本身也带缓动；关闭后立即响应、不做动画 |
 | **右侧栏** | 六个分类标签（调整/颜色/细节/效果/预设/工具）；直方图与底栏固定，工具与历史独立分类，面板默认 260px 可拖宽 |
@@ -70,12 +71,12 @@ Prism 服务两种场景 ——
 
 | 平台 | 文件 | 说明 |
 | :--- | :--- | :--- |
-| Windows | `Prism-Setup-9.15.9.exe` | 安装包 · 含修图面板与插件 · 40.1 MB |
-| Windows | `Prism-Viewer-9.15.9.zip` | 纯看图版 · 便携免安装 · 30.1 MB |
-| Windows | `Prism-BigScreen-Setup-9.15.9.exe` | **大屏版**安装包 · 底栏大按钮 · 无快捷键 · 纯看图 |
-| Windows | `Prism-BigScreen-9.15.9.zip` | 大屏版 · 便携免安装 |
-| macOS | `Prism-macOS-9.15.9.zip` | 源码运行 · 需 Python 3 + Pillow · 227 KB |
-| Linux | `Prism-Linux-9.15.9.zip` | 源码运行 · 带 `.desktop` · 227 KB |
+| Windows | `Prism-Setup-9.15.10.exe` | 安装包 · 含修图面板与插件 · 40.1 MB |
+| Windows | `Prism-Viewer-9.15.10.zip` | 纯看图版 · 便携免安装 · 30.1 MB |
+| Windows | `Prism-BigScreen-Setup-9.15.10.exe` | **大屏版**安装包 · 底栏大按钮 · 无快捷键 · 纯看图 |
+| Windows | `Prism-BigScreen-9.15.10.zip` | 大屏版 · 便携免安装 |
+| macOS | `Prism-macOS-9.15.10.zip` | 源码运行 · 需 Python 3 + Pillow · 227 KB |
+| Linux | `Prism-Linux-9.15.10.zip` | 源码运行 · 带 `.desktop` · 227 KB |
 
 <div align="center">
 
@@ -108,16 +109,29 @@ chmod +x prism.sh
 ./prism.sh 照片.jpg
 ```
 
-依赖只有 **Python 3 + Pillow**（Linux 另需 `python3-tk`）。
+依赖只有 **Python 3 + Pillow**（Linux 另需 `python3-tk`）；拖入打开额外需要
+`tkinterdnd2`（Windows 安装包已内置）：
 
----
+```powershell
+python -m pip install tkinterdnd2
+```
+
+## 拖入打开
+
+把一张图片、多张图片或一个文件夹直接拖进 Prism 窗口即可打开，不需要先点「打开」。
+
+- 拖到图片区、工具栏、右侧面板、状态栏都可以，整个窗口都是落点。
+- 多文件以第一张所在目录建立浏览序列；文件夹自动打开其中第一张图片。
+- 文件名含空格、中文或括号也能识别。
+- 拖动悬停时状态栏会提示「松开以打开文件」。
+- 没装 `tkinterdnd2` 时功能自动隐藏；安装后无需额外设置。
 
 ---
 
 ## 人像美化
 
 > 纯算法实现，**不依赖任何模型文件**、不联网、不上传照片。
-> 9.15.9 以 50 轮质量台架迭代重写了肤色蒙版、磨皮、祛斑、眼周、嘴部与瘦脸路径。
+> 50 轮质量台架迭代重写了肤色蒙版、磨皮、祛斑、眼周、嘴部与瘦脸路径。
 
 ### 怎么找到它
 

@@ -4,3 +4,4 @@
 pyinstaller==6.22.3
 pillow==12.3.0
 numpy==2.3.5
+tkinterdnd2==0.4.3

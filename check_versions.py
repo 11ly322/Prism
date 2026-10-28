@@ -10,14 +10,13 @@ import re
 import sys
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
-PAT = re.compile(r"\b9\.\d+\.\d+(?:alpha|beta|rc\d*)?\b")
+PAT = re.compile(r"\b9\.\d+\.\d+\b")
 SKIP_DIRS = {".git", "_build", "_build2", "_viewer_build", "_mac_stage",
              "_lin_stage", "__pycache__", "_internal", "shots", "design",
              "tools"}
 # 这些行是在讲历史，不是当前版本号
 SKIP_LINE_HINTS = ("已于", "历史", "之前", "8.3.2 /", "round",
-                   "（9.", "(9.", "从 9.", "since 9.", "Since 9.", "9.4.0 起",
-                   "最后一个稳定版", "last stable")
+                   "（9.", "(9.", "从 9.", "since 9.", "Since 9.", "9.4.0 起")
 
 
 def app_version():

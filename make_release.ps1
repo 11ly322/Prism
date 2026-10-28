@@ -240,8 +240,6 @@ Write-Host '== 外观回归截图 =='
 # ---- 发布到 GitHub Release（仓库不保存二进制）----
 $page = Join-Path $root 'docs\index.html'
 $pageBak = "$page.bak"
-$verPat = '\d+\.\d+\.\d+(?:alpha|beta|rc\d*)?'
-$isPre = $ver -match '(?i)(alpha|beta|rc)'
 $pushed = $false
 try {
     $setup = Get-ChildItem (Join-Path $root 'docs') -File |
@@ -256,17 +254,17 @@ try {
             $html = [regex]::Replace($html, '<code>[0-9A-Fa-f]{64}</code>', "<code>$sha</code>")
             $html = [regex]::Replace($html, '>\d+\.\d+ MB · Windows 10/11', ">$sizeMb MB · Windows 10/11")
             # 链接与文件名里的版本号（用 ${1} 明确分组，避免 $1 与版本号粘连）
-            $html = [regex]::Replace($html, 'releases/download/v' + $verPat + '/', "releases/download/v$ver/")
+            $html = [regex]::Replace($html, 'releases/download/v\d+\.\d+\.\d+/', "releases/download/v$ver/")
             $html = [regex]::Replace($html,
-                '(Prism-(?:BigScreen-Setup|BigScreen|Viewer-Setup|Viewer|Portable|macOS|Linux|Setup)-)' + $verPat + '(\.(?:exe|zip))',
+                '(Prism-(?:BigScreen-Setup|BigScreen|Viewer-Setup|Viewer|Portable|macOS|Linux|Setup)-)\d+\.\d+\.\d+(\.(?:exe|zip))',
                 '${1}' + $ver + '${2}')
             # 页面上显示的版本号（品牌、meta、页脚）
-            $html = [regex]::Replace($html, '<i>' + $verPat + '</i>', "<i>$ver</i>")
-            $html = [regex]::Replace($html, '版本 ' + $verPat, "版本 $ver")
-            $html = [regex]::Replace($html, 'Prism ' + $verPat + ' ·', "Prism $ver ·")
+            $html = [regex]::Replace($html, '<i>\d+\.\d+\.\d+</i>', "<i>$ver</i>")
+            $html = [regex]::Replace($html, '版本 \d+\.\d+\.\d+', "版本 $ver")
+            $html = [regex]::Replace($html, 'Prism \d+\.\d+\.\d+ ·', "Prism $ver ·")
             # data-ver 与 JSON-LD 里的软件版本不会出现在可见文字里，单独替换
-            $html = [regex]::Replace($html, 'data-ver="' + $verPat + '"', 'data-ver="' + $ver + '"')
-            $html = [regex]::Replace($html, '"softwareVersion":"' + $verPat + '"', '"softwareVersion":"' + $ver + '"')
+            $html = [regex]::Replace($html, 'data-ver="\d+\.\d+\.\d+"', 'data-ver="' + $ver + '"')
+            $html = [regex]::Replace($html, '"softwareVersion":"\d+\.\d+\.\d+"', '"softwareVersion":"' + $ver + '"')
             Set-Content -LiteralPath $page -Value $html -Encoding UTF8 -NoNewline
             Write-Host ("   页面已更新 SHA " + $sha.Substring(0, 12) + " / " + $sizeMb + " MB / 版本 $ver")
         }
@@ -287,14 +285,8 @@ try {
             $existing = (& gh release view $tag --json tagName 2>$null)
             if ($LASTEXITCODE -eq 0 -and $existing) {
                 & gh release upload $tag @assets --clobber
-                if ($isPre) {
-                    & gh release edit $tag --prerelease 2>&1 | Out-Null
-                }
             } else {
-                $createArgs = @('release', 'create', $tag, '--title', ("Prism $ver"),
-                                '--notes', $notes)
-                if ($isPre) { $createArgs += '--prerelease' }
-                & gh @createArgs @assets
+                & gh release create $tag --title "Prism $ver" --notes $notes @assets
             }
             if ($LASTEXITCODE -ne 0) {
                 throw ("gh release 失败（退出码 " + $LASTEXITCODE + "）")

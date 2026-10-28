@@ -1,4 +1,4 @@
-<div align="center">
+﻿<div align="center">
 
 <img src="src/Prism.png" width="96" alt="Prism">
 
@@ -15,7 +15,7 @@
 
 <div align="center">
 
-![version](https://img.shields.io/badge/version-9.15.10alpha-3d7dff?style=flat-square)
+![version](https://img.shields.io/badge/version-9.15.9-3d7dff?style=flat-square)
 ![platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-2b2f36?style=flat-square)
 ![python](https://img.shields.io/badge/python-3.9%2B-3776ab?style=flat-square&logo=python&logoColor=white)
 ![license](https://img.shields.io/badge/license-MIT-3ddc84?style=flat-square)
@@ -23,8 +23,6 @@
 </div>
 
 > **MIT 协议开源**，见 [LICENSE](LICENSE)。插件请只安装你信任的：它们以完整权限运行（[说明](docs/plugin-api.md)）。
->
-> **换电脑 / 源码交接**：见 [HANDOFF.md](HANDOFF.md)。
 >
 > **插件文档（三语）**：
 > 指南 [中文](plugins/README.md) · [English](plugins/README.en.md) · [日本語](plugins/README.ja.md)；
@@ -72,12 +70,12 @@ Prism 服务两种场景 ——
 
 | 平台 | 文件 | 说明 |
 | :--- | :--- | :--- |
-| Windows | `Prism-Setup-9.15.10alpha.exe` | 安装包 · 含修图面板与插件 · 40.1 MB |
-| Windows | `Prism-Viewer-9.15.10alpha.zip` | 纯看图版 · 便携免安装 · 30.1 MB |
-| Windows | `Prism-BigScreen-Setup-9.15.10alpha.exe` | **大屏版**安装包 · 底栏大按钮 · 无快捷键 · 纯看图 |
-| Windows | `Prism-BigScreen-9.15.10alpha.zip` | 大屏版 · 便携免安装 |
-| macOS | `Prism-macOS-9.15.10alpha.zip` | 源码运行 · 需 Python 3 + Pillow · 227 KB |
-| Linux | `Prism-Linux-9.15.10alpha.zip` | 源码运行 · 带 `.desktop` · 227 KB |
+| Windows | `Prism-Setup-9.15.9.exe` | 安装包 · 含修图面板与插件 · 40.1 MB |
+| Windows | `Prism-Viewer-9.15.9.zip` | 纯看图版 · 便携免安装 · 30.1 MB |
+| Windows | `Prism-BigScreen-Setup-9.15.9.exe` | **大屏版**安装包 · 底栏大按钮 · 无快捷键 · 纯看图 |
+| Windows | `Prism-BigScreen-9.15.9.zip` | 大屏版 · 便携免安装 |
+| macOS | `Prism-macOS-9.15.9.zip` | 源码运行 · 需 Python 3 + Pillow · 227 KB |
+| Linux | `Prism-Linux-9.15.9.zip` | 源码运行 · 带 `.desktop` · 227 KB |
 
 <div align="center">
 
@@ -119,7 +117,7 @@ chmod +x prism.sh
 ## 人像美化
 
 > 纯算法实现，**不依赖任何模型文件**、不联网、不上传照片。
-> 9.15.10alpha 以 50 轮质量台架迭代重写了肤色蒙版、磨皮、祛斑、眼周、嘴部与瘦脸路径。
+> 9.15.9 以 50 轮质量台架迭代重写了肤色蒙版、磨皮、祛斑、眼周、嘴部与瘦脸路径。
 
 ### 怎么找到它
 

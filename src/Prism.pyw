@@ -22,6 +22,7 @@ import queue
 import re
 import struct
 import sys
+import tempfile
 import threading
 import time
 import traceback
@@ -77,8 +78,29 @@ IS_WIN = sys.platform.startswith("win")
 # macOS 用 Command 作主修饰键，其余平台用 Control
 K = "Command" if IS_MAC else "Control"
 
+# 启动诊断日志：Windows 10 上如果窗口没出来，先看这个文件。
+# 放在临时目录，安装目录只读时也能写。
+_BOOT_LOG = os.path.join(tempfile.gettempdir(), "prism_boot.log")
+
+
+def _boot_path():
+    return _BOOT_LOG
+
+
+def _boot_log(msg):
+    try:
+        with open(_boot_path(), "a", encoding="utf-8") as fh:
+            fh.write("%s %s\n" % (time.strftime("%Y-%m-%d %H:%M:%S"), msg))
+    except Exception:
+        pass
+
+
+# 安全模式：完全跳过 tkdnd，供老 Win10 / 杀毒软件拦截 tkdnd 时使用
+SAFE_MODE = ("--safe-mode" in sys.argv
+             or os.environ.get("PRISM_SAFE") == "1")
+
 APP_NAME = "Prism"
-APP_VERSION = "9.15.10"
+APP_VERSION = "9.15.11"
 APP_BUILD = "2025-12.9"
 # ---------------------------------------------------------------- 运行模式
 # 同一份源码编出三个版本：
@@ -143,6 +165,8 @@ try:  # 拖放支持（装了 tkinterdnd2 就自动启用）
     _DND_OK = True
 except Exception:
     pass
+if SAFE_MODE:
+    _DND_OK = False
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 Image.MAX_IMAGE_PIXELS = 512 * 1024 * 1024  # 放宽超大图限制
@@ -187,6 +211,87 @@ def _init_dpi():
 def px(v):
     """把 96dpi 下的像素尺寸换算成当前 DPI 下的像素。"""
     return int(round(v * UI))
+
+
+def _work_area():
+    """当前主显示器的工作区（不含任务栏），返回 (x, y, w, h)。
+
+    Win10 笔记本常见 125%/150% 缩放，按 96dpi 写死的 1120x760 会被放大到
+    1400x950 甚至 1680x1140，底部按钮和状态栏直接跑到屏幕外。所有窗口尺寸
+    都要先经过这里裁一次。
+    """
+    if IS_WIN:
+        try:
+            import ctypes
+            from ctypes import wintypes
+            rect = wintypes.RECT()
+            if ctypes.windll.user32.SystemParametersInfoW(
+                    0x0030, 0, ctypes.byref(rect), 0):
+                w = int(rect.right - rect.left)
+                h = int(rect.bottom - rect.top)
+                if w >= 320 and h >= 240:
+                    return int(rect.left), int(rect.top), w, h
+        except Exception:
+            pass
+    try:
+        if IS_WIN:
+            import ctypes
+            w = int(ctypes.windll.user32.GetSystemMetrics(0))
+            h = int(ctypes.windll.user32.GetSystemMetrics(1))
+        else:
+            w, h = 1920, 1080
+    except Exception:
+        w, h = 1920, 1080
+    return 0, 0, max(320, w), max(240, h)
+
+
+def _fit_window_rect(w, h, margin=None):
+    """把窗口尺寸限制在工作区内并居中，返回 (w, h, x, y)。"""
+    left, top, aw, ah = _work_area()
+    m = px(12) if margin is None else int(margin)
+    # Tk 的 geometry 是客户区，Windows 还会加标题栏和边框；不预留这部分，
+    # 窗口外框仍会顶到任务栏下面，状态栏就被盖住。
+    chrome_w = px(18)
+    chrome_h = px(44)
+    maxw = max(320, aw - 2 * m - chrome_w)
+    maxh = max(240, ah - 2 * m - chrome_h)
+    w = max(min(int(w), maxw), 320)
+    h = max(min(int(h), maxh), 240)
+    x = left + max(0, (aw - w - chrome_w) // 2)
+    y = top + max(0, (ah - h - chrome_h) // 2)
+    return int(w), int(h), int(x), int(y)
+
+
+def _clamp_geometry(g):
+    """校验并裁切保存的 "WxH+X+Y"；坏值返回空串。"""
+    if not isinstance(g, str):
+        return ""
+    m = re.match(r"^(\d+)x(\d+)\+(-?\d+)\+(-?\d+)$", g.strip())
+    if not m:
+        return ""
+    try:
+        w, h, x, y = (int(m.group(i)) for i in range(1, 5))
+    except Exception:
+        return ""
+    left, top, aw, ah = _work_area()
+    chrome_w = px(18)
+    chrome_h = px(44)
+    maxw = max(320, aw - px(24) - chrome_w)
+    maxh = max(240, ah - px(24) - chrome_h)
+    w = max(min(w, maxw), 320)
+    h = max(min(h, maxh), 240)
+    x = min(max(x, left), left + max(0, aw - w - chrome_w))
+    y = min(max(y, top), top + max(0, ah - h - chrome_h))
+    return "%dx%d+%d+%d" % (w, h, x, y)
+
+
+def _fit_dialog(win, w, h):
+    """对话框也按工作区收缩并居中，避免 150% 缩放下按钮在屏幕外。"""
+    w, h, x, y = _fit_window_rect(w, h)
+    try:
+        win.geometry("%dx%d+%d+%d" % (w, h, x, y))
+    except Exception:
+        pass
 
 
 _init_dpi()
@@ -2756,7 +2861,28 @@ class Loader(object):
 
 # ---------------------------------------------------------------- 主程序
 
-_BASE = TkinterDnD.Tk if _DND_OK else tk.Tk
+if _DND_OK:
+    class _DndTk(tk.Tk, TkinterDnD.DnDWrapper):
+        """先建普通 Tk 根窗口，再加载 tkdnd。
+
+        9.15.10 直接继承 TkinterDnD.Tk；老 Win10 上 tkdnd 的 DLL 一旦加载
+        失败，Tk 根窗口都建不出来，表现就是双击没反应。这里失败时保留已经
+        建好的窗口，只关掉拖放，其余功能照常。
+        """
+
+        def __init__(self, *args, **kwargs):
+            tk.Tk.__init__(self, *args, **kwargs)
+            global _DND_OK
+            try:
+                self.TkdndVersion = TkinterDnD._require(self)
+            except Exception as exc:
+                _DND_OK = False
+                self.TkdndVersion = None
+                _boot_log("tkdnd load failed; drag disabled: %s" % exc)
+
+    _BASE = _DndTk
+else:
+    _BASE = tk.Tk
 
 
 # ---------------------------------------------------------------- 镜头 / 胶片 / 人像
@@ -3883,10 +4009,14 @@ def _run_selftest():
 class QPEApp(_BASE):
 
     def __init__(self):
+        _boot_log("QPEApp: 创建 Tk 根窗口")
         super(QPEApp, self).__init__()
+        _boot_log("QPEApp: Tk 根窗口完成，拖放=%s" % _DND_OK)
         # 配色要在建界面之前定下来，否则控件会先按默认色建出来
         self.fast_skip_fx = False
         self.motion = bool(self._peek_setting("motion", True))
+        if SAFE_MODE:
+            self.motion = False
         self.tips_seen = False
         self._lang_ready = False
         self.low_mem = bool(globals().get("LOW_MEM_ARG", False))
@@ -3915,8 +4045,9 @@ class QPEApp(_BASE):
         self.title(APP_TITLE)
         self._apply_icon()
         self.configure(bg=BG)
-        self.geometry("%dx%d" % (px(1120), px(760)))
-        self.minsize(px(700), px(400))
+        _w0, _h0, _x0, _y0 = _fit_window_rect(px(1120), px(760))
+        self.geometry("%dx%d+%d+%d" % (_w0, _h0, _x0, _y0))
+        self.minsize(min(px(700), _w0), min(px(400), _h0))
 
         self.files = []
         self.folder = None
@@ -4134,6 +4265,8 @@ class QPEApp(_BASE):
 
         self.load_settings()          # 必须在建界面之前：水印输入框要预填
         self.motion = bool(getattr(self, "motion", True))
+        if SAFE_MODE:
+            self.motion = False
         global MOTION_ENABLED
         MOTION_ENABLED = self.motion
 
@@ -4157,10 +4290,12 @@ class QPEApp(_BASE):
         self._refresh_preset_box()
         self._refresh_sort_btn()
         if self.saved_geom and not BIGSCREEN:
-            try:
-                self.geometry(self.saved_geom)
-            except Exception:
-                pass
+            _g = _clamp_geometry(self.saved_geom)
+            if _g:
+                try:
+                    self.geometry(_g)
+                except Exception:
+                    pass
         if self.saved_panel:
             try:
                 self.toggle_panel(True)
@@ -4173,8 +4308,18 @@ class QPEApp(_BASE):
         self.alive = True
         self.pump_job = self.after(30, self._pump)
         self.after(120, self._render)
+        self.after(0, lambda: _boot_log("QPEApp: 进入事件循环"))
         if BIGSCREEN:
             self.after(180, self._bigscreen_start)
+
+    def _raise_startup(self):
+        """双击图片/文件夹启动时，把窗口提到最前，避免看起来没打开。"""
+        try:
+            self.deiconify()
+            self.lift()
+            self.focus_force()
+        except Exception:
+            pass
 
     def _bigscreen_start(self):
         """大屏版启动即最大化；全屏由底栏按钮切换。"""
@@ -4625,10 +4770,20 @@ class QPEApp(_BASE):
         f.pack(side="left", padx=px(SPACE_SM), pady=px(SPACE_MD))
 
     def _build_bigscreen_bar(self):
-        """大屏版：底部大按钮工具栏，没有菜单、没有快捷键。"""
+        """大屏版：底部大按钮工具栏，没有菜单、没有快捷键。
+
+        1366x768 的 Win10 笔记本开 125%/150% 缩放时，原来一排 15 个按钮会
+        把「全屏 / 退出」挤出屏幕。这里按可用宽度分三档：
+          宽屏  全部按钮
+          中屏  次要按钮收进「更多」
+          窄屏  再缩小字号和内边距
+        """
         self.bar_groups = []
         self.bar_hidden = set()
         self.bar_laid_out = True
+        self._big_items = []
+        self._big_buttons = []
+        self._big_mode = None
         self.bar = tk.Frame(self, bg=BAR_BG, height=px(86))
         _status = getattr(self, "status", None)
         if _status is not None and _status.winfo_exists():
@@ -4637,21 +4792,28 @@ class QPEApp(_BASE):
         else:
             self.bar.pack(side="bottom", fill="x")
         self.bar.pack_propagate(False)
-        big = (self.ui_font[0], -int(px(15)), "bold")
 
-        def add(text, cmd):
+        self._big_left = tk.Frame(self.bar, bg=BAR_BG)
+        self._big_left.pack(side="left", fill="y")
+
+        def add(text, cmd, optional=False):
             b = tk.Button(
-                self.bar, text=text, command=cmd, font=big, bg=BTN_BG, fg=FG,
-                activebackground=BAR_HOVER, activeforeground=FG_HI,
-                relief="flat", bd=0, highlightthickness=0, padx=px(14),
-                pady=px(7), cursor="hand2", takefocus=0)
+                self._big_left, text=text, command=cmd, font=self._big_font(),
+                bg=BTN_BG, fg=FG, activebackground=BAR_HOVER,
+                activeforeground=FG_HI, relief="flat", bd=0,
+                highlightthickness=0, padx=px(14), pady=px(7),
+                cursor="hand2", takefocus=0)
             b.pack(side="left", padx=px(3), pady=px(11))
             self._wire_press(b, BTN_BG, ACCENT, ON_BG)
+            self._big_items.append((b, optional))
+            self._big_buttons.append(b)
             return b
 
-        def sep():
-            tk.Frame(self.bar, bg=CARD_LINE, width=max(1, px(1)),
-                     height=px(34)).pack(side="left", padx=px(7), pady=px(26))
+        def sep(optional=False):
+            f = tk.Frame(self._big_left, bg=CARD_LINE, width=max(1, px(1)),
+                         height=px(34))
+            f.pack(side="left", padx=px(7), pady=px(26))
+            self._big_items.append((f, optional))
 
         add("打开", self.open_dialog)
         add("文件夹", self.open_folder_dialog)
@@ -4660,19 +4822,36 @@ class QPEApp(_BASE):
         add("▶", lambda: self.step(1))
         sep()
         add("适应", self.fit_window)
-        add("1:1", self.actual_size)
+        add("1:1", self.actual_size, True)
         add("−", lambda: self.zoom_by(1 / 1.25))
         add("＋", lambda: self.zoom_by(1.25))
-        add("旋转", lambda: self.rotate(90))
-        sep()
-        self.big_slide_btn = add("幻灯片", self.toggle_slideshow)
-        add("网格", self.toggle_grid)
-        sep()
-        add("全屏", self.toggle_fullscreen)
+        add("旋转", lambda: self.rotate(90), True)
+        sep(True)
+        self.big_slide_btn = add("幻灯片", self.toggle_slideshow, True)
+        add("网格", self.toggle_grid, True)
+        sep(True)
+        self._big_fs_btn = add("全屏", self.toggle_fullscreen)
+
+        # 次要按钮在窄屏下收进这个菜单，不再直接消失
+        self._big_more = tk.Menubutton(
+            self._big_left, text=_tr("更多"), font=self._big_font(), bg=BTN_BG,
+            fg=FG, activebackground=BAR_HOVER, activeforeground=FG_HI,
+            relief="flat", bd=0, highlightthickness=0, padx=px(10),
+            pady=px(7), cursor="hand2", takefocus=0)
+        _bm = tk.Menu(self._big_more, tearoff=0, bg=DEEP2_BG, fg=FG,
+                      activebackground=ACCENT, activeforeground=ON_BG,
+                      bd=0, relief="flat", font=self.ui_font)
+        _bm.add_command(label="原始大小 100%", command=self.actual_size)
+        _bm.add_command(label="顺时针旋转", command=lambda: self.rotate(90))
+        _bm.add_command(label="幻灯片", command=self.toggle_slideshow)
+        _bm.add_command(label="网格浏览", command=self.toggle_grid)
+        self._big_more.configure(menu=_bm)
+        self._wire_press(self._big_more, BTN_BG, ACCENT, ON_BG)
 
         exit_btn = tk.Button(
-            self.bar, text="退出", command=self.on_close, font=big, bg=BTN_BG,
-            fg=FG, activebackground=BAR_HOVER, activeforeground=FG_HI,
+            self.bar, text="退出", command=self.on_close,
+            font=self._big_font(), bg=BTN_BG, fg=FG,
+            activebackground=BAR_HOVER, activeforeground=FG_HI,
             relief="flat", bd=0, highlightthickness=0, padx=px(14),
             pady=px(7), cursor="hand2", takefocus=0)
         exit_btn.pack(side="right", padx=(px(3), px(10)), pady=px(11))
@@ -4681,8 +4860,75 @@ class QPEApp(_BASE):
             self.bar, text="", font=self.ui_font, bg=BAR_BG, fg=FG_DIM,
             width=6, anchor="e")
         self.zoom_lbl.pack(side="right", padx=(px(6), px(4)))
+        self.bar.bind("<Configure>", self._on_big_bar_configure)
+        self.after(120, self._layout_bigscreen_bar)
         if getattr(self, "outline", False):
             self._apply_outline(OUTLINE_COLOR, self.bar)
+
+    def _big_font(self, small=False):
+        return (self.ui_font[0], -int(px(12 if small else 15)), "bold")
+
+    def _on_big_bar_configure(self, _event=None):
+        job = getattr(self, "_big_bar_job", None)
+        if job is not None:
+            try:
+                self.after_cancel(job)
+            except Exception:
+                pass
+        self._big_bar_job = self.after(40, self._layout_bigscreen_bar)
+
+    def _layout_bigscreen_bar(self):
+        """按条宽切换 全部 / 更多 / 小字号，保证退出和全屏始终可见。"""
+        self._big_bar_job = None
+        try:
+            width = self.bar.winfo_width()
+        except Exception:
+            return
+        if width < 2:
+            return
+        logical = width / max(UI, 0.1)
+        if logical >= 1180:
+            mode = "wide"
+        elif logical >= 820:
+            mode = "compact"
+        else:
+            mode = "tight"
+        if mode == getattr(self, "_big_mode", None):
+            return
+        self._big_mode = mode
+        small = (mode == "tight")
+        show_optional = (mode == "wide")
+        for b in self._big_buttons:
+            try:
+                b.configure(font=self._big_font(small),
+                            padx=px(7 if small else 14),
+                            pady=px(6 if small else 7))
+            except Exception:
+                pass
+        try:
+            self._big_more.configure(font=self._big_font(small),
+                                     padx=px(7 if small else 10))
+        except Exception:
+            pass
+        for w, _opt in self._big_items:
+            try:
+                w.pack_forget()
+            except Exception:
+                pass
+        try:
+            self._big_more.pack_forget()
+        except Exception:
+            pass
+        for w, opt in self._big_items:
+            if opt and not show_optional:
+                continue
+            if w is self._big_fs_btn and not show_optional:
+                self._big_more.pack(side="left", padx=px(3), pady=px(11))
+            if isinstance(w, tk.Frame):
+                w.pack(side="left", padx=px(7), pady=px(26))
+            else:
+                w.pack(side="left", padx=px(3), pady=px(11))
+        _boot_log("bigscreen bar: %s width %d" % (mode, width))
 
     def _build_bar(self):
         """构建（或在切换语言后重建）工具条。"""
@@ -5108,18 +5354,44 @@ class QPEApp(_BASE):
             except Exception:
                 pass
 
-    def _enable_drop_tree(self, root):
-        """递归注册现有控件，拖到工具栏、面板或状态栏也能打开。"""
+    def _enable_drop_tree(self, root=None):
+        """只注册主要落点，且等窗口先画出来。
+
+        9.15.10 递归注册整棵控件树；老 Win10 上每次 tkdnd 注册都要几十到
+        几百毫秒，窗口要等十几秒才出现，看起来就是「双击没反应」。现在先让
+        窗口显示，再只把图片区、工具栏、面板、状态栏这几个大块注册上。
+        """
         if not _DND_OK:
             return
-        stack = [root]
-        while stack:
-            w = stack.pop()
-            self._enable_drop(w)
+        if getattr(self, "_drop_ready", False):
+            if root is not None:
+                self._enable_drop(root)
+            return
+        if getattr(self, "_drop_queued", False):
+            return
+        self._drop_queued = True
+        self.after(150, self._register_drop_surfaces)
+
+    def _register_drop_surfaces(self):
+        if not _DND_OK:
+            return
+        targets = [self]
+        for name in ("canvas", "body", "bar", "panel", "pcan", "status",
+                     "strip_can", "grid_canvas"):
+            targets.append(getattr(self, name, None))
+        n = 0
+        for w in targets:
+            if w is None:
+                continue
             try:
-                stack.extend(w.winfo_children())
+                if not w.winfo_exists():
+                    continue
             except Exception:
-                pass
+                continue
+            self._enable_drop(w)
+            n += 1
+        self._drop_ready = True
+        _boot_log("drop targets registered: %d" % n)
 
     def _on_drop_enter(self, _event=None):
         if getattr(self, "_dnd_hot", False):
@@ -5296,7 +5568,10 @@ class QPEApp(_BASE):
                 self._save_setting("tips_seen", True)
             except Exception:
                 pass
-            self._flash("F5 全分辨率 · Tab 专注模式 · 拖动右栏调宽", 6000)
+            if VIEWER_ONLY:
+                self._flash("F5 全分辨率 · F11 全屏", 6000)
+            else:
+                self._flash("F5 全分辨率 · Tab 专注模式 · 拖动右栏调宽", 6000)
 
     def _pump(self):
         self.pump_job = None
@@ -7326,6 +7601,12 @@ class QPEApp(_BASE):
                 if BIGSCREEN:
                     self._set_text(_tr(hint) + _tr(
                         "\n\n用底部大按钮打开图片或文件夹"))
+                elif VIEWER_ONLY:
+                    # 看图版没有修图面板，「拖动右栏调宽」会误导
+                    self._set_text(_tr(hint) + _tr(
+                        "\n\nCtrl+O 打开文件    Ctrl+Shift+O 打开文件夹"
+                        "\n\nF5 全分辨率 · F11 全屏"
+                        "\n\n按 F1 查看全部快捷键"))
                 else:
                     self._set_text(_tr(hint) + _tr(
                         "\n\nCtrl+O 打开文件    Ctrl+Shift+O 打开文件夹"
@@ -10518,7 +10799,7 @@ class QPEApp(_BASE):
         self.set_win = win
         win.title("设置")
         win.configure(bg=PANEL_BG)
-        win.geometry("%dx%d" % (px(450), px(600)))
+        _fit_dialog(win, px(450), px(600))
         win.after(60, lambda: _round_window(win))
         win.transient(self)
         self.after(40, self._apply_lang)
@@ -10875,8 +11156,10 @@ class QPEApp(_BASE):
 
         bind_scroll(win)
         canvas.yview_moveto(0)
-        # 窗口首次映射后内容高度才稳定；再归位一次，保证打开时看到标题/主题顶部
+        # 窗口首次映射后内容高度才稳定；再归位一次，保证打开时看到标题/主题顶部。
+        # 9.15.11 起窗口会按工作区重新定位，内容高度稳定得更晚，补一次 260ms 归位。
         win.after(160, lambda: canvas.yview_moveto(0))
+        win.after(260, lambda: canvas.yview_moveto(0))
         if getattr(self, "outline", False):
             self._apply_outline(OUTLINE_COLOR, win)
         if getattr(self, "motion", True):
@@ -11070,7 +11353,7 @@ class QPEApp(_BASE):
         self.plug_win = win
         win.title("插件")
         win.configure(bg=BAR_BG)
-        win.geometry("%dx%d" % (px(560), px(460)))
+        _fit_dialog(win, px(560), px(460))
         win.transient(self)
         self.after(40, self._apply_lang)
         tk.Label(win, text="已安装插件", font=self.ui_font_b, bg=BAR_BG, fg=FG,
@@ -11210,7 +11493,7 @@ class QPEApp(_BASE):
         self.market_win = win
         win.title("插件市场")
         win.configure(bg=BAR_BG)
-        win.geometry("%dx%d" % (px(640), px(600)))
+        _fit_dialog(win, px(640), px(600))
         win.transient(self)
         win.after(40, self._apply_lang)
         try:
@@ -11468,7 +11751,7 @@ class QPEApp(_BASE):
         win = tk.Toplevel(self)
         win.title("安装插件")
         win.configure(bg=BAR_BG)
-        win.geometry("%dx%d" % (px(560), px(330)))
+        _fit_dialog(win, px(560), px(330))
         win.transient(self)
         win.after(40, self._apply_lang)
         try:
@@ -12169,7 +12452,7 @@ def run(img, **params):
         win = tk.Toplevel(self)
         win.title("%s · 结果" % name)
         win.configure(bg=BG)
-        win.geometry("%dx%d" % (px(780), px(660)))
+        _fit_dialog(win, px(780), px(660))
         cv = tk.Canvas(win, bg=BG, highlightthickness=0, bd=0)
         cv.pack(fill="both", expand=True, padx=px(12), pady=(px(10), 0))
         info = tk.Label(win, text="", font=self.ui_font_s, bg=BG, fg=FG_DIM)
@@ -13026,9 +13309,7 @@ def run(img, **params):
         win = tk.Toplevel(self)
         win.title("网格浏览 · %d 张" % len(self.files))
         win.configure(bg="#141414")
-        win.geometry("%dx%d+%d+%d" % (
-            px(900), px(620),
-            self.winfo_rootx() + px(60), self.winfo_rooty() + px(60)))
+        _fit_dialog(win, px(900), px(620))
         self.grid_win = win
         self.grid_canvas = tk.Canvas(win, bg="#141414",
                                      highlightthickness=0, bd=0)
@@ -13368,7 +13649,7 @@ def run(img, **params):
         self.batch_win = win
         win.title("批量导出")
         win.configure(bg=BAR_BG)
-        win.geometry("%dx%d" % (px(560), px(380)))
+        _fit_dialog(win, px(560), px(380))
         win.transient(self)
         self.after(40, self._apply_lang)
         wrap = tk.Frame(win, bg=BAR_BG)
@@ -14149,7 +14430,7 @@ def run(img, **params):
         self.info_win = win
         win.title("图片信息")
         win.configure(bg=BAR_BG)
-        win.geometry("%dx%d" % (px(560), px(640)))
+        _fit_dialog(win, px(560), px(640))
         win.transient(self)
         self.after(40, self._apply_lang)
         bar = tk.Frame(win, bg=BAR_BG)
@@ -14408,7 +14689,7 @@ def run(img, **params):
         win = tk.Toplevel(self)
         win.title("快捷键 - %s %s" % (APP_NAME, APP_VERSION))
         win.configure(bg=BAR_BG)
-        win.geometry("%dx%d" % (px(460), px(560)))
+        _fit_dialog(win, px(460), px(560))
         win.transient(self)
         self.after(40, self._apply_lang)
         txt = tk.Text(win, bg=DEEP_BG, fg=FG, bd=0, highlightthickness=0,
@@ -14643,8 +14924,32 @@ def _gps_deg(coord, ref):
 # ---------------------------------------------------------------- 入口
 
 
+def _boot_fail(exc_type, exc, tb):
+    text = "".join(traceback.format_exception(exc_type, exc, tb))
+    _boot_log("FATAL\n" + text)
+    try:
+        import tkinter.messagebox as _mb
+        _mb.showerror(
+            _tr("Prism 启动失败"),
+            _tr("启动失败，诊断日志：") + "\n%s\n\n%s" % (
+                _boot_path(), text[-1200:]))
+    except Exception:
+        pass
+
+
+sys.excepthook = _boot_fail
+
+
 def main(argv=None):
     argv = list(sys.argv[1:] if argv is None else argv)
+    try:
+        with open(_boot_path(), "w", encoding="utf-8"):
+            pass
+    except Exception:
+        pass
+    _boot_log("启动 %s frozen=%s dnd=%s safe=%s dpi=%.2f"
+              % (APP_VERSION, getattr(sys, "frozen", False), _DND_OK,
+                 SAFE_MODE, UI))
     if "--selftest" in sys.argv:
         where = _run_selftest()
         try:
@@ -14654,12 +14959,19 @@ def main(argv=None):
             pass
         sys.exit(0)
     app = QPEApp()
+    try:
+        _boot_log("screen %dx%d workarea %s" % (
+            app.winfo_screenwidth(), app.winfo_screenheight(), _work_area()))
+    except Exception:
+        pass
     files = [a for a in argv if os.path.isfile(a)]
     folders = [a for a in argv if os.path.isdir(a)]
     if files:
         app.open_files(files)
     elif folders:
         app.open_folder(folders[0])
+    if files or folders:
+        app.after(120, app._raise_startup)
     app.mainloop()
     return 0
 

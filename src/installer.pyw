@@ -12,7 +12,7 @@ import time
 import subprocess
 import zipfile
 
-VER = "9.15.10"
+VER = "9.15.11"
 APP = "Prism"
 FRIENDLY = "Prism"
 DISPLAY = "Prism %s" % VER
@@ -385,6 +385,14 @@ def main():
     root = tk.Tk()
     root.title("安装 %s" % DISPLAY)
     root.configure(bg="#181b20")
+    # 双击安装包后窗口如果落到资源管理器后面，看起来就像「没反应」
+    try:
+        root.lift()
+        root.attributes("-topmost", True)
+        root.after(700, lambda: root.attributes("-topmost", False))
+        root.focus_force()
+    except Exception:
+        pass
     try:
         ui = max(1.0, root.winfo_fpixels("1i") / 96.0)
     except Exception:
@@ -395,7 +403,26 @@ def main():
 
     # 这里原来是固定的 560x300 物理像素，而字体与内边距都按 DPI 放大，
     # 200% 缩放下内容把窗口撑爆，底部按钮被挤出可视区域 —— 就是「没有确认按钮」。
-    root.geometry("%dx%d" % (px(620), px(380)))
+    _w, _h = px(620), px(380)
+    _x = _y = None
+    try:
+        import ctypes
+        from ctypes import wintypes
+        _r = wintypes.RECT()
+        if ctypes.windll.user32.SystemParametersInfoW(
+                0x0030, 0, ctypes.byref(_r), 0):
+            _aw, _ah = int(_r.right - _r.left), int(_r.bottom - _r.top)
+            if _aw >= 320 and _ah >= 240:
+                _w = max(320, min(_w, _aw - px(24)))
+                _h = max(240, min(_h, _ah - px(80)))
+                _x = max(0, (_aw - _w - px(18)) // 2)
+                _y = max(0, (_ah - _h - px(44)) // 2)
+    except Exception:
+        _x = _y = None
+    if _x is None:
+        root.geometry("%dx%d" % (_w, _h))
+    else:
+        root.geometry("%dx%d+%d+%d" % (_w, _h, _x, _y))
     root.resizable(False, False)
     # 按钮栏先 pack，先 pack 的先分配空间，保证它一定在窗口内
     btnbar = tk.Frame(root, bg="#181b20")
@@ -404,10 +431,6 @@ def main():
     try:
         if os.path.exists(ico):
             root.iconbitmap(ico)
-    except Exception:
-        pass
-    try:
-        root.eval("tk::PlaceWindow . center")
     except Exception:
         pass
 

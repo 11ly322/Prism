@@ -324,6 +324,10 @@ window.PRISM_I18N = {
 "悬停渐变、按压回弹、点击涟漪与状态过渡可一键关闭；开关本身带缓动；关闭后立即响应、不做动画": "Hover fades, press rebound, click ripples and state transitions can all be disabled; the switch itself is animated; when off, everything responds instantly",
 "动态效果能关闭吗？ 可以。设置 →「动效与反馈」关掉开关；关闭后按钮仍立即执行，只是不做悬停渐变、回弹与涟漪。": "Can motion be disabled? Yes. Turn off the switch in Settings → Motion & feedback. Buttons still work instantly, just without hover fades, rebound or ripples.",
 "图片或文件夹拖到窗口任意位置；多文件按文件打开，文件夹自动载入第一张；文件名含空格、中文或括号也可识别": "Drop images or a folder anywhere in the window; multiple files open as files, a folder loads its first image; names with spaces, CJK characters or brackets work",
+"图片或文件夹拖到图片区、工具栏、面板或状态栏；多文件按文件打开，文件夹自动载入第一张；文件名含空格、中文或括号也可识别": "Drop images or a folder onto the image area, toolbar, panel or status bar; multiple files open as files, a folder loads its first image; names with spaces, CJK characters or brackets work",
+"先显示窗口再加载拖放；tkdnd 加载失败只关拖放，不拖垮启动；窗口按工作区收缩，1366×768 与 125%/150% 缩放不再裁掉底部按钮": "The window appears before drag and drop loads; a tkdnd failure only disables dropping, never startup; windows fit the work area, so 1366×768 at 125%/150% scaling no longer clips bottom controls",
+"9.15.11 修复 Windows 10 兼容性：拖放加载失败不再拖垮窗口，1366×768 与 125%/150% 缩放不再裁掉底部按钮。": "9.15.11 fixes Windows 10 compatibility: a failed drag-and-drop load no longer blocks the window, and 1366×768 at 125%/150% scaling no longer clips bottom controls.",
+"4. Windows 10 打不开：先试便携版 zip；仍无窗口时运行 Prism.exe --safe-mode，日志在 %TEMP%\\prism_boot.log。": "4. Windows 10 won't open: try the portable zip first; if the window still doesn't appear, run Prism.exe --safe-mode and check %TEMP%\\prism_boot.log.",
 "拖入打开": "Drag to open"
 },
 "ja": {
@@ -650,6 +654,10 @@ window.PRISM_I18N = {
 "悬停渐变、按压回弹、点击涟漪与状态过渡可一键关闭；开关本身带缓动；关闭后立即响应、不做动画": "ホバー漸変・押下の戻り・クリック波紋・状態遷移を一括でオフにできます。スイッチ自体もアニメーション。オフ時は即時応答のみ",
 "动态效果能关闭吗？ 可以。设置 →「动效与反馈」关掉开关；关闭后按钮仍立即执行，只是不做悬停渐变、回弹与涟漪。": "動きはオフにできますか？ はい。設定 →「動きとフィードバック」でスイッチをオフに。ボタンは即時動作し、ホバー漸変・戻り・波紋のみ無効になります。",
 "图片或文件夹拖到窗口任意位置；多文件按文件打开，文件夹自动载入第一张；文件名含空格、中文或括号也可识别": "画像やフォルダーをウィンドウの任意の場所にドロップ。複数ファイルはファイルとして開き、フォルダーは先頭画像を読み込みます。スペース・日本語・括弧を含む名前にも対応",
+"图片或文件夹拖到图片区、工具栏、面板或状态栏；多文件按文件打开，文件夹自动载入第一张；文件名含空格、中文或括号也可识别": "画像やフォルダーを画像エリア・ツールバー・パネル・ステータスバーにドロップ。複数ファイルはファイルとして開き、フォルダーは先頭画像を読み込みます。スペース・日本語・括弧を含む名前にも対応",
+"先显示窗口再加载拖放；tkdnd 加载失败只关拖放，不拖垮启动；窗口按工作区收缩，1366×768 与 125%/150% 缩放不再裁掉底部按钮": "ウィンドウを先に表示してからドラッグ＆ドロップを読み込みます。tkdnd の読み込みに失敗してもドロップだけを無効化し、起動は止めません。ウィンドウは作業領域に収まるため、1366×768・125%/150% 拡大でも下部ボタンが切れません",
+"9.15.11 修复 Windows 10 兼容性：拖放加载失败不再拖垮窗口，1366×768 与 125%/150% 缩放不再裁掉底部按钮。": "9.15.11 は Windows 10 互換性を修正：ドラッグ＆ドロップの読み込み失敗でもウィンドウを表示し、1366×768・125%/150% 拡大でも下部ボタンを切らない。",
+"4. Windows 10 打不开：先试便携版 zip；仍无窗口时运行 Prism.exe --safe-mode，日志在 %TEMP%\\prism_boot.log。": "4. Windows 10 で開かない場合：まずポータブル版 zip を試し、それでもウィンドウが出ないときは Prism.exe --safe-mode を実行して %TEMP%\\prism_boot.log を確認してください。",
 "拖入打开": "ドラッグで開く"
 }
 };

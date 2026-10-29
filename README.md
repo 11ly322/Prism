@@ -15,7 +15,7 @@
 
 <div align="center">
 
-![version](https://img.shields.io/badge/version-9.15.10-3d7dff?style=flat-square)
+![version](https://img.shields.io/badge/version-9.15.11-3d7dff?style=flat-square)
 ![platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-2b2f36?style=flat-square)
 ![python](https://img.shields.io/badge/python-3.9%2B-3776ab?style=flat-square&logo=python&logoColor=white)
 ![license](https://img.shields.io/badge/license-MIT-3ddc84?style=flat-square)
@@ -59,7 +59,8 @@ Prism 服务两种场景 ——
 | **一致性** | 预览与导出走同一套渲染管，实测平均逐像素差 **0.000** |
 | **色彩管理** | 读 ICC 转 sRGB 预览，导出写入 sRGB profile；Display P3 / AdobeRGB 不再被当 sRGB；可选 ICC 软打样 |
 | **默认应用** | 安装器注册默认应用候选；安装完成页「一键设为默认」登记全部支持格式，Windows 10 确认一次，Windows 11 按格式确认；完整版/看图版/大屏版各自独立 |
-| **拖入打开** | 图片或文件夹拖到窗口任意位置；多文件按文件打开，文件夹自动载入第一张 |
+| **拖入打开** | 图片或文件夹拖到窗口主要区域；多文件按文件打开，文件夹自动载入第一张 |
+| **Windows 10** | 先显示窗口再加载拖放；tkdnd 加载失败只关拖放、不拖垮启动；窗口按工作区收缩，1366×768 与 125%/150% 缩放不裁底部按钮 |
 | **主题** | 10 套配色：深色 / 浅色 / 高对比 / 炭橙 / 深海 / 森林 / 玫瑰 / 极夜 / 霓虹 / 暖纸；另有 2px 高对比描边开关，可叠加在任意主题上 |
 | **动效与反馈** | 悬停渐变、按压回弹、点击涟漪和状态过渡都可一键关闭；设置里的开关本身也带缓动；关闭后立即响应、不做动画 |
 | **右侧栏** | 六个分类标签（调整/颜色/细节/效果/预设/工具）；直方图与底栏固定，工具与历史独立分类，面板默认 260px 可拖宽 |
@@ -71,12 +72,16 @@ Prism 服务两种场景 ——
 
 | 平台 | 文件 | 说明 |
 | :--- | :--- | :--- |
-| Windows | `Prism-Setup-9.15.10.exe` | 安装包 · 含修图面板与插件 · 40.6 MB |
-| Windows | `Prism-Viewer-9.15.10.zip` | 纯看图版 · 便携免安装 · 30.6 MB |
-| Windows | `Prism-BigScreen-Setup-9.15.10.exe` | **大屏版**安装包 · 底栏大按钮 · 无快捷键 · 纯看图 |
-| Windows | `Prism-BigScreen-9.15.10.zip` | 大屏版 · 便携免安装 |
-| macOS | `Prism-macOS-9.15.10.zip` | 源码运行 · 需 Python 3 + Pillow + tkinterdnd2 · 246 KB |
-| Linux | `Prism-Linux-9.15.10.zip` | 源码运行 · 带 `.desktop` · 246 KB |
+| Windows | `Prism-Setup-9.15.11.exe` | 安装包 · 含修图面板与插件 · 40.6 MB |
+| Windows | `Prism-Viewer-9.15.11.zip` | 纯看图版 · 便携免安装 · 30.6 MB |
+| Windows | `Prism-BigScreen-Setup-9.15.11.exe` | **大屏版**安装包 · 底栏大按钮 · 无快捷键 · 纯看图 |
+| Windows | `Prism-BigScreen-9.15.11.zip` | 大屏版 · 便携免安装 |
+| macOS | `Prism-macOS-9.15.11.zip` | 源码运行 · 需 Python 3 + Pillow + tkinterdnd2 · 250 KB |
+| Linux | `Prism-Linux-9.15.11.zip` | 源码运行 · 带 `.desktop` · 250 KB |
+
+> **Windows 10 打不开？** 先试 `Prism-Viewer-*.zip` 便携版：解压后直接运行 `PrismViewer.exe`。
+> 仍然没有窗口时，在命令行运行 `Prism.exe --safe-mode`（跳过拖放）并把
+> `%TEMP%\prism_boot.log` 发到 Issue；安装包无反应时同样可先用便携版。
 
 <div align="center">
 

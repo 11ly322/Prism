@@ -644,6 +644,7 @@ LANG_TABLE = {
         "（已转 sRGB）": " (converted to sRGB)",
         # 9.9.0 更新检查/首次提示
         "F5 全分辨率 · Tab 专注模式 · 拖动右栏调宽": "F5 full resolution · Tab focus mode · drag the panel edge to resize",
+        "F5 全分辨率 · F11 全屏": "F5 full resolution · F11 fullscreen",
         "正在检查更新…": "Checking for updates…",
         "检查更新": "Check for updates",
         "检查更新…": "Check for updates…",
@@ -685,6 +686,8 @@ LANG_TABLE = {
         "旋转": "Rotate",
         "全屏": "Fullscreen",
         "全屏（兼容模式）：按「全屏」按钮退出": "Fullscreen (compatibility mode): exit with the Fullscreen button",
+        "Prism 启动失败": "Prism failed to start",
+        "启动失败，诊断日志：": "Startup failed. Diagnostic log:",
         # 9.14.0 主题扩展
         "深海": "Deep sea",
         "森林": "Forest",
@@ -1331,6 +1334,7 @@ LANG_TABLE = {
         "（已转 sRGB）": "（sRGB に変換済み）",
         # 9.9.0 更新检查/首次提示
         "F5 全分辨率 · Tab 专注模式 · 拖动右栏调宽": "F5 フル解像度 · Tab 集中モード · 右パネルの端をドラッグで幅変更",
+        "F5 全分辨率 · F11 全屏": "F5 フル解像度 · F11 全画面",
         "正在检查更新…": "更新を確認中…",
         "检查更新": "更新を確認",
         "检查更新…": "更新を確認…",
@@ -1372,6 +1376,8 @@ LANG_TABLE = {
         "旋转": "回転",
         "全屏": "全画面",
         "全屏（兼容模式）：按「全屏」按钮退出": "全画面（互換モード）：全画面ボタンで終了",
+        "Prism 启动失败": "Prism の起動に失敗しました",
+        "启动失败，诊断日志：": "起動に失敗しました。診断ログ：",
         # 9.14.0 主题扩展
         "深海": "深海",
         "森林": "森",

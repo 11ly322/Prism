@@ -32,8 +32,15 @@ def main():
         ok("面板不构建", app.panel is None)
         ok("工具栏在底部", app.bar.pack_info().get("side") == "bottom",
            str(app.bar.pack_info().get("side")))
-        texts = [w.cget("text") for w in app.bar.winfo_children()
-                 if isinstance(w, mod.tk.Button)]
+        texts = []
+
+        def collect(w):
+            for child in w.winfo_children():
+                if isinstance(child, mod.tk.Button):
+                    texts.append(child.cget("text"))
+                collect(child)
+
+        collect(app.bar)
         for label in ("打开", "文件夹", "幻灯片", "全屏", "退出"):
             ok("底栏按钮 " + label, label in texts, str(texts[:6]))
         ok("无 F5 快捷键", not app.bind("<F5>"))

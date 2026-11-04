@@ -13,8 +13,8 @@
 Pages 的 Source 已切成 **GitHub Actions**；legacy 分支部署不再使用。
 回退方式：Settings → Pages → Source 改回 `Deploy from a branch` → `main` / `/docs`。
 
-`main` 分支保护已启用：PR 合并前要求 `static` + `static-linux` + `static-macos` 通过；
-`gui` 已是普通 job，但当前仍不在必需检查里，失败会标红而不会自动阻止管理员合并。
+`main` 分支保护已启用：PR 合并前要求 `static` + `static-linux` + `static-macos` + `gui`
+通过；管理员可直接推送。
 
 ## 权限
 

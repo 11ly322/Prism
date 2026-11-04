@@ -100,7 +100,7 @@ SAFE_MODE = ("--safe-mode" in sys.argv
              or os.environ.get("PRISM_SAFE") == "1")
 
 APP_NAME = "Prism"
-APP_VERSION = "9.15.11"
+APP_VERSION = "9.16.0"
 APP_BUILD = "2025-12.9"
 # ---------------------------------------------------------------- 运行模式
 # 同一份源码编出三个版本：
@@ -4250,6 +4250,24 @@ class QPEApp(_BASE):
         self.var_gray = None
         self.var_auto = None
         self.drag = None
+        # 大屏版画笔：笔迹存图像坐标，缩放/平移后仍贴在原处。
+        self.brush_on = False
+        self.brush_color = "#ff4d4f"
+        self.brush_size = 4.0
+        self.brush_eraser = False
+        self.brush_erasing = False
+        self.brush_strokes = []
+        self.brush_current = None
+        self.brush_undo = []
+        self.brush_items = []
+        self.brush_palette = None
+        self.brush_color_btns = []
+        self.brush_size_lbl = None
+        self.brush_eraser_btn = None
+        self.brush_undo_btn = None
+        self.brush_clear_btn = None
+        self.brush_done_btn = None
+        self._big_brush_btn = None
         self.resize_job = None
         self.refine_job = None
         self.bar_job = None
@@ -4830,6 +4848,9 @@ class QPEApp(_BASE):
         self.big_slide_btn = add("幻灯片", self.toggle_slideshow, True)
         add("网格", self.toggle_grid, True)
         sep(True)
+        self._big_brush_btn = add(
+            "完成" if getattr(self, "brush_on", False) else "画笔",
+            self.toggle_brush)
         self._big_fs_btn = add("全屏", self.toggle_fullscreen)
 
         # 次要按钮在窄屏下收进这个菜单，不再直接消失
@@ -4845,6 +4866,7 @@ class QPEApp(_BASE):
         _bm.add_command(label="顺时针旋转", command=lambda: self.rotate(90))
         _bm.add_command(label="幻灯片", command=self.toggle_slideshow)
         _bm.add_command(label="网格浏览", command=self.toggle_grid)
+        _bm.add_command(label="画笔标注", command=self.toggle_brush)
         self._big_more.configure(menu=_bm)
         self._wire_press(self._big_more, BTN_BG, ACCENT, ON_BG)
 
@@ -4910,6 +4932,14 @@ class QPEApp(_BASE):
                                      padx=px(7 if small else 10))
         except Exception:
             pass
+        brush_btn = getattr(self, "_big_brush_btn", None)
+        if brush_btn is not None:
+            try:
+                brush_btn.configure(text=_tr(
+                    "完成" if self.brush_on
+                    else ("笔" if mode == "tight" else "画笔")))
+            except Exception:
+                pass
         for w, _opt in self._big_items:
             try:
                 w.pack_forget()
@@ -4929,6 +4959,318 @@ class QPEApp(_BASE):
             else:
                 w.pack(side="left", padx=px(3), pady=px(11))
         _boot_log("bigscreen bar: %s width %d" % (mode, width))
+
+    # ------------------------------------------------------------ 画笔
+
+    def _build_brush_palette(self):
+        """大屏版画笔工具条：贴在画布底部居中，不占用底栏空间。"""
+        if not BIGSCREEN:
+            return
+        p = tk.Frame(self.canvas, bg=DEEP2_BG, bd=0,
+                     highlightthickness=max(1, px(1)),
+                     highlightbackground=CARD_LINE)
+        self.brush_palette = p
+        row = tk.Frame(p, bg=DEEP2_BG)
+        row.pack(padx=px(8), pady=px(6))
+        tk.Label(row, text="画笔", font=self.ui_font_b, bg=DEEP2_BG,
+                 fg=FG_HI).pack(side="left", padx=(0, px(6)))
+
+        colors = (("红", "#ff4d4f", "#ffffff"), ("黄", "#ffd666", "#1a1a1a"),
+                  ("绿", "#52c41a", "#ffffff"), ("青", "#40c4ff", "#102030"),
+                  ("白", "#ffffff", "#111111"), ("黑", "#111111", "#ffffff"))
+        for name, color, fg in colors:
+            b = tk.Button(
+                row, text=name, command=lambda c=color: self._set_brush_color(c),
+                font=self.ui_font_s, bg=color, fg=fg, activebackground=color,
+                activeforeground=fg, relief="flat", bd=0,
+                highlightthickness=max(1, px(2)),
+                highlightbackground=DEEP2_BG, padx=px(2), pady=px(1),
+                width=2, cursor="hand2", takefocus=0)
+            b.pack(side="left", padx=px(1))
+            self.brush_color_btns.append((b, color))
+
+        def sep():
+            tk.Frame(row, bg=CARD_LINE, width=max(1, px(1)),
+                     height=px(22)).pack(side="left", padx=px(7), pady=px(2))
+
+        sep()
+        tk.Label(row, text="粗细", font=self.ui_font_s, bg=DEEP2_BG,
+                 fg=FG_DIM).pack(side="left", padx=(0, px(3)))
+        tk.Button(row, text="−", command=lambda: self._brush_size_by(-2),
+                  font=self.ui_font_s, bg=BTN_BG, fg=FG,
+                  activebackground=BAR_HOVER, activeforeground=FG_HI,
+                  relief="flat", bd=0, highlightthickness=0, padx=px(5),
+                  pady=0, cursor="hand2", takefocus=0).pack(side="left")
+        self.brush_size_lbl = tk.Label(
+            row, text="4 px", font=self.mono_font, bg=DEEP2_BG, fg=FG,
+            width=5, anchor="center")
+        self.brush_size_lbl.pack(side="left", padx=px(2))
+        tk.Button(row, text="+", command=lambda: self._brush_size_by(2),
+                  font=self.ui_font_s, bg=BTN_BG, fg=FG,
+                  activebackground=BAR_HOVER, activeforeground=FG_HI,
+                  relief="flat", bd=0, highlightthickness=0, padx=px(5),
+                  pady=0, cursor="hand2", takefocus=0).pack(side="left")
+
+        sep()
+        self.brush_eraser_btn = tk.Button(
+            row, text="橡皮", command=self._toggle_brush_eraser,
+            font=self.ui_font_s, bg=BTN_BG, fg=FG,
+            activebackground=BAR_HOVER, activeforeground=FG_HI,
+            relief="flat", bd=0, highlightthickness=0, padx=px(7), pady=0,
+            cursor="hand2", takefocus=0)
+        self.brush_eraser_btn.pack(side="left")
+        self.brush_undo_btn = tk.Button(
+            row, text="撤销", command=self._brush_undo_action,
+            font=self.ui_font_s, bg=BTN_BG, fg=FG,
+            activebackground=BAR_HOVER, activeforeground=FG_HI,
+            relief="flat", bd=0, highlightthickness=0, padx=px(8), pady=0,
+            cursor="hand2", takefocus=0)
+        self.brush_undo_btn.pack(side="left", padx=px(3))
+        self.brush_clear_btn = tk.Button(
+            row, text="清空", command=self._brush_clear,
+            font=self.ui_font_s, bg=BTN_BG, fg=FG,
+            activebackground=BAR_HOVER, activeforeground=FG_HI,
+            relief="flat", bd=0, highlightthickness=0, padx=px(8), pady=0,
+            cursor="hand2", takefocus=0)
+        self.brush_clear_btn.pack(side="left")
+
+        tk.Label(row, text="拖动标注", font=self.ui_font_s, bg=DEEP2_BG,
+                 fg=FG_DIM).pack(side="left", padx=(px(9), 0))
+
+        p.place(relx=0.5, rely=1.0, anchor="s", y=-px(8))
+        p.place_forget()
+        p.lift()
+        self._sync_brush_palette()
+
+    def _brush_button_label(self):
+        if self.brush_on:
+            return "完成"
+        return "笔" if getattr(self, "_big_mode", None) == "tight" else "画笔"
+
+    def _sync_brush_palette(self):
+        for b, color in getattr(self, "brush_color_btns", []):
+            selected = color == self.brush_color and not self.brush_eraser
+            try:
+                b.configure(
+                    highlightbackground=(ACCENT if selected else DEEP2_BG),
+                    highlightthickness=max(1, px(3 if selected else 2)))
+            except Exception:
+                pass
+        eb = getattr(self, "brush_eraser_btn", None)
+        if eb is not None:
+            try:
+                eb.configure(bg=ACCENT if self.brush_eraser else BTN_BG,
+                             fg=ON_BG if self.brush_eraser else FG)
+            except Exception:
+                pass
+        if self.brush_size_lbl is not None:
+            try:
+                self.brush_size_lbl.configure(
+                    text="%d px" % int(round(self.brush_size)))
+            except Exception:
+                pass
+        for b, enabled in ((getattr(self, "brush_undo_btn", None),
+                            bool(self.brush_undo)),
+                           (getattr(self, "brush_clear_btn", None),
+                            bool(self.brush_strokes))):
+            if b is None:
+                continue
+            try:
+                b.configure(state="normal" if enabled else "disabled")
+            except Exception:
+                pass
+        btn = getattr(self, "_big_brush_btn", None)
+        if btn is not None:
+            try:
+                btn.configure(text=_tr(self._brush_button_label()))
+            except Exception:
+                pass
+        p = getattr(self, "brush_palette", None)
+        if p is None:
+            return
+        try:
+            if self.brush_on:
+                p.place(relx=0.5, rely=1.0, anchor="s", y=-px(8))
+                p.lift()
+            else:
+                p.place_forget()
+        except Exception:
+            pass
+
+    def toggle_brush(self):
+        if self.doc is None:
+            self._flash("先打开一张图片")
+            return
+        self.brush_on = not self.brush_on
+        self.brush_current = None
+        self.brush_erasing = False
+        self.drag = None
+        if self.brush_on:
+            self.brush_eraser = False
+            self._flash("画笔已开启：拖动标注 · 点「完成」退出")
+        else:
+            self._flash("画笔已关闭")
+        self._sync_brush_palette()
+        self._draw_brush()
+        self._update_cursor()
+
+    def _set_brush_color(self, color):
+        self.brush_color = color
+        self.brush_eraser = False
+        self._sync_brush_palette()
+        self._update_cursor()
+
+    def _brush_size_by(self, delta):
+        self.brush_size = max(1.0, min(32.0, self.brush_size + float(delta)))
+        self._sync_brush_palette()
+
+    def _toggle_brush_eraser(self):
+        self.brush_eraser = not self.brush_eraser
+        self.brush_current = None
+        self.brush_erasing = False
+        self._sync_brush_palette()
+        self._update_cursor()
+
+    def _brush_push_undo(self):
+        self.brush_undo.append([
+            {"color": s["color"], "size": s["size"],
+             "points": list(s["points"])}
+            for s in self.brush_strokes])
+        if len(self.brush_undo) > 40:
+            self.brush_undo.pop(0)
+
+    def _brush_undo_action(self):
+        if not self.brush_undo:
+            return
+        self.brush_strokes = self.brush_undo.pop()
+        self.brush_current = None
+        self._draw_brush()
+        self._sync_brush_palette()
+
+    def _brush_clear(self):
+        if not self.brush_strokes and self.brush_current is None:
+            return
+        self._brush_push_undo()
+        self.brush_strokes = []
+        self.brush_current = None
+        self._draw_brush()
+        self._sync_brush_palette()
+
+    def _brush_clamp(self, x, y):
+        im = self._view_image()
+        if im is None:
+            return 0.0, 0.0
+        ix, iy = self._canvas_to_image(x, y)
+        return (max(0.0, min(float(im.size[0] - 1), ix)),
+                max(0.0, min(float(im.size[1] - 1), iy)))
+
+    def _brush_inside(self, x, y):
+        im = self._view_image()
+        if im is None:
+            return False
+        ix, iy = self._canvas_to_image(x, y)
+        return 0 <= ix <= float(im.size[0] - 1) and 0 <= iy <= float(
+            im.size[1] - 1)
+
+    def _brush_press(self, event):
+        # 图像外起笔不生成贴边痕迹；拖动时仍钳制到图像边界。
+        if not self._brush_inside(event.x, event.y):
+            return
+        if self.brush_eraser:
+            self.brush_erasing = True
+            self._brush_erase_at(event.x, event.y)
+            return
+        self._brush_push_undo()
+        ix, iy = self._brush_clamp(event.x, event.y)
+        self.brush_current = {
+            "color": self.brush_color, "size": self.brush_size,
+            "points": [(ix, iy)]}
+        self._draw_brush()
+
+    def _brush_drag(self, event):
+        if self.brush_eraser:
+            if getattr(self, "brush_erasing", False):
+                self._brush_erase_at(event.x, event.y)
+            return
+        cur = self.brush_current
+        if cur is None:
+            return
+        ix, iy = self._brush_clamp(event.x, event.y)
+        lx, ly = cur["points"][-1]
+        step = max(1.0, px(2) / max(self.scale, 1e-6))
+        if abs(ix - lx) + abs(iy - ly) < step:
+            return
+        cur["points"].append((ix, iy))
+        self._draw_brush()
+
+    def _brush_release(self, _event=None):
+        if getattr(self, "brush_erasing", False):
+            self.brush_erasing = False
+            return
+        cur = self.brush_current
+        if cur is None:
+            return
+        # 单击也保留一个点，画布上会显示成圆点。
+        if cur["points"]:
+            self.brush_strokes.append(cur)
+        self.brush_current = None
+        self._draw_brush()
+        self._sync_brush_palette()
+
+    def _brush_erase_at(self, x, y):
+        if not self.brush_strokes:
+            return
+        ix, iy = self._canvas_to_image(x, y)
+        r = px(14) / max(self.scale, 1e-6)
+        r2 = r * r
+        hit = []
+        for s in self.brush_strokes:
+            for px_, py_ in s["points"]:
+                if (px_ - ix) ** 2 + (py_ - iy) ** 2 <= r2:
+                    hit.append(id(s))
+                    break
+        if not hit:
+            return
+        self._brush_push_undo()
+        drop = set(hit)
+        self.brush_strokes = [s for s in self.brush_strokes if id(s) not in drop]
+        self._draw_brush()
+        self._sync_brush_palette()
+
+    def _draw_brush(self):
+        c = getattr(self, "canvas", None)
+        if c is None:
+            return
+        for it in self.brush_items:
+            try:
+                c.delete(it)
+            except Exception:
+                pass
+        self.brush_items = []
+        if self.doc is None or not (self.brush_strokes or self.brush_current):
+            return
+        s = max(self.scale, 1e-6)
+        strokes = list(self.brush_strokes)
+        if self.brush_current is not None:
+            strokes.append(self.brush_current)
+        for stroke in strokes:
+            pts = []
+            for ix, iy in stroke["points"]:
+                x, y = self._image_to_canvas(ix, iy)
+                pts.extend((x, y))
+            if not pts:
+                continue
+            w = max(1.0, float(stroke["size"]) * s)
+            if len(stroke["points"]) == 1:
+                self.brush_items.append(c.create_oval(
+                    pts[0] - w / 2.0, pts[1] - w / 2.0,
+                    pts[0] + w / 2.0, pts[1] + w / 2.0,
+                    fill=stroke["color"], outline=""))
+            else:
+                self.brush_items.append(c.create_line(
+                    *pts, fill=stroke["color"], width=max(1, int(round(w))),
+                    smooth=True, splinesteps=10, capstyle="round",
+                    joinstyle="round"))
 
     def _build_bar(self):
         """构建（或在切换语言后重建）工具条。"""
@@ -5069,8 +5411,20 @@ class QPEApp(_BASE):
         self.canvas.bind("<Shift-MouseWheel>", self._on_wheel_h)
         self.canvas.bind("<Button-4>", lambda e: self._wheel_steps(1, e.x, e.y))
         self.canvas.bind("<Button-5>", lambda e: self._wheel_steps(-1, e.x, e.y))
+        # 触控板双指捏合在 Tk 里通常表现为 Ctrl+滚轮；macOS 还会发 Magnify。
+        if BIGSCREEN:
+            self.canvas.bind("<Control-MouseWheel>", self._on_pinch)
+            self.canvas.bind("<Control-Button-4>",
+                             lambda e: self._pinch_steps(1, e.x, e.y))
+            self.canvas.bind("<Control-Button-5>",
+                             lambda e: self._pinch_steps(-1, e.x, e.y))
+            try:
+                self.canvas.bind("<Magnify>", self._on_magnify)
+            except Exception:
+                pass
         self.canvas.bind("<Motion>", self._on_motion)
 
+        self._build_brush_palette()
         self._build_cropbar()
         # 面板默认隐藏，首次打开时才构建（启动省 60 ms 左右）
         self._apply_lang()
@@ -6797,6 +7151,21 @@ class QPEApp(_BASE):
         self.local_sel = -1
         self.local_mode = None
         self.local_drag = None
+        # 换图时清掉上一张的笔迹，避免把标注带到下一张。
+        self.brush_strokes = []
+        self.brush_current = None
+        self.brush_undo = []
+        self.brush_erasing = False
+        for it in getattr(self, "brush_items", []):
+            try:
+                self.canvas.delete(it)
+            except Exception:
+                pass
+        self.brush_items = []
+        if self.brush_on:
+            self.brush_on = False
+        if getattr(self, "brush_palette", None) is not None:
+            self._sync_brush_palette()
         self.picker_mode = False
         self.geom_key = None
         self.tile_cache.clear()
@@ -6927,6 +7296,31 @@ class QPEApp(_BASE):
             return
         self._set_scale(self.scale * (1.2 ** steps), (x, y))
 
+    def _on_pinch(self, event):
+        """触控板双指捏合：Windows/Linux 一般映射为 Ctrl+滚轮。"""
+        if self.doc is None:
+            return "break"
+        self._pinch_steps(wheel_units(event.delta), event.x, event.y)
+        return "break"
+
+    def _pinch_steps(self, steps, x, y):
+        if self.doc is None or not steps:
+            return
+        steps = max(-4.0, min(4.0, float(steps)))
+        self._set_scale(self.scale * (1.18 ** steps), (x, y))
+
+    def _on_magnify(self, event):
+        """macOS 触控板捏合事件（Tk 8.6 的 <Magnify>）。"""
+        if self.doc is None:
+            return "break"
+        d = float(getattr(event, "delta", 0) or 0)
+        if abs(d) > 2.0:
+            d /= 100.0
+        factor = max(0.75, min(1.35, 1.0 + d))
+        self._set_scale(self.scale * factor,
+                        (getattr(event, "x", 0), getattr(event, "y", 0)))
+        return "break"
+
     def _hit_handle(self, x, y):
         """选中滤镜的五个手柄：中心=移动，左右=改 rx，上下=改 ry。"""
         if not (0 <= self.local_sel < len(self.locals)):
@@ -6947,6 +7341,9 @@ class QPEApp(_BASE):
         return None
 
     def _on_press(self, event):
+        if self.brush_on and self.doc is not None:
+            self._brush_press(event)
+            return
         if self.split_x is not None and not self.crop_mode:
             cw = max(1, self.canvas.winfo_width())
             if abs(event.x - cw * self.split_x) <= px(9):
@@ -7000,6 +7397,9 @@ class QPEApp(_BASE):
         self.drag = (event.x, event.y, self.cx, self.cy)
 
     def _on_drag(self, event):
+        if self.brush_on and self.doc is not None:
+            self._brush_drag(event)
+            return
         if self.split_drag:
             cw = max(1, self.canvas.winfo_width())
             self.split_x = max(0.02, min(0.98, event.x / float(cw)))
@@ -7094,6 +7494,9 @@ class QPEApp(_BASE):
         self.canvas.configure(cursor="fleur")
 
     def _on_release(self, event):
+        if self.brush_on and self.doc is not None:
+            self._brush_release(event)
+            return
         if self.split_drag:
             self.split_drag = False
             self._flush_render()
@@ -7131,7 +7534,7 @@ class QPEApp(_BASE):
 
     def _on_double(self, event):
         self.drag = None
-        if self.doc is None:
+        if self.brush_on or self.doc is None:
             return
         if abs(self.scale - 1.0) > 1e-6:
             self._set_scale(1.0, (event.x, event.y))
@@ -7217,6 +7620,9 @@ class QPEApp(_BASE):
         self._do_sample()
 
     def _update_cursor(self):
+        if self.brush_on:
+            self.canvas.configure(cursor="crosshair")
+            return
         if self.crop_mode or self.picker_mode or self.local_mode:
             self.canvas.configure(cursor="crosshair")
             return
@@ -7816,6 +8222,7 @@ class QPEApp(_BASE):
         elif self.crop_item is not None:
             self.canvas.tag_raise(self.crop_item)
         self._draw_locals()
+        self._draw_brush()
         self._draw_slide_label()
         self._draw_hint()
         self._update_cursor()
@@ -14927,6 +15334,11 @@ def _gps_deg(coord, ref):
 def _boot_fail(exc_type, exc, tb):
     text = "".join(traceback.format_exception(exc_type, exc, tb))
     _boot_log("FATAL\n" + text)
+    # 只在真正的 Prism 进程里弹窗。测试脚本 import 本模块后也会继承
+    # excepthook；若测试自己抛异常（例如 Windows GBK 控制台打印箭头），
+    # 再弹「Prism 启动失败」会误导用户，也会把命令行测试卡在模态框上。
+    if not (getattr(sys, "frozen", False) or __name__ == "__main__"):
+        return
     try:
         import tkinter.messagebox as _mb
         _mb.showerror(
@@ -14937,7 +15349,8 @@ def _boot_fail(exc_type, exc, tb):
         pass
 
 
-sys.excepthook = _boot_fail
+if getattr(sys, "frozen", False) or __name__ == "__main__":
+    sys.excepthook = _boot_fail
 
 
 def main(argv=None):

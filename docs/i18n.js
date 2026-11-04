@@ -328,7 +328,19 @@ window.PRISM_I18N = {
 "先显示窗口再加载拖放；tkdnd 加载失败只关拖放，不拖垮启动；窗口按工作区收缩，1366×768 与 125%/150% 缩放不再裁掉底部按钮": "The window appears before drag and drop loads; a tkdnd failure only disables dropping, never startup; windows fit the work area, so 1366×768 at 125%/150% scaling no longer clips bottom controls",
 "9.15.11 修复 Windows 10 兼容性：拖放加载失败不再拖垮窗口，1366×768 与 125%/150% 缩放不再裁掉底部按钮。": "9.15.11 fixes Windows 10 compatibility: a failed drag-and-drop load no longer blocks the window, and 1366×768 at 125%/150% scaling no longer clips bottom controls.",
 "4. Windows 10 打不开：先试便携版 zip；仍无窗口时运行 Prism.exe --safe-mode，日志在 %TEMP%\\prism_boot.log。": "4. Windows 10 won't open: try the portable zip first; if the window still doesn't appear, run Prism.exe --safe-mode and check %TEMP%\\prism_boot.log.",
-"拖入打开": "Drag to open"
+"拖入打开": "Drag to open",
+"纯看图、无快捷键、工具栏在底部。新增双指缩放与画笔标注；所有操作都用大按钮完成，适合展厅、会议室、触摸大屏和长时间展示。": "Viewer only, no shortcuts, bottom toolbar. New two-finger zoom and brush annotation; every action is a large button, built for showrooms, meeting rooms, touch screens and long-running displays.",
+"打开、文件夹、翻页、适应、1:1、缩放、旋转、幻灯片、网格、画笔、全屏、退出；没有修图面板。": "Open, folder, page, fit, 1:1, zoom, rotate, slideshow, grid, brush, full screen, exit; no editing panel.",
+"双指缩放": "Two-finger zoom",
+"触控板双指捏合 / Ctrl+滚轮以指针为中心缩放；单指拖动平移；macOS 支持原生捏合": "Pinch on a trackpad or Ctrl+wheel zooms around the pointer; drag with one finger to pan; native pinch on macOS",
+"画笔标注": "Brush annotation",
+"底栏「画笔」进入；6 色、1–32 px、橡皮、撤销、清空；笔迹跟随缩放平移，换图自动清空": "Open Brush in the bottom bar; 6 colors, 1–32 px, eraser, undo, clear; strokes follow zoom and pan and clear on image change",
+"大屏手势": "Large-screen gestures",
+"大屏版支持双指捏合 / Ctrl+滚轮缩放与单指平移，触摸屏和触控板演示更顺手；macOS 额外支持原生捏合": "The large-screen edition supports pinch / Ctrl+wheel zoom and one-finger pan for touch screens and trackpads; macOS also gets native pinch",
+"大屏画笔": "Large-screen brush",
+"底栏一键进入标注：6 色、粗细、橡皮、撤销、清空；笔迹按图像坐标贴在原处，换图自动清空": "One tap in the bottom bar opens annotation: 6 colors, size, eraser, undo, clear; strokes stay pinned to the image and clear on image change",
+"9.16.0 为大屏版加入双指缩放与画笔标注：触控板捏合以指针为中心缩放，底栏一键进入 6 色画笔；笔迹跟随图片缩放平移，换图自动清空。": "9.16.0 adds two-finger zoom and brush annotation to the large-screen edition: pinch zooms around the pointer, and the bottom bar opens a 6-color brush; strokes follow zoom and pan and clear when the image changes.",
+"大屏版也是纯看图，但工具栏在底部、按钮更大、支持双指缩放与画笔标注、没有应用快捷键，启动即最大化；适合展厅、会议室、触摸屏和长时间展示。看图版保留顶部工具栏与快捷键，适合日常桌面使用。": "The large-screen edition is also viewer-only, but with a bottom toolbar, bigger buttons, two-finger zoom and brush annotation, no app shortcuts and a maximized start; it suits showrooms, meeting rooms, touch screens and long-running displays. The viewer keeps the top toolbar and shortcuts for everyday desktop use."
 },
 "ja": {
 "Prism — 简约图片查看器": "Prism — ミニマルな画像ビューア",
@@ -658,7 +670,19 @@ window.PRISM_I18N = {
 "先显示窗口再加载拖放；tkdnd 加载失败只关拖放，不拖垮启动；窗口按工作区收缩，1366×768 与 125%/150% 缩放不再裁掉底部按钮": "ウィンドウを先に表示してからドラッグ＆ドロップを読み込みます。tkdnd の読み込みに失敗してもドロップだけを無効化し、起動は止めません。ウィンドウは作業領域に収まるため、1366×768・125%/150% 拡大でも下部ボタンが切れません",
 "9.15.11 修复 Windows 10 兼容性：拖放加载失败不再拖垮窗口，1366×768 与 125%/150% 缩放不再裁掉底部按钮。": "9.15.11 は Windows 10 互換性を修正：ドラッグ＆ドロップの読み込み失敗でもウィンドウを表示し、1366×768・125%/150% 拡大でも下部ボタンを切らない。",
 "4. Windows 10 打不开：先试便携版 zip；仍无窗口时运行 Prism.exe --safe-mode，日志在 %TEMP%\\prism_boot.log。": "4. Windows 10 で開かない場合：まずポータブル版 zip を試し、それでもウィンドウが出ないときは Prism.exe --safe-mode を実行して %TEMP%\\prism_boot.log を確認してください。",
-"拖入打开": "ドラッグで開く"
+"拖入打开": "ドラッグで開く",
+"纯看图、无快捷键、工具栏在底部。新增双指缩放与画笔标注；所有操作都用大按钮完成，适合展厅、会议室、触摸大屏和长时间展示。": "閲覧専用・ショートカットなし・ツールバーは下部。二本指ズームとブラシ注釈を追加。すべて大きなボタンで操作でき、展示場・会議室・タッチ画面・長時間表示に適します。",
+"打开、文件夹、翻页、适应、1:1、缩放、旋转、幻灯片、网格、画笔、全屏、退出；没有修图面板。": "開く・フォルダー・ページ送り・フィット・1:1・ズーム・回転・スライドショー・グリッド・ブラシ・全画面・終了。編集パネルはありません。",
+"双指缩放": "二本指ズーム",
+"触控板双指捏合 / Ctrl+滚轮以指针为中心缩放；单指拖动平移；macOS 支持原生捏合": "トラックパッドのピンチまたは Ctrl+ホイールでポインター中心にズーム。1 本指ドラッグで移動。macOS はネイティブのピンチに対応",
+"画笔标注": "ブラシ注釈",
+"底栏「画笔」进入；6 色、1–32 px、橡皮、撤销、清空；笔迹跟随缩放平移，换图自动清空": "下部バーの「ブラシ」から開始。6 色・1～32 px・消しゴム・元に戻す・クリア。線はズーム・移動に追従し、画像を変えると自動で消去",
+"大屏手势": "大画面ジェスチャー",
+"大屏版支持双指捏合 / Ctrl+滚轮缩放与单指平移，触摸屏和触控板演示更顺手；macOS 额外支持原生捏合": "大画面版はピンチ / Ctrl+ホイールのズームと 1 本指の移動に対応。タッチ画面・トラックパッドでの演示が快適。macOS はネイティブのピンチにも対応",
+"大屏画笔": "大画面ブラシ",
+"底栏一键进入标注：6 色、粗细、橡皮、撤销、清空；笔迹按图像坐标贴在原处，换图自动清空": "下部バーのワンタップで注釈。6 色・太さ・消しゴム・元に戻す・クリア。線は画像座標に固定され、画像を変えると自動で消去",
+"9.16.0 为大屏版加入双指缩放与画笔标注：触控板捏合以指针为中心缩放，底栏一键进入 6 色画笔；笔迹跟随图片缩放平移，换图自动清空。": "9.16.0 は大画面版に二本指ズームとブラシ注釈を追加。ピンチでポインター中心にズームし、下部バーから 6 色ブラシを開けます。線はズーム・移動に追従し、画像を変えると自動で消去。",
+"大屏版也是纯看图，但工具栏在底部、按钮更大、支持双指缩放与画笔标注、没有应用快捷键，启动即最大化；适合展厅、会议室、触摸屏和长时间展示。看图版保留顶部工具栏与快捷键，适合日常桌面使用。": "大画面版も閲覧専用ですが、ツールバーは下部・ボタンはより大きく・二本指ズームとブラシ注釈に対応・アプリのショートカットなし・起動時に最大化。展示場・会議室・タッチ画面・長時間表示向けです。ビューアは上部ツールバーとショートカットを残し、日常のデスクトップ向けです。"
 }
 };
 window.PRISM_LANGS = [["zh", "中文"], ["en", "EN"], ["ja", "日本語"]];

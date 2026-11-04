@@ -6,9 +6,19 @@ import shutil
 import sys
 import tempfile
 import time
+from types import SimpleNamespace
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 FAIL = []
+
+# Windows 默认 GBK 控制台无法编码底栏的 ◀/▶；测试脚本被 Prism 的
+# excepthook 捕获时还会误报成「启动失败」。这里只降级无法编码的字符，
+# 保留中文和正常输出。
+for _stream in (sys.stdout, sys.stderr):
+    try:
+        _stream.reconfigure(errors="backslashreplace")
+    except Exception:
+        pass
 
 
 def ok(name, cond, detail=""):
@@ -55,6 +65,70 @@ def main():
             if app.doc is not None:
                 break
         ok("大屏能打开图片", app.doc is not None and app.doc.size == (800, 600))
+        ok("底栏有画笔", "画笔" in texts, str(texts[:9]))
+        ok("画笔工具条已建", app.brush_palette is not None)
+        app.toggle_brush()
+        app.update()
+        ok("画笔开启", app.brush_on and app.brush_palette.winfo_ismapped())
+        pb = app.brush_palette
+        canvas_bottom = app.canvas.winfo_rooty() + app.canvas.winfo_height()
+        ok("画笔工具条在底部",
+           abs(pb.winfo_rooty() + pb.winfo_height() - canvas_bottom) <= 16,
+           "%d/%d" % (pb.winfo_rooty() + pb.winfo_height(), canvas_bottom))
+        ok("画笔工具条不挡状态栏",
+           pb.winfo_rooty() + pb.winfo_height() <= app.status.winfo_rooty() + 2)
+        app._on_press(SimpleNamespace(x=2, y=2))
+        app._on_drag(SimpleNamespace(x=20, y=20))
+        app._on_release(SimpleNamespace(x=20, y=20))
+        ok("图像外不起笔", not app.brush_strokes and not app.brush_items)
+        im = app._view_image()
+        bx, by = app._image_to_canvas(im.size[0] * 0.45, im.size[1] * 0.55)
+        app._on_press(SimpleNamespace(x=bx, y=by))
+        app._on_drag(SimpleNamespace(x=bx + 40, y=by + 25))
+        app._on_release(SimpleNamespace(x=bx + 40, y=by + 25))
+        ok("画笔落笔", len(app.brush_strokes) == 1 and bool(app.brush_items))
+        app._brush_undo_action()
+        ok("画笔撤销", not app.brush_strokes and not app.brush_items)
+        app._set_brush_color("#ffd666")
+        app._brush_size_by(2)
+        bx, by = app._image_to_canvas(im.size[0] * 0.55, im.size[1] * 0.45)
+        app._on_press(SimpleNamespace(x=bx, y=by))
+        app._on_drag(SimpleNamespace(x=bx + 40, y=by + 25))
+        app._on_release(SimpleNamespace(x=bx + 40, y=by + 25))
+        ok("画笔颜色/粗细", len(app.brush_strokes) == 1
+           and app.brush_strokes[0]["color"] == "#ffd666")
+        s0 = app.scale
+        app._on_pinch(SimpleNamespace(delta=120, x=400, y=300))
+        ok("双指捏合放大", app.scale > s0, "%.3f -> %.3f" % (s0, app.scale))
+
+        p2 = os.path.join(tmp, "b.jpg")
+        Image.new("RGB", (640, 480), (160, 90, 60)).save(p2)
+        app.open_files([p, p2])
+        for _ in range(100):
+            app.update()
+            time.sleep(0.01)
+            if app.doc is not None and app.index == 0:
+                break
+        app.goto(1)
+        for _ in range(100):
+            app.update()
+            time.sleep(0.01)
+            if app.index == 1 and app.doc is not None:
+                break
+        ok("换图清空画笔", app.index == 1 and not app.brush_on
+           and not app.brush_strokes
+           and not app.brush_palette.winfo_ismapped())
+        app.geometry("1366x768")
+        for _ in range(30):
+            app.update()
+            time.sleep(0.01)
+        app._layout_bigscreen_bar()
+        app.update()
+        right = max((w.winfo_x() + w.winfo_width())
+                    for w in app.bar.winfo_children())
+        ok("1366 底栏不溢出", right <= app.bar.winfo_width() + 2,
+           "%d/%d %s" % (right, app.bar.winfo_width(), app._big_mode))
+        ok("1366 显示画笔", app._big_brush_btn.winfo_ismapped())
         app.toggle_panel(True)
         ok("大屏没有修图面板", app.panel is None)
     finally:

@@ -16,7 +16,7 @@ FAIL = []
 # 保留中文和正常输出。
 for _stream in (sys.stdout, sys.stderr):
     try:
-        _stream.reconfigure(errors="backslashreplace")
+        _stream.reconfigure(encoding="utf-8", errors="backslashreplace")
     except Exception:
         pass
 
@@ -55,6 +55,13 @@ def main():
             ok("底栏按钮 " + label, label in texts, str(texts[:6]))
         ok("无 F5 快捷键", not app.bind("<F5>"))
         ok("无 Ctrl+O 快捷键", not app.bind("<Control-o>"))
+        _l, _t, aw, ah = mod._work_area()
+        ok("大屏窗口不出屏",
+           app.winfo_x() >= _l and app.winfo_y() >= _t
+           and app.winfo_x() + app.winfo_width() <= _l + aw
+           and app.winfo_y() + app.winfo_height() <= _t + ah,
+           "%dx%d+%d+%d / %dx%d" % (app.winfo_width(), app.winfo_height(),
+                                    app.winfo_x(), app.winfo_y(), aw, ah))
 
         p = os.path.join(tmp, "a.jpg")
         Image.new("RGB", (800, 600), (90, 120, 160)).save(p)
@@ -97,6 +104,51 @@ def main():
         app._on_release(SimpleNamespace(x=bx + 40, y=by + 25))
         ok("画笔颜色/粗细", len(app.brush_strokes) == 1
            and app.brush_strokes[0]["color"] == "#ffd666")
+        sizes = [s for _sc, s, _dot in app.brush_size_btns]
+        ok("画笔三档", sizes == [4, 10, 20], str(sizes))
+        app.brush_size_btns[-1][0].event_generate("<Button-1>", x=2, y=2)
+        app.update()
+        ok("点击三档按钮", abs(app.brush_size - 20) < 0.01,
+           "%.0f" % app.brush_size)
+
+        # 区域橡皮：画一条横线，在中间擦一刀，应断成两条而不是整条消失。
+        app._brush_clear()
+        app.brush_undo = []
+        app._set_brush_size(10)
+        if app.brush_eraser:
+            app._toggle_brush_eraser()
+        im = app._view_image()
+        x0, y0 = app._image_to_canvas(im.size[0] * 0.25, im.size[1] * 0.5)
+        x1, y1 = app._image_to_canvas(im.size[0] * 0.75, im.size[1] * 0.5)
+        app._on_press(SimpleNamespace(x=x0, y=y0))
+        for i in range(1, 11):
+            app._on_drag(SimpleNamespace(
+                x=x0 + (x1 - x0) * i / 10.0,
+                y=y0 + (y1 - y0) * i / 10.0))
+        app._on_release(SimpleNamespace(x=x1, y=y1))
+        n_points = len(app.brush_strokes[0]["points"]) if app.brush_strokes else 0
+        ok("区域橡皮准备", len(app.brush_strokes) == 1 and n_points >= 5,
+           "%d 点" % n_points)
+        app._toggle_brush_eraser()
+        mx, my = (x0 + x1) / 2.0, (y0 + y1) / 2.0
+        app._on_motion(SimpleNamespace(x=mx, y=my))
+        app.update()
+        ok("橡皮区域显示",
+           app.brush_cursor_item is not None
+           and app.canvas.type(app.brush_cursor_item) == "oval")
+        undo_before = len(app.brush_undo)
+        app._on_press(SimpleNamespace(x=mx, y=my))
+        ok("区域擦除断开笔迹", len(app.brush_strokes) == 2,
+           "%d 段" % len(app.brush_strokes))
+        app._on_release(SimpleNamespace(x=mx, y=my))
+        ok("区域擦除一次撤销", len(app.brush_undo) == undo_before + 1,
+           "%d -> %d" % (undo_before, len(app.brush_undo)))
+        app._brush_undo_action()
+        ok("区域擦除可撤销",
+           len(app.brush_strokes) == 1
+           and len(app.brush_strokes[0]["points"]) == n_points)
+        if app.brush_eraser:
+            app._toggle_brush_eraser()
         s0 = app.scale
         app._on_pinch(SimpleNamespace(delta=120, x=400, y=300))
         ok("双指捏合放大", app.scale > s0, "%.3f -> %.3f" % (s0, app.scale))

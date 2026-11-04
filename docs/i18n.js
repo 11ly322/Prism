@@ -329,18 +329,22 @@ window.PRISM_I18N = {
 "9.15.11 修复 Windows 10 兼容性：拖放加载失败不再拖垮窗口，1366×768 与 125%/150% 缩放不再裁掉底部按钮。": "9.15.11 fixes Windows 10 compatibility: a failed drag-and-drop load no longer blocks the window, and 1366×768 at 125%/150% scaling no longer clips bottom controls.",
 "4. Windows 10 打不开：先试便携版 zip；仍无窗口时运行 Prism.exe --safe-mode，日志在 %TEMP%\\prism_boot.log。": "4. Windows 10 won't open: try the portable zip first; if the window still doesn't appear, run Prism.exe --safe-mode and check %TEMP%\\prism_boot.log.",
 "拖入打开": "Drag to open",
-"纯看图、无快捷键、工具栏在底部。新增双指缩放与画笔标注；所有操作都用大按钮完成，适合展厅、会议室、触摸大屏和长时间展示。": "Viewer only, no shortcuts, bottom toolbar. New two-finger zoom and brush annotation; every action is a large button, built for showrooms, meeting rooms, touch screens and long-running displays.",
+"纯看图、无快捷键、工具栏在底部。新增双指缩放、三档画笔与区域橡皮；启动时按工作区填满屏幕，底栏「退出」始终在屏内，适合展厅、会议室、触摸大屏和长时间展示。": "Viewer only, no shortcuts, bottom toolbar. New two-finger zoom, three brush sizes and area eraser; the window fills the work area on startup so the bottom bar and Exit stay on screen — built for showrooms, meeting rooms, touch screens and long-running displays.",
 "打开、文件夹、翻页、适应、1:1、缩放、旋转、幻灯片、网格、画笔、全屏、退出；没有修图面板。": "Open, folder, page, fit, 1:1, zoom, rotate, slideshow, grid, brush, full screen, exit; no editing panel.",
 "双指缩放": "Two-finger zoom",
 "触控板双指捏合 / Ctrl+滚轮以指针为中心缩放；单指拖动平移；macOS 支持原生捏合": "Pinch on a trackpad or Ctrl+wheel zooms around the pointer; drag with one finger to pan; native pinch on macOS",
 "画笔标注": "Brush annotation",
-"底栏「画笔」进入；6 色、1–32 px、橡皮、撤销、清空；笔迹跟随缩放平移，换图自动清空": "Open Brush in the bottom bar; 6 colors, 1–32 px, eraser, undo, clear; strokes follow zoom and pan and clear on image change",
+"底栏「画笔」进入；6 色、4/10/20 三档粗细、区域橡皮、撤销、清空；橡皮显示擦除圆环，笔迹跟随缩放平移，换图自动清空": "Open Brush in the bottom bar; 6 colors, 4/10/20 sizes, area eraser, undo, clear; the eraser shows a circular cursor, strokes follow zoom and pan and clear on image change",
 "大屏手势": "Large-screen gestures",
 "大屏版支持双指捏合 / Ctrl+滚轮缩放与单指平移，触摸屏和触控板演示更顺手；macOS 额外支持原生捏合": "The large-screen edition supports pinch / Ctrl+wheel zoom and one-finger pan for touch screens and trackpads; macOS also gets native pinch",
 "大屏画笔": "Large-screen brush",
-"底栏一键进入标注：6 色、粗细、橡皮、撤销、清空；笔迹按图像坐标贴在原处，换图自动清空": "One tap in the bottom bar opens annotation: 6 colors, size, eraser, undo, clear; strokes stay pinned to the image and clear on image change",
-"9.16.0 为大屏版加入双指缩放与画笔标注：触控板捏合以指针为中心缩放，底栏一键进入 6 色画笔；笔迹跟随图片缩放平移，换图自动清空。": "9.16.0 adds two-finger zoom and brush annotation to the large-screen edition: pinch zooms around the pointer, and the bottom bar opens a 6-color brush; strokes follow zoom and pan and clear when the image changes.",
+"底栏一键进入标注：6 色、4/10/20 三档粗细、区域橡皮、撤销、清空；笔迹按图像坐标贴在原处，换图自动清空": "One tap in the bottom bar opens annotation: 6 colors, 4/10/20 sizes, area eraser, undo, clear; strokes stay pinned to the image and clear on image change",
+"9.16.1 修复大屏版「退出」被挤出屏幕的问题，并把画笔粗细改为 4/10/20 三档、橡皮改为带擦除圆环的区域擦除：只删圆内笔迹，圆外两段保留并断开，一次拖动只占一个撤销点。": "9.16.1 fixes the large-screen Exit button being pushed off screen, changes brush size to 4/10/20 presets, and turns the eraser into an area eraser with a visible ring: only points inside the circle are removed, the two outside segments stay separate, and one drag creates a single undo step.",
 "大屏版也是纯看图，但工具栏在底部、按钮更大、支持双指缩放与画笔标注、没有应用快捷键，启动即最大化；适合展厅、会议室、触摸屏和长时间展示。看图版保留顶部工具栏与快捷键，适合日常桌面使用。": "The large-screen edition is also viewer-only, but with a bottom toolbar, bigger buttons, two-finger zoom and brush annotation, no app shortcuts and a maximized start; it suits showrooms, meeting rooms, touch screens and long-running displays. The viewer keeps the top toolbar and shortcuts for everyday desktop use."
+,
+"启动填满工作区": "Fills the work area",
+"按屏幕工作区计算窗口外框，底栏不会被任务栏或屏幕边缘裁掉；全屏由底栏「全屏」按钮切换": "The window frame is calculated from the screen work area so the bottom bar is never clipped by the taskbar or screen edge; Fullscreen is toggled from the bottom bar",
+"大屏版也是纯看图，但工具栏在底部、按钮更大、支持双指缩放、三档画笔与区域橡皮、没有应用快捷键；启动按工作区填满屏幕，底栏不会越界，适合展厅、会议室、触摸屏和长时间展示。看图版保留顶部工具栏与快捷键，适合日常桌面使用。": "The large-screen edition is also viewer-only, but with a bottom toolbar, bigger buttons, two-finger zoom, three brush sizes and an area eraser, no app shortcuts; it fills the work area on startup so the bottom bar stays on screen, suiting showrooms, meeting rooms, touch screens and long-running displays. The viewer keeps the top toolbar and shortcuts for everyday desktop use."
 },
 "ja": {
 "Prism — 简约图片查看器": "Prism — ミニマルな画像ビューア",
@@ -683,6 +687,14 @@ window.PRISM_I18N = {
 "底栏一键进入标注：6 色、粗细、橡皮、撤销、清空；笔迹按图像坐标贴在原处，换图自动清空": "下部バーのワンタップで注釈。6 色・太さ・消しゴム・元に戻す・クリア。線は画像座標に固定され、画像を変えると自動で消去",
 "9.16.0 为大屏版加入双指缩放与画笔标注：触控板捏合以指针为中心缩放，底栏一键进入 6 色画笔；笔迹跟随图片缩放平移，换图自动清空。": "9.16.0 は大画面版に二本指ズームとブラシ注釈を追加。ピンチでポインター中心にズームし、下部バーから 6 色ブラシを開けます。線はズーム・移動に追従し、画像を変えると自動で消去。",
 "大屏版也是纯看图，但工具栏在底部、按钮更大、支持双指缩放与画笔标注、没有应用快捷键，启动即最大化；适合展厅、会议室、触摸屏和长时间展示。看图版保留顶部工具栏与快捷键，适合日常桌面使用。": "大画面版も閲覧専用ですが、ツールバーは下部・ボタンはより大きく・二本指ズームとブラシ注釈に対応・アプリのショートカットなし・起動時に最大化。展示場・会議室・タッチ画面・長時間表示向けです。ビューアは上部ツールバーとショートカットを残し、日常のデスクトップ向けです。"
+,
+"纯看图、无快捷键、工具栏在底部。新增双指缩放、三档画笔与区域橡皮；启动时按工作区填满屏幕，底栏「退出」始终在屏内，适合展厅、会议室、触摸大屏和长时间展示。": "閲覧専用・ショートカットなし・ツールバーは下部。二本指ズーム、3 段階のブラシ、範囲消しゴムを追加。起動時は作業領域いっぱいに表示し、下部バーの「終了」が画面外に出ないため、展示場・会議室・タッチ画面・長時間表示に適します。",
+"底栏「画笔」进入；6 色、4/10/20 三档粗细、区域橡皮、撤销、清空；橡皮显示擦除圆环，笔迹跟随缩放平移，换图自动清空": "下部バーの「ブラシ」から開始。6 色・4/10/20 の 3 段階・範囲消しゴム・元に戻す・クリア。消しゴムは円形カーソルを表示し、線はズーム・移動に追従、画像を変えると自動で消去",
+"底栏一键进入标注：6 色、4/10/20 三档粗细、区域橡皮、撤销、清空；笔迹按图像坐标贴在原处，换图自动清空": "下部バーのワンタップで注釈。6 色・4/10/20 の 3 段階・範囲消しゴム・元に戻す・クリア。線は画像座標に固定され、画像を変えると自動で消去",
+"9.16.1 修复大屏版「退出」被挤出屏幕的问题，并把画笔粗细改为 4/10/20 三档、橡皮改为带擦除圆环的区域擦除：只删圆内笔迹，圆外两段保留并断开，一次拖动只占一个撤销点。": "9.16.1 は大画面版の「終了」が画面外に押し出される問題を修正し、ブラシの太さを 4/10/20 の 3 段階に、消しゴムを円形の範囲消しゴムに変更しました。円内の点だけを削除し、円外の 2 つの区間は分断して残し、1 回のドラッグで元に戻す地点は 1 つだけです。",
+"启动填满工作区": "作業領域いっぱいに起動",
+"按屏幕工作区计算窗口外框，底栏不会被任务栏或屏幕边缘裁掉；全屏由底栏「全屏」按钮切换": "画面の作業領域からウィンドウ外枠を計算し、下部バーがタスクバーや画面端で切れないようにします。全画面は下部バーの「全画面」で切り替え",
+"大屏版也是纯看图，但工具栏在底部、按钮更大、支持双指缩放、三档画笔与区域橡皮、没有应用快捷键；启动按工作区填满屏幕，底栏不会越界，适合展厅、会议室、触摸屏和长时间展示。看图版保留顶部工具栏与快捷键，适合日常桌面使用。": "大画面版も閲覧専用ですが、ツールバーは下部・ボタンはより大きく・二本指ズーム・3 段階ブラシ・範囲消しゴムに対応・アプリのショートカットなし。起動時は作業領域いっぱいに表示され下部バーが画面外に出ないため、展示場・会議室・タッチ画面・長時間表示向けです。ビューアは上部ツールバーとショートカットを残し、日常のデスクトップ向けです。"
 }
 };
 window.PRISM_LANGS = [["zh", "中文"], ["en", "EN"], ["ja", "日本語"]];

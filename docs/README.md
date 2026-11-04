@@ -15,7 +15,7 @@
 
 <div align="center">
 
-![version](https://img.shields.io/badge/version-9.16.0-3d7dff?style=flat-square)
+![version](https://img.shields.io/badge/version-9.16.1-3d7dff?style=flat-square)
 ![platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-2b2f36?style=flat-square)
 ![python](https://img.shields.io/badge/python-3.9%2B-3776ab?style=flat-square&logo=python&logoColor=white)
 ![license](https://img.shields.io/badge/license-MIT-3ddc84?style=flat-square)
@@ -64,7 +64,7 @@ Prism 服务两种场景 ——
 | **主题** | 10 套配色：深色 / 浅色 / 高对比 / 炭橙 / 深海 / 森林 / 玫瑰 / 极夜 / 霓虹 / 暖纸；另有 2px 高对比描边开关，可叠加在任意主题上 |
 | **动效与反馈** | 悬停渐变、按压回弹、点击涟漪和状态过渡都可一键关闭；设置里的开关本身也带缓动；关闭后立即响应、不做动画 |
 | **右侧栏** | 六个分类标签（调整/颜色/细节/效果/预设/工具）；直方图与底栏固定，工具与历史独立分类，面板默认 260px 可拖宽 |
-| **大屏版** | 纯看图 · 底部大按钮 · 双指缩放 · 画笔标注 · 无快捷键 · 无调色面板，装完即用，适合展陈/会议室大屏 |
+| **大屏版** | 纯看图 · 底部大按钮 · 双指缩放 · 三档画笔 · 区域橡皮 · 无快捷键 · 无调色面板，装完即用，适合展陈/会议室大屏 |
 
 ---
 
@@ -72,12 +72,12 @@ Prism 服务两种场景 ——
 
 | 平台 | 文件 | 说明 |
 | :--- | :--- | :--- |
-| Windows | `Prism-Setup-9.16.0.exe` | 安装包 · 含修图面板与插件 · 40.6 MB |
-| Windows | `Prism-Viewer-9.16.0.zip` | 纯看图版 · 便携免安装 · 30.6 MB |
-| Windows | `Prism-BigScreen-Setup-9.16.0.exe` | **大屏版**安装包 · 底栏大按钮 · 双指缩放 · 画笔标注 · 无快捷键 |
-| Windows | `Prism-BigScreen-9.16.0.zip` | 大屏版 · 便携免安装 |
-| macOS | `Prism-macOS-9.16.0.zip` | 源码运行 · 需 Python 3 + Pillow + tkinterdnd2 · 254 KB |
-| Linux | `Prism-Linux-9.16.0.zip` | 源码运行 · 带 `.desktop` · 255 KB |
+| Windows | `Prism-Setup-9.16.1.exe` | 安装包 · 含修图面板与插件 · 40.6 MB |
+| Windows | `Prism-Viewer-9.16.1.zip` | 纯看图版 · 便携免安装 · 30.6 MB |
+| Windows | `Prism-BigScreen-Setup-9.16.1.exe` | **大屏版**安装包 · 底栏大按钮 · 双指缩放 · 画笔标注 · 无快捷键 |
+| Windows | `Prism-BigScreen-9.16.1.zip` | 大屏版 · 便携免安装 |
+| macOS | `Prism-macOS-9.16.1.zip` | 源码运行 · 需 Python 3 + Pillow + tkinterdnd2 · 254 KB |
+| Linux | `Prism-Linux-9.16.1.zip` | 源码运行 · 带 `.desktop` · 255 KB |
 
 > **Windows 10 打不开？** 先试 `Prism-Viewer-*.zip` 便携版：解压后直接运行 `PrismViewer.exe`。
 > 仍然没有窗口时，在命令行运行 `Prism.exe --safe-mode`（跳过拖放）并把
@@ -99,10 +99,11 @@ Prism 服务两种场景 ——
 - 工具栏在**底部**，大按钮、适合触摸/远距离操作。
 - **双指缩放**：触控板双指捏合（Windows/Linux 为 Ctrl+滚轮）以指针为中心缩放；
   macOS 支持触控板原生捏合。单指拖动平移，Shift+滚轮水平移动。
-- **画笔标注**：底栏「画笔」进入标注，画布底部横向工具条提供 6 色、1–32 px 粗细、
-  橡皮、撤销、清空；笔迹跟随图片缩放/平移，换图自动清空。
+- **画笔标注**：底栏「画笔」进入标注，画布底部横向工具条提供 6 色、4/10/20 三档
+  粗细、区域橡皮、撤销、清空；笔迹跟随图片缩放/平移，换图自动清空。橡皮按圆形区域
+  擦除并显示擦除圆环，一次拖动只占一个撤销点。
 - **没有键盘快捷键**；打开、翻页、缩放、旋转、幻灯片、网格、全屏、退出全部点按钮。
-- 启动即最大化；全屏由底栏「全屏」按钮切换，再点一次退出。
+- 启动按工作区填满屏幕，底栏不会越界；全屏由底栏「全屏」按钮切换，再点一次退出。
 - 与完整版一样提供自解压 exe 安装器（可选安装目录/开始菜单/桌面快捷方式）。
 
 ## 运行

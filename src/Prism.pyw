@@ -100,7 +100,7 @@ SAFE_MODE = ("--safe-mode" in sys.argv
              or os.environ.get("PRISM_SAFE") == "1")
 
 APP_NAME = "Prism"
-APP_VERSION = "9.16.0"
+APP_VERSION = "9.16.1"
 APP_BUILD = "2025-12.9"
 # ---------------------------------------------------------------- 运行模式
 # 同一份源码编出三个版本：
@@ -4262,6 +4262,11 @@ class QPEApp(_BASE):
         self.brush_items = []
         self.brush_palette = None
         self.brush_color_btns = []
+        self.brush_size_btns = []
+        self.brush_cursor = None
+        self.brush_cursor_item = None
+        self.brush_erase_touched = False
+        self.brush_erase_pushed = False
         self.brush_size_lbl = None
         self.brush_eraser_btn = None
         self.brush_undo_btn = None
@@ -4340,12 +4345,20 @@ class QPEApp(_BASE):
             pass
 
     def _bigscreen_start(self):
-        """大屏版启动即最大化；全屏由底栏按钮切换。"""
+        """大屏版启动填满工作区；不用 state("zoomed")。
+
+        Tk 在 Windows 高 DPI 下会把 zoomed 的客户区按屏幕尺寸算，外框
+        再额外加标题栏/边框，整条底栏（包括「退出」）会被挤出屏幕。
+        这里按工作区显式留出外框，保证底栏始终在屏幕内。
+        """
         try:
-            self.state("zoomed")
+            _left, _top, aw, ah = _work_area()
+            w, h, x, y = _fit_window_rect(aw, ah, margin=0)
+            self.state("normal")
+            self.geometry("%dx%d+%d+%d" % (w, h, x, y))
         except Exception:
             try:
-                self.attributes("-zoomed", True)
+                self.state("zoomed")
             except Exception:
                 pass
 
@@ -4984,7 +4997,7 @@ class QPEApp(_BASE):
                 font=self.ui_font_s, bg=color, fg=fg, activebackground=color,
                 activeforeground=fg, relief="flat", bd=0,
                 highlightthickness=max(1, px(2)),
-                highlightbackground=DEEP2_BG, padx=px(2), pady=px(1),
+                highlightbackground=CARD_LINE, padx=px(2), pady=px(1),
                 width=2, cursor="hand2", takefocus=0)
             b.pack(side="left", padx=px(1))
             self.brush_color_btns.append((b, color))
@@ -4995,21 +5008,21 @@ class QPEApp(_BASE):
 
         sep()
         tk.Label(row, text="粗细", font=self.ui_font_s, bg=DEEP2_BG,
-                 fg=FG_DIM).pack(side="left", padx=(0, px(3)))
-        tk.Button(row, text="−", command=lambda: self._brush_size_by(-2),
-                  font=self.ui_font_s, bg=BTN_BG, fg=FG,
-                  activebackground=BAR_HOVER, activeforeground=FG_HI,
-                  relief="flat", bd=0, highlightthickness=0, padx=px(5),
-                  pady=0, cursor="hand2", takefocus=0).pack(side="left")
-        self.brush_size_lbl = tk.Label(
-            row, text="4 px", font=self.mono_font, bg=DEEP2_BG, fg=FG,
-            width=5, anchor="center")
-        self.brush_size_lbl.pack(side="left", padx=px(2))
-        tk.Button(row, text="+", command=lambda: self._brush_size_by(2),
-                  font=self.ui_font_s, bg=BTN_BG, fg=FG,
-                  activebackground=BAR_HOVER, activeforeground=FG_HI,
-                  relief="flat", bd=0, highlightthickness=0, padx=px(5),
-                  pady=0, cursor="hand2", takefocus=0).pack(side="left")
+                 fg=FG_DIM).pack(side="left", padx=(0, px(4)))
+        # 三档粗细：按钮里直接画出对应大小的圆点，点哪个一眼就知道多粗。
+        # 选中的一档用 ACCENT 底色 + 白色圆点，未选中是深色底 + 灰白圆点。
+        for _size in (4, 10, 20):
+            sc = tk.Canvas(row, width=px(34), height=px(26), bg=BTN_BG,
+                           bd=0, highlightthickness=max(1, px(2)),
+                           highlightbackground=DEEP2_BG, cursor="hand2",
+                           takefocus=0)
+            _r = max(px(2), int(px(_size * 0.45)))
+            _dot = sc.create_oval(
+                px(17) - _r, px(13) - _r, px(17) + _r, px(13) + _r,
+                fill=FG, outline="")
+            sc.bind("<Button-1>", lambda _e, s=_size: self._set_brush_size(s))
+            sc.pack(side="left", padx=px(1))
+            self.brush_size_btns.append((sc, _size, _dot))
 
         sep()
         self.brush_eraser_btn = tk.Button(
@@ -5052,7 +5065,7 @@ class QPEApp(_BASE):
             selected = color == self.brush_color and not self.brush_eraser
             try:
                 b.configure(
-                    highlightbackground=(ACCENT if selected else DEEP2_BG),
+                    highlightbackground=(ACCENT if selected else CARD_LINE),
                     highlightthickness=max(1, px(3 if selected else 2)))
             except Exception:
                 pass
@@ -5061,6 +5074,14 @@ class QPEApp(_BASE):
             try:
                 eb.configure(bg=ACCENT if self.brush_eraser else BTN_BG,
                              fg=ON_BG if self.brush_eraser else FG)
+            except Exception:
+                pass
+        for sc, size, dot in getattr(self, "brush_size_btns", []):
+            selected = abs(float(self.brush_size) - float(size)) < 0.01
+            try:
+                sc.configure(bg=ACCENT if selected else BTN_BG,
+                             highlightbackground=ACCENT if selected else DEEP2_BG)
+                sc.itemconfigure(dot, fill=ON_BG if selected else FG)
             except Exception:
                 pass
         if self.brush_size_lbl is not None:
@@ -5104,6 +5125,7 @@ class QPEApp(_BASE):
         self.brush_on = not self.brush_on
         self.brush_current = None
         self.brush_erasing = False
+        self.brush_cursor = None
         self.drag = None
         if self.brush_on:
             self.brush_eraser = False
@@ -5120,15 +5142,30 @@ class QPEApp(_BASE):
         self._sync_brush_palette()
         self._update_cursor()
 
-    def _brush_size_by(self, delta):
-        self.brush_size = max(1.0, min(32.0, self.brush_size + float(delta)))
+    def _set_brush_size(self, size):
+        self.brush_size = float(size)
         self._sync_brush_palette()
+        self._update_cursor()
+
+    def _brush_size_by(self, delta):
+        # 保留给键盘/测试的兼容入口，但实际只在这三档之间切换。
+        sizes = (4, 10, 20)
+        idx = min(range(len(sizes)),
+                  key=lambda i: abs(sizes[i] - self.brush_size))
+        if delta > 0:
+            idx = min(len(sizes) - 1, idx + 1)
+        elif delta < 0:
+            idx = max(0, idx - 1)
+        self._set_brush_size(sizes[idx])
 
     def _toggle_brush_eraser(self):
         self.brush_eraser = not self.brush_eraser
         self.brush_current = None
         self.brush_erasing = False
+        self.brush_cursor = None
+        self.brush_erase_touched = False
         self._sync_brush_palette()
+        self._draw_brush()
         self._update_cursor()
 
     def _brush_push_undo(self):
@@ -5178,7 +5215,14 @@ class QPEApp(_BASE):
             return
         if self.brush_eraser:
             self.brush_erasing = True
+            self.brush_erase_touched = False
+            self.brush_cursor = (event.x, event.y)
+            # 一次拖动只留一个撤销点；没擦到任何笔迹时在释放时回退它。
+            self.brush_erase_pushed = bool(self.brush_strokes)
+            if self.brush_erase_pushed:
+                self._brush_push_undo()
             self._brush_erase_at(event.x, event.y)
+            self._draw_brush()
             return
         self._brush_push_undo()
         ix, iy = self._brush_clamp(event.x, event.y)
@@ -5190,7 +5234,9 @@ class QPEApp(_BASE):
     def _brush_drag(self, event):
         if self.brush_eraser:
             if getattr(self, "brush_erasing", False):
+                self.brush_cursor = (event.x, event.y)
                 self._brush_erase_at(event.x, event.y)
+                self._draw_brush()
             return
         cur = self.brush_current
         if cur is None:
@@ -5206,6 +5252,13 @@ class QPEApp(_BASE):
     def _brush_release(self, _event=None):
         if getattr(self, "brush_erasing", False):
             self.brush_erasing = False
+            if (not self.brush_erase_touched
+                    and getattr(self, "brush_erase_pushed", False)):
+                if self.brush_undo:
+                    self.brush_undo.pop()
+            self.brush_erase_pushed = False
+            self._draw_brush()
+            self._sync_brush_palette()
             return
         cur = self.brush_current
         if cur is None:
@@ -5218,24 +5271,54 @@ class QPEApp(_BASE):
         self._sync_brush_palette()
 
     def _brush_erase_at(self, x, y):
-        if not self.brush_strokes:
-            return
+        """按圆形区域切分笔迹：只删圆内的点，圆外两段断开保留。"""
+        if not self.brush_strokes or not self._brush_inside(x, y):
+            return False
         ix, iy = self._canvas_to_image(x, y)
-        r = px(14) / max(self.scale, 1e-6)
+        r = px(18) / max(self.scale, 1e-6)
         r2 = r * r
-        hit = []
+        changed = False
+        kept = []
         for s in self.brush_strokes:
+            run = []
             for px_, py_ in s["points"]:
                 if (px_ - ix) ** 2 + (py_ - iy) ** 2 <= r2:
-                    hit.append(id(s))
-                    break
-        if not hit:
+                    changed = True
+                    if run:
+                        kept.append({"color": s["color"], "size": s["size"],
+                                     "points": run})
+                        run = []
+                else:
+                    run.append((px_, py_))
+            if run:
+                kept.append({"color": s["color"], "size": s["size"],
+                             "points": run})
+        if not changed:
+            return False
+        self.brush_strokes = kept
+        self.brush_erase_touched = True
+        return True
+
+    def _draw_brush_cursor(self):
+        c = getattr(self, "canvas", None)
+        if c is None:
             return
-        self._brush_push_undo()
-        drop = set(hit)
-        self.brush_strokes = [s for s in self.brush_strokes if id(s) not in drop]
-        self._draw_brush()
-        self._sync_brush_palette()
+        if self.brush_cursor_item is not None:
+            try:
+                c.delete(self.brush_cursor_item)
+            except Exception:
+                pass
+            self.brush_cursor_item = None
+        if not (self.brush_on and self.brush_eraser
+                and self.brush_cursor is not None and self.doc is not None):
+            return
+        x, y = self.brush_cursor
+        if not self._brush_inside(x, y):
+            return
+        r = px(18)
+        self.brush_cursor_item = c.create_oval(
+            x - r, y - r, x + r, y + r, outline=FG_HI,
+            width=max(1, px(2)), dash=(px(4), px(3)))
 
     def _draw_brush(self):
         c = getattr(self, "canvas", None)
@@ -5247,7 +5330,13 @@ class QPEApp(_BASE):
             except Exception:
                 pass
         self.brush_items = []
-        if self.doc is None or not (self.brush_strokes or self.brush_current):
+        if self.brush_cursor_item is not None:
+            try:
+                c.delete(self.brush_cursor_item)
+            except Exception:
+                pass
+            self.brush_cursor_item = None
+        if self.doc is None:
             return
         s = max(self.scale, 1e-6)
         strokes = list(self.brush_strokes)
@@ -5271,6 +5360,7 @@ class QPEApp(_BASE):
                     *pts, fill=stroke["color"], width=max(1, int(round(w))),
                     smooth=True, splinesteps=10, capstyle="round",
                     joinstyle="round"))
+        self._draw_brush_cursor()
 
     def _build_bar(self):
         """构建（或在切换语言后重建）工具条。"""
@@ -7156,12 +7246,21 @@ class QPEApp(_BASE):
         self.brush_current = None
         self.brush_undo = []
         self.brush_erasing = False
+        self.brush_cursor = None
+        self.brush_erase_touched = False
+        self.brush_erase_pushed = False
         for it in getattr(self, "brush_items", []):
             try:
                 self.canvas.delete(it)
             except Exception:
                 pass
         self.brush_items = []
+        if getattr(self, "brush_cursor_item", None) is not None:
+            try:
+                self.canvas.delete(self.brush_cursor_item)
+            except Exception:
+                pass
+            self.brush_cursor_item = None
         if self.brush_on:
             self.brush_on = False
         if getattr(self, "brush_palette", None) is not None:
@@ -7542,6 +7641,14 @@ class QPEApp(_BASE):
             self.fit_window()
 
     def _on_motion(self, event):
+        if self.brush_on:
+            if self.brush_eraser:
+                self.brush_cursor = (event.x, event.y)
+                if not self.brush_erasing:
+                    self._draw_brush_cursor()
+            elif self.brush_cursor_item is not None:
+                self.brush_cursor = None
+                self._draw_brush_cursor()
         if self.drag is None:
             self._update_cursor()
         self._schedule_sample(event.x, event.y)
@@ -7916,13 +8023,12 @@ class QPEApp(_BASE):
     def _enter_fullscreen(self):
         try:
             self._fs_geo = self.geometry()
-            sw = self.winfo_screenwidth()
-            sh = self.winfo_screenheight()
+            left, top, aw, ah = _work_area()
             try:
                 self.overrideredirect(True)
             except Exception:
                 pass
-            self.geometry("%dx%d+0+0" % (sw, sh))
+            self.geometry("%dx%d+%d+%d" % (aw, ah, left, top))
             self._fs_on = True
             self._mark_fast()
             self._render()
@@ -7935,7 +8041,10 @@ class QPEApp(_BASE):
                 pass
             self._fs_on = False
             try:
-                self.state("zoomed")
+                _left, _top, aw, ah = _work_area()
+                w, h, x, y = _fit_window_rect(aw, ah, margin=0)
+                self.state("normal")
+                self.geometry("%dx%d+%d+%d" % (w, h, x, y))
             except Exception:
                 pass
             self._flash("全屏不可用，已回退为窗口最大化", 3200)
@@ -15151,8 +15260,20 @@ def run(img, **params):
         self.goto(idx, wrap=False)
 
     def on_close(self):
+        # 双保险：窗口销毁失败时也用 quit() 结束 mainloop，不能留下
+        # 「点了退出、窗口还在」的状态。重复点击直接忽略。
+        if getattr(self, "_closing", False):
+            return
+        self._closing = True
         self._stop_anim()
-        self.destroy()
+        try:
+            self.destroy()
+        except Exception:
+            pass
+        try:
+            self.quit()
+        except Exception:
+            pass
 
     def destroy(self):
         """不管从哪条路径关闭，都先停掉所有挂着的 after 任务。

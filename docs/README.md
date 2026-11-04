@@ -72,12 +72,12 @@ Prism 服务两种场景 ——
 
 | 平台 | 文件 | 说明 |
 | :--- | :--- | :--- |
-| Windows | `Prism-Setup-9.16.1.exe` | 安装包 · 含修图面板与插件 · 40.6 MB |
+| Windows | `Prism-Setup-9.16.1.exe` | 安装包 · 含修图面板与插件 · 40.7 MB |
 | Windows | `Prism-Viewer-9.16.1.zip` | 纯看图版 · 便携免安装 · 30.6 MB |
 | Windows | `Prism-BigScreen-Setup-9.16.1.exe` | **大屏版**安装包 · 底栏大按钮 · 双指缩放 · 画笔标注 · 无快捷键 |
 | Windows | `Prism-BigScreen-9.16.1.zip` | 大屏版 · 便携免安装 |
-| macOS | `Prism-macOS-9.16.1.zip` | 源码运行 · 需 Python 3 + Pillow + tkinterdnd2 · 254 KB |
-| Linux | `Prism-Linux-9.16.1.zip` | 源码运行 · 带 `.desktop` · 255 KB |
+| macOS | `Prism-macOS-9.16.1.zip` | 源码运行 · 需 Python 3 + Pillow + tkinterdnd2 · 256 KB |
+| Linux | `Prism-Linux-9.16.1.zip` | 源码运行 · 带 `.desktop` · 256 KB |
 
 > **Windows 10 打不开？** 先试 `Prism-Viewer-*.zip` 便携版：解压后直接运行 `PrismViewer.exe`。
 > 仍然没有窗口时，在命令行运行 `Prism.exe --safe-mode`（跳过拖放）并把

@@ -41,7 +41,6 @@ gh auth refresh --hostname github.com --scopes workflow
   失败，修复后从 13:16Z 起恢复正常。
 - 到 **2026-11-03** 复核：修复后共 96 次 CI 运行，`gui` job 全部 success；因此已删除
   `.github/workflows/ci.yml` 里 `gui` 的 `continue-on-error: true`。
-- `gui` 现在是普通 job，失败会使 CI 结论失败；当前分支保护的必需检查仍只有三个
-  static job，是否把 `gui` 加入必需检查另行评估。
-- 如果 Windows runner 没有可用桌面导致真实失败，恢复 `continue-on-error` 并把失败
-  原因记进 issue。
+- `gui` 现在是普通 job，并已加入 `main` 的必需检查；失败会阻止合并。
+- 如果 Windows runner 没有可用桌面导致持续失败，恢复 `continue-on-error` 并把它从
+  必需检查移除，把失败原因记进 issue。
